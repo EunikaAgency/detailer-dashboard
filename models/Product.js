@@ -10,6 +10,7 @@ const MediaSchema = new mongoose.Schema({
 const ProductSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    externalId: String,
     brandName: String,
     description: { type: String, required: true },
     category: { type: String, required: true },
