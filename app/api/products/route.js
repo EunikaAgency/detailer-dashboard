@@ -67,17 +67,19 @@ export async function POST(request) {
         });
     }
 
-    const mediaFile = formData.get("mediaFile");
-    if (mediaFile && typeof mediaFile === "object" && mediaFile.arrayBuffer) {
-      await fs.mkdir(uploadsDir, { recursive: true });
-      const buffer = Buffer.from(await mediaFile.arrayBuffer());
-      const ext = path.extname(mediaFile.name || "") || ".bin";
-      const safeName = cleanFilename(path.basename(mediaFile.name || "upload", ext));
-      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
-      const filePath = path.join(uploadsDir, filename);
-      await fs.writeFile(filePath, buffer);
-      const publicUrl = `/uploads/${filename}`;
-      media.push({ type: getMediaType(mediaFile.type || filename), url: publicUrl });
+    const mediaFiles = formData.getAll("mediaFile");
+    for (const mediaFile of mediaFiles) {
+      if (mediaFile && typeof mediaFile === "object" && mediaFile.arrayBuffer) {
+        await fs.mkdir(uploadsDir, { recursive: true });
+        const buffer = Buffer.from(await mediaFile.arrayBuffer());
+        const ext = path.extname(mediaFile.name || "") || ".bin";
+        const safeName = cleanFilename(path.basename(mediaFile.name || "upload", ext));
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
+        const filePath = path.join(uploadsDir, filename);
+        await fs.writeFile(filePath, buffer);
+        const publicUrl = `/uploads/${filename}`;
+        media.push({ type: getMediaType(mediaFile.type || filename), url: publicUrl });
+      }
     }
 
     await connectDB();
