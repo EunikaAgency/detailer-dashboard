@@ -3,7 +3,6 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useDropzone } from "react-dropzone";
 
 const toSlug = (value) =>
   value
@@ -73,16 +72,10 @@ export default function ProductDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    multiple: true,
-    accept: {
-      "application/pdf": [".pdf"],
-      "video/*": [],
-    },
-    onDrop: (acceptedFiles) => {
-      setMediaFiles(acceptedFiles || []);
-    },
-  });
+  const handleMediaChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    setMediaFiles(files);
+  };
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -335,99 +328,116 @@ export default function ProductDetailPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (video/pdf)</label>
-                <div
-                  {...getRootProps({
-                    className: `border-2 border-dashed rounded-lg px-4 py-6 text-sm text-gray-600 cursor-pointer transition ${
-                      isDragActive ? "border-blue-400 bg-blue-50" : "border-gray-200"
-                    }`,
-                  })}
-                >
-                  <input {...getInputProps()} />
-                  <div className="space-y-3">
-                    {existingMedia.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="text-xs font-semibold uppercase text-gray-500">
-                          Existing media
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {existingMedia.map((item) => {
-                            const filename = item.url.split("/").pop() || item.url;
-                            const ext = filename.split(".").pop()?.toUpperCase() || "";
-                            return (
-                            <div key={item.url} className="flex flex-col items-center">
-                              <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center text-xs text-gray-600 shadow-inner">
-                                {item.size ? `${Math.round(item.size / 1024)} KB` : "--"}
-                              </div>
-                              <div
-                                className="mt-2 text-[11px] text-gray-600 truncate w-24 text-center"
-                                title={filename}
-                              >
-                                {filename}
-                              </div>
-                              {ext && <div className="text-[10px] text-gray-400">{ext}</div>}
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  const confirmed = window.confirm("Remove this file?");
-                                  if (!confirmed) return;
-                                  setExistingMedia((prev) => prev.filter((media) => media.url !== item.url));
-                                }}
-                                className="mt-1 text-xs text-blue-600 underline"
-                              >
-                                Remove file
-                              </button>
-                            </div>
-                            );
-                          })}
-                        </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (ppt/pptx/pdf)</label>
+                <input
+                  type="file"
+                  multiple
+                  accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+                  onChange={handleMediaChange}
+                  className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <div className="space-y-3 mt-4">
+                  {existingMedia.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="text-xs font-semibold uppercase text-gray-500">
+                        Existing media
                       </div>
-                    )}
-                    {mediaFiles.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="text-xs font-semibold uppercase text-gray-500">
-                          New uploads
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {mediaFiles.map((file) => {
-                            const ext = file.name.split(".").pop()?.toUpperCase() || "";
-                            return (
-                            <div key={file.name} className="flex flex-col items-center">
-                              <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center text-xs text-gray-600 shadow-inner">
-                                {Math.round(file.size / 1024)} KB
-                              </div>
-                              <div
-                                className="mt-2 text-[11px] text-gray-600 truncate w-24 text-center"
-                                title={file.name}
-                              >
-                                {file.name}
-                              </div>
-                              {ext && <div className="text-[10px] text-gray-400">{ext}</div>}
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  const confirmed = window.confirm("Remove this file?");
-                                  if (!confirmed) return;
-                                  setMediaFiles((prev) => prev.filter((item) => item.name !== file.name));
-                                }}
-                                className="mt-1 text-xs text-blue-600 underline"
-                              >
-                                Remove file
-                              </button>
-                            </div>
-                            );
-                          })}
-                        </div>
+                      <div className="overflow-hidden rounded-lg border border-gray-200">
+                        <table className="w-full text-sm text-gray-700">
+                          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                              <th className="px-3 py-2 text-left font-semibold">File</th>
+                              <th className="px-3 py-2 text-left font-semibold">Type</th>
+                              <th className="px-3 py-2 text-right font-semibold">Size</th>
+                              <th className="px-3 py-2 text-right font-semibold">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {existingMedia.map((item) => {
+                              const filename = item.url.split("/").pop() || item.url;
+                              const ext = filename.split(".").pop()?.toUpperCase() || "";
+                              return (
+                                <tr key={item.url} className="border-t border-gray-100">
+                                  <td className="px-3 py-2 truncate" title={filename}>
+                                    {filename}
+                                  </td>
+                                  <td className="px-3 py-2">{ext || "--"}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    {item.size ? `${Math.round(item.size / 1024)} KB` : "--"}
+                                  </td>
+                                  <td className="px-3 py-2 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const confirmed = window.confirm("Remove this file?");
+                                        if (!confirmed) return;
+                                        setExistingMedia((prev) =>
+                                          prev.filter((media) => media.url !== item.url)
+                                        );
+                                      }}
+                                      className="text-xs text-blue-600 underline"
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
-                    {existingMedia.length === 0 && mediaFiles.length === 0 && (
-                      <div>
-                        <span className="font-medium">Drop files here</span> or click to upload
+                    </div>
+                  )}
+                  {mediaFiles.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="text-xs font-semibold uppercase text-gray-500">
+                        New uploads
                       </div>
-                    )}
-                  </div>
+                      <div className="overflow-hidden rounded-lg border border-gray-200">
+                        <table className="w-full text-sm text-gray-700">
+                          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                              <th className="px-3 py-2 text-left font-semibold">File</th>
+                              <th className="px-3 py-2 text-left font-semibold">Type</th>
+                              <th className="px-3 py-2 text-right font-semibold">Size</th>
+                              <th className="px-3 py-2 text-right font-semibold">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {mediaFiles.map((file) => {
+                              const ext = file.name.split(".").pop()?.toUpperCase() || "";
+                              return (
+                                <tr key={file.name} className="border-t border-gray-100">
+                                  <td className="px-3 py-2 truncate" title={file.name}>
+                                    {file.name}
+                                  </td>
+                                  <td className="px-3 py-2">{ext || "--"}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    {Math.round(file.size / 1024)} KB
+                                  </td>
+                                  <td className="px-3 py-2 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const confirmed = window.confirm("Remove this file?");
+                                        if (!confirmed) return;
+                                        setMediaFiles((prev) =>
+                                          prev.filter((item) => item.name !== file.name)
+                                        );
+                                      }}
+                                      className="text-xs text-blue-600 underline"
+                                    >
+                                      Remove
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useDropzone } from "react-dropzone";
 
 const toSlug = (value) =>
   value
@@ -70,31 +69,15 @@ export default function ProductsPage() {
   const [mediaUpdateFiles, setMediaUpdateFiles] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState("");
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    multiple: true,
-    accept: {
-      "application/pdf": [".pdf"],
-      "video/*": [],
-    },
-    onDrop: (acceptedFiles) => {
-      setMediaFiles(acceptedFiles || []);
-    },
-  });
+  const handleMediaChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    setMediaFiles(files);
+  };
 
-  const {
-    getRootProps: getUpdateRootProps,
-    getInputProps: getUpdateInputProps,
-    isDragActive: isUpdateDragActive,
-  } = useDropzone({
-    multiple: true,
-    accept: {
-      "application/pdf": [".pdf"],
-      "video/*": [],
-    },
-    onDrop: (acceptedFiles) => {
-      setMediaUpdateFiles(acceptedFiles || []);
-    },
-  });
+  const handleUpdateMediaChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    setMediaUpdateFiles(files);
+  };
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -313,51 +296,57 @@ export default function ProductsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (video/pdf)</label>
-              <div
-                {...getRootProps({
-                  className: `border-2 border-dashed rounded-lg px-4 py-6 text-sm text-gray-600 cursor-pointer transition ${
-                    isDragActive ? "border-blue-400 bg-blue-50" : "border-gray-200"
-                  }`,
-                })}
-              >
-                <input {...getInputProps()} />
-                {mediaFiles.length ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {mediaFiles.map((file) => {
-                      const ext = file.name.split(".").pop()?.toUpperCase() || "";
-                      return (
-                      <div key={file.name} className="flex flex-col items-center">
-                        <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center text-xs text-gray-600 shadow-inner">
-                          {Math.round(file.size / 1024)} KB
-                        </div>
-                        <div
-                          className="mt-2 text-[11px] text-gray-600 truncate w-24 text-center"
-                          title={file.name}
-                        >
-                          {file.name}
-                        </div>
-                        {ext && <div className="text-[10px] text-gray-400">{ext}</div>}
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setMediaFiles((prev) => prev.filter((item) => item.name !== file.name));
-                          }}
-                          className="mt-1 text-xs text-blue-600 underline"
-                        >
-                          Remove file
-                        </button>
-                      </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div>
-                    <span className="font-medium">Drop files here</span> or click to upload
-                  </div>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (ppt/pptx/pdf)</label>
+              <input
+                type="file"
+                multiple
+                accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+                onChange={handleMediaChange}
+                className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {mediaFiles.length ? (
+                <div className="mt-3 overflow-hidden rounded-lg border border-gray-200">
+                  <table className="w-full text-sm text-gray-700">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-semibold">File</th>
+                        <th className="px-3 py-2 text-left font-semibold">Type</th>
+                        <th className="px-3 py-2 text-right font-semibold">Size</th>
+                        <th className="px-3 py-2 text-right font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mediaFiles.map((file) => {
+                        const ext = file.name.split(".").pop()?.toUpperCase() || "";
+                        return (
+                          <tr key={file.name} className="border-t border-gray-100">
+                            <td className="px-3 py-2 truncate" title={file.name}>
+                              {file.name}
+                            </td>
+                            <td className="px-3 py-2">{ext || "--"}</td>
+                            <td className="px-3 py-2 text-right">
+                              {Math.round(file.size / 1024)} KB
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMediaFiles((prev) =>
+                                    prev.filter((item) => item.name !== file.name)
+                                  );
+                                }}
+                                className="text-xs text-blue-600 underline"
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
             </div>
             <button
               type="submit"
@@ -430,51 +419,57 @@ export default function ProductsPage() {
             {products.find((product) => product.id === selectedProductId)?.mediaCount || 0}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Add media (video/pdf)</label>
-            <div
-              {...getUpdateRootProps({
-                className: `border-2 border-dashed rounded-lg px-4 py-6 text-sm text-gray-600 cursor-pointer transition ${
-                  isUpdateDragActive ? "border-blue-400 bg-blue-50" : "border-gray-200"
-                }`,
-              })}
-            >
-              <input {...getUpdateInputProps()} />
-              {mediaUpdateFiles.length ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {mediaUpdateFiles.map((file) => {
-                    const ext = file.name.split(".").pop()?.toUpperCase() || "";
-                    return (
-                    <div key={file.name} className="flex flex-col items-center">
-                      <div className="h-20 w-20 rounded-2xl bg-gray-100 flex items-center justify-center text-xs text-gray-600 shadow-inner">
-                        {Math.round(file.size / 1024)} KB
-                      </div>
-                      <div
-                        className="mt-2 text-[11px] text-gray-600 truncate w-24 text-center"
-                        title={file.name}
-                      >
-                        {file.name}
-                      </div>
-                      {ext && <div className="text-[10px] text-gray-400">{ext}</div>}
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setMediaUpdateFiles((prev) => prev.filter((item) => item.name !== file.name));
-                        }}
-                        className="mt-1 text-xs text-blue-600 underline"
-                      >
-                        Remove file
-                      </button>
-                    </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div>
-                  <span className="font-medium">Drop files here</span> or click to upload
-                </div>
-              )}
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Add media (ppt/pptx/pdf)</label>
+            <input
+              type="file"
+              multiple
+              accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+              onChange={handleUpdateMediaChange}
+              className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {mediaUpdateFiles.length ? (
+              <div className="mt-3 overflow-hidden rounded-lg border border-gray-200">
+                <table className="w-full text-sm text-gray-700">
+                  <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">File</th>
+                      <th className="px-3 py-2 text-left font-semibold">Type</th>
+                      <th className="px-3 py-2 text-right font-semibold">Size</th>
+                      <th className="px-3 py-2 text-right font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mediaUpdateFiles.map((file) => {
+                      const ext = file.name.split(".").pop()?.toUpperCase() || "";
+                      return (
+                        <tr key={file.name} className="border-t border-gray-100">
+                          <td className="px-3 py-2 truncate" title={file.name}>
+                            {file.name}
+                          </td>
+                          <td className="px-3 py-2">{ext || "--"}</td>
+                          <td className="px-3 py-2 text-right">
+                            {Math.round(file.size / 1024)} KB
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMediaUpdateFiles((prev) =>
+                                  prev.filter((item) => item.name !== file.name)
+                                );
+                              }}
+                              className="text-xs text-blue-600 underline"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </div>
           <button
             type="button"
