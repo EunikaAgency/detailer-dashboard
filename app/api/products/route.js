@@ -4,10 +4,13 @@ import { promises as fs } from "fs";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import { requireAuth } from "@/lib/auth";
+import { isPdf, isPpt } from "@/lib/fileConverter";
+import "@/lib/conversionWorker";
 
 export const runtime = "nodejs";
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
+const queueDir = path.join(uploadsDir, "queue");
 
 const getMediaType = (value) => {
   const lower = value.toLowerCase();
@@ -70,15 +73,38 @@ export async function POST(request) {
     const mediaFiles = formData.getAll("mediaFile");
     for (const mediaFile of mediaFiles) {
       if (mediaFile && typeof mediaFile === "object" && mediaFile.arrayBuffer) {
-        await fs.mkdir(uploadsDir, { recursive: true });
         const buffer = Buffer.from(await mediaFile.arrayBuffer());
-        const ext = path.extname(mediaFile.name || "") || ".bin";
-        const safeName = cleanFilename(path.basename(mediaFile.name || "upload", ext));
-        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
-        const filePath = path.join(uploadsDir, filename);
-        await fs.writeFile(filePath, buffer);
-        const publicUrl = `/uploads/${filename}`;
-        media.push({ type: getMediaType(mediaFile.type || filename), url: publicUrl });
+        const filename = mediaFile.name || "upload";
+        const mimeType = mediaFile.type || "";
+
+        // Check if file is PDF or PPT/PPTX
+        if (isPdf(filename, mimeType) || isPpt(filename, mimeType)) {
+          await fs.mkdir(queueDir, { recursive: true });
+          const ext = path.extname(filename) || ".bin";
+          const safeName = cleanFilename(path.basename(filename, ext));
+          const groupId = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}`;
+          const queuedFilename = `${groupId}${ext}`;
+          const filePath = path.join(queueDir, queuedFilename);
+          await fs.writeFile(filePath, buffer);
+          const publicUrl = `/uploads/queue/${queuedFilename}`;
+          media.push({
+            type: "pdf",
+            url: publicUrl,
+            status: "pending",
+            groupId,
+            sourceName: filename,
+          });
+        } else {
+          // Regular file upload (images, videos, etc.)
+          await fs.mkdir(uploadsDir, { recursive: true });
+          const ext = path.extname(filename) || ".bin";
+          const safeName = cleanFilename(path.basename(filename, ext));
+          const newFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
+          const filePath = path.join(uploadsDir, newFilename);
+          await fs.writeFile(filePath, buffer);
+          const publicUrl = `/uploads/${newFilename}`;
+          media.push({ type: getMediaType(mimeType || filename), url: publicUrl });
+        }
       }
     }
 
@@ -95,6 +121,10 @@ export async function POST(request) {
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     console.error("Create product error:", error);
-    return NextResponse.json({ error: "Failed to create product." }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to create product.", 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
   }
 }

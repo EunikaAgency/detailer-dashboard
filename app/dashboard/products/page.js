@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const toSlug = (value) =>
@@ -9,6 +9,32 @@ const toSlug = (value) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+const CONVERTED_PREFIX = "/uploads/converted/";
+
+const countMediaGroups = (media = []) => {
+  if (!Array.isArray(media) || media.length === 0) return 0;
+  const groups = new Set();
+  media.forEach((item) => {
+    if (item?.groupId) {
+      groups.add(`group:${item.groupId}`);
+      return;
+    }
+    const url = item?.url || "";
+    const convertedIndex = url.indexOf(CONVERTED_PREFIX);
+    if (convertedIndex !== -1) {
+      const rest = url.slice(convertedIndex + CONVERTED_PREFIX.length);
+      const folderName = rest.split("/")[0] || "";
+      if (folderName) {
+        groups.add(`converted:${folderName}`);
+        return;
+      }
+    }
+    const filename = url.split("/").pop() || url || "media";
+    groups.add(`file:${filename}`);
+  });
+  return groups.size;
+};
 
 const mapProduct = (product) => {
   const image =
@@ -24,7 +50,7 @@ const mapProduct = (product) => {
     category: product.category,
     description: product.description,
     image,
-    mediaCount: Array.isArray(product.media) ? product.media.length : 0,
+    mediaCount: countMediaGroups(product.media),
   };
 };
 
@@ -68,6 +94,8 @@ export default function ProductsPage() {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [mediaUpdateFiles, setMediaUpdateFiles] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState("");
+  const mediaInputRef = useRef(null);
+  const mediaUpdateInputRef = useRef(null);
 
   const handleMediaChange = (event) => {
     const files = Array.from(event.target.files || []);
@@ -156,8 +184,17 @@ export default function ProductsPage() {
       });
 
       if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error || "Failed to save product.");
+        let message = "Failed to save product.";
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const errorPayload = await response.json().catch(() => ({}));
+          message =
+            errorPayload.error || errorPayload.details || errorPayload.message || message;
+        } else {
+          const errorText = await response.text().catch(() => "");
+          if (errorText) message = errorText;
+        }
+        throw new Error(message);
       }
 
       const saved = await response.json();
@@ -172,6 +209,9 @@ export default function ProductsPage() {
         thumbnailUrl: "",
       });
       setMediaFiles([]);
+      if (mediaInputRef.current) {
+        mediaInputRef.current.value = "";
+      }
       showToast("success", "Product saved.");
     } catch (error) {
       console.error(error);
@@ -202,8 +242,17 @@ export default function ProductsPage() {
         }
       );
       if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error || "Failed to update media.");
+        let message = "Failed to update media.";
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const errorPayload = await response.json().catch(() => ({}));
+          message =
+            errorPayload.error || errorPayload.details || errorPayload.message || message;
+        } else {
+          const errorText = await response.text().catch(() => "");
+          if (errorText) message = errorText;
+        }
+        throw new Error(message);
       }
       const updated = await response.json();
       const mapped = mapProduct(updated);
@@ -211,6 +260,9 @@ export default function ProductsPage() {
         prev.map((item) => (item.id === mapped.id ? mapped : item))
       );
       setMediaUpdateFiles([]);
+      if (mediaUpdateInputRef.current) {
+        mediaUpdateInputRef.current.value = "";
+      }
       showToast("success", "Media updated.");
     } catch (error) {
       console.error(error);
@@ -302,6 +354,7 @@ export default function ProductsPage() {
                 multiple
                 accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
                 onChange={handleMediaChange}
+                ref={mediaInputRef}
                 className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
               />
               {mediaFiles.length ? (
@@ -425,6 +478,7 @@ export default function ProductsPage() {
               multiple
               accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
               onChange={handleUpdateMediaChange}
+              ref={mediaUpdateInputRef}
               className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
             />
             {mediaUpdateFiles.length ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const toSlug = (value) =>
@@ -12,6 +12,7 @@ const toSlug = (value) =>
     .replace(/^-+|-+$/g, "");
 
 const FALLBACK_IMAGE = "/images/product-fallback.svg";
+const CONVERTED_PREFIX = "/uploads/converted/";
 
 const mapProduct = (product) => {
   const image =
@@ -33,6 +34,9 @@ const mapProduct = (product) => {
       type: item.type,
       title: item.title,
       size: item.size,
+      status: item.status,
+      groupId: item.groupId,
+      sourceName: item.sourceName,
     })),
   };
 };
@@ -61,6 +65,48 @@ const Toast = ({ toast, onClose }) => {
   );
 };
 
+const groupExistingMedia = (mediaItems) => {
+  const groups = new Map();
+
+  mediaItems.forEach((item) => {
+    const url = item.url || "";
+    if (item.groupId) {
+      const key = `group:${item.groupId}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          label: item.sourceName || item.originalName || item.groupId,
+          items: [],
+        });
+      }
+      groups.get(key).items.push(item);
+      return;
+    }
+    const convertedIndex = url.indexOf(CONVERTED_PREFIX);
+    if (convertedIndex !== -1) {
+      const rest = url.slice(convertedIndex + CONVERTED_PREFIX.length);
+      const folderName = rest.split("/")[0] || "converted";
+      const labelBase = folderName.replace(/^\d+-/, "");
+      const label = labelBase ? `${labelBase} (converted)` : "Converted media";
+      const key = `converted:${folderName}`;
+      if (!groups.has(key)) {
+        groups.set(key, { key, label, items: [] });
+      }
+      groups.get(key).items.push(item);
+      return;
+    }
+
+    const filename = url.split("/").pop() || url || "Media file";
+    const key = `file:${filename}`;
+    if (!groups.has(key)) {
+      groups.set(key, { key, label: filename, items: [] });
+    }
+    groups.get(key).items.push(item);
+  });
+
+  return Array.from(groups.values());
+};
+
 export default function ProductDetailPage() {
   const router = useRouter();
   const { slug } = useParams();
@@ -68,6 +114,7 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [existingMedia, setExistingMedia] = useState([]);
+  const mediaInputRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -133,6 +180,21 @@ export default function ProductDetailPage() {
       isMounted = false;
     };
   }, [slug]);
+
+  useEffect(() => {
+    const hasPending = existingMedia.some(
+      (item) =>
+        item?.status === "pending" ||
+        (item?.url || "").startsWith("/uploads/queue/")
+    );
+    if (!hasPending) return undefined;
+
+    const timer = setInterval(() => {
+      refreshProduct();
+    }, 10000);
+
+    return () => clearInterval(timer);
+  }, [existingMedia]);
 
   const handleDelete = async () => {
     if (!product?.id) {
@@ -216,6 +278,9 @@ export default function ProductDetailPage() {
           throw new Error(errorPayload.error || "Failed to upload media.");
         }
         setMediaFiles([]);
+        if (mediaInputRef.current) {
+          mediaInputRef.current.value = "";
+        }
         await refreshProduct();
         showToast("success", "Media uploaded.");
       }
@@ -226,6 +291,8 @@ export default function ProductDetailPage() {
       setIsUpdating(false);
     }
   };
+
+  const groupedExistingMedia = groupExistingMedia(existingMedia);
 
   return (
     <div className="space-y-8">
@@ -334,6 +401,7 @@ export default function ProductDetailPage() {
                   multiple
                   accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
                   onChange={handleMediaChange}
+                  ref={mediaInputRef}
                   className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
                 />
                 <div className="space-y-3 mt-4">
@@ -342,49 +410,92 @@ export default function ProductDetailPage() {
                       <div className="text-xs font-semibold uppercase text-gray-500">
                         Existing media
                       </div>
-                      <div className="overflow-hidden rounded-lg border border-gray-200">
-                        <table className="w-full text-sm text-gray-700">
-                          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                            <tr>
-                              <th className="px-3 py-2 text-left font-semibold">File</th>
-                              <th className="px-3 py-2 text-left font-semibold">Type</th>
-                              <th className="px-3 py-2 text-right font-semibold">Size</th>
-                              <th className="px-3 py-2 text-right font-semibold">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {existingMedia.map((item) => {
-                              const filename = item.url.split("/").pop() || item.url;
-                              const ext = filename.split(".").pop()?.toUpperCase() || "";
-                              return (
-                                <tr key={item.url} className="border-t border-gray-100">
-                                  <td className="px-3 py-2 truncate" title={filename}>
-                                    {filename}
-                                  </td>
-                                  <td className="px-3 py-2">{ext || "--"}</td>
-                                  <td className="px-3 py-2 text-right">
-                                    {item.size ? `${Math.round(item.size / 1024)} KB` : "--"}
-                                  </td>
-                                  <td className="px-3 py-2 text-right">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const confirmed = window.confirm("Remove this file?");
-                                        if (!confirmed) return;
-                                        setExistingMedia((prev) =>
-                                          prev.filter((media) => media.url !== item.url)
-                                        );
-                                      }}
-                                      className="text-xs text-blue-600 underline"
-                                    >
-                                      Remove
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                      <div className="space-y-3">
+                        {groupedExistingMedia.map((group) => {
+                          const pendingOnly =
+                            group.items.length > 0 &&
+                            group.items.every(
+                              (item) =>
+                                item.status === "pending" ||
+                                (item.url || "").startsWith("/uploads/queue/")
+                            );
+                          const headerLabel = group.label;
+                          return (
+                          <details
+                            key={group.key}
+                            className="rounded-lg border border-gray-200 bg-white"
+                          >
+                            <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
+                              <span className="truncate">{headerLabel}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-medium text-gray-400">
+                                  {group.items.length} file{group.items.length === 1 ? "" : "s"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    const confirmed = window.confirm(
+                                      "Remove all media in this group?"
+                                    );
+                                    if (!confirmed) return;
+                                    const urlsToRemove = new Set(
+                                      group.items.map((item) => item.url)
+                                    );
+                                    setExistingMedia((prev) =>
+                                      prev.filter((item) => !urlsToRemove.has(item.url))
+                                    );
+                                  }}
+                                  className="text-xs font-medium text-red-600 underline"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </summary>
+                            <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+                              <div className="space-y-2">
+                                {pendingOnly ? (
+                                  <div className="text-sm text-gray-500">
+                                    Converting to images in progress.
+                                  </div>
+                                ) : (
+                                  group.items.map((item) => {
+                                    const filename = item.url.split("/").pop() || item.url;
+                                    const ext = filename.split(".").pop()?.toUpperCase() || "";
+                                    const isImage = /(png|jpg|jpeg|gif|webp)$/i.test(filename);
+                                    return (
+                                      <div
+                                        key={item.url}
+                                        className="flex flex-col gap-2 rounded-md border border-gray-100 p-3 text-sm text-gray-700 sm:flex-row sm:items-center sm:justify-between"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          {isImage && (
+                                            <img
+                                              src={item.url}
+                                              alt={filename}
+                                              className="h-12 w-12 rounded border border-gray-200 object-cover"
+                                            />
+                                          )}
+                                          <div className="min-w-0">
+                                            <div className="truncate" title={filename}>
+                                              {filename}
+                                            </div>
+                                            <div className="text-xs text-gray-400">
+                                              {ext || "--"}
+                                              {item.size ? ` • ${Math.round(item.size / 1024)} KB` : ""}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>
+                          </details>
+                        );
+                        })}
                       </div>
                     </div>
                   )}

@@ -5,6 +5,9 @@ const MediaSchema = new mongoose.Schema({
   url: { type: String, required: true },
   title: String,
   size: Number,
+  status: String,
+  groupId: String,
+  sourceName: String,
 }, { _id: false });
 
 const ProductSchema = new mongoose.Schema(
