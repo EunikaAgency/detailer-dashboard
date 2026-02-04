@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  getAuthCookieOptions,
+  signAccessToken,
+  signRefreshToken,
+} from '@/lib/auth';
 
 export async function POST(request) {
   try {
@@ -41,12 +47,14 @@ export async function POST(request) {
       );
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '7d' }
-    );
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    if (!accessToken || !refreshToken) {
+      return NextResponse.json(
+        { error: 'Auth server is misconfigured' },
+        { status: 500 }
+      );
+    }
 
     // Create response with token
     const response = NextResponse.json(
@@ -60,14 +68,8 @@ export async function POST(request) {
       { status: 200 }
     );
 
-    // Set HTTP-only cookie
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
+    response.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, getAuthCookieOptions(60 * 15));
+    response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, getAuthCookieOptions(60 * 60 * 24 * 30));
 
     return response;
   } catch (error) {

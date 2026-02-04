@@ -11,25 +11,42 @@ const toSlug = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const buildProductSlug = (product) =>
+  toSlug(`${product?.name || ""}-${product?.brandName || product?.brand || ""}`);
+
 const FALLBACK_IMAGE = "/images/product-fallback.svg";
 const CONVERTED_PREFIX = "/uploads/converted/";
 
+const toFlatMedia = (media = []) => {
+  if (!Array.isArray(media) || media.length === 0) return [];
+  if (media[0] && Array.isArray(media[0].items)) {
+    return media.flatMap((group) =>
+      (group.items || []).map((item) => ({
+        url: item?.url,
+        groupId: group.groupId || item?.groupId,
+      }))
+    );
+  }
+  return media;
+};
+
 const mapProduct = (product) => {
+  const flatMedia = toFlatMedia(product.media);
   const image =
     product.thumbnailUrl ||
-    product.media?.[0]?.url ||
+    flatMedia?.[0]?.url ||
     FALLBACK_IMAGE;
 
   return {
     id: product._id?.toString?.() || product._id || product.id || "",
-    slug: toSlug(product.name),
+    slug: buildProductSlug(product),
     name: product.name,
     brand: product.brandName || "",
     category: product.category,
     description: product.description,
     image,
     thumbnailUrl: product.thumbnailUrl || "",
-    media: (product.media || []).map((item) => ({
+    media: flatMedia.map((item) => ({
       url: item.url,
       type: item.type,
       title: item.title,
@@ -143,8 +160,9 @@ export default function ProductDetailPage() {
       const response = await fetch("/api/products");
       if (!response.ok) return;
       const data = await response.json();
-      if (!Array.isArray(data)) return;
-      const mapped = data.map(mapProduct);
+      const productsPayload = Array.isArray(data) ? data : data?.products;
+      if (!Array.isArray(productsPayload)) return;
+      const mapped = productsPayload.map(mapProduct);
       const found = mapped.find((item) => item.slug === slug) || null;
       if (found) {
         setProduct(found);
@@ -162,8 +180,9 @@ export default function ProductDetailPage() {
         const response = await fetch("/api/products");
         if (!response.ok) return;
         const data = await response.json();
-        if (!Array.isArray(data)) return;
-        const mapped = data.map(mapProduct);
+        const productsPayload = Array.isArray(data) ? data : data?.products;
+        if (!Array.isArray(productsPayload)) return;
+        const mapped = productsPayload.map(mapProduct);
         const found = mapped.find((item) => item.slug === slug) || null;
         if (isMounted) {
           setProduct(found);
@@ -261,7 +280,7 @@ export default function ProductDetailPage() {
       const mapped = mapProduct(updated);
       setProduct(mapped);
       setExistingMedia(mapped.media || []);
-      const newSlug = toSlug(mapped.name);
+      const newSlug = buildProductSlug(mapped);
       if (newSlug && newSlug !== slug) {
         router.replace(`/dashboard/products/${newSlug}`);
       }

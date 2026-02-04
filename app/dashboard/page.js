@@ -70,6 +70,9 @@ export default function Dashboard() {
         const productsData = productsRes.ok ? await productsRes.json() : [];
         const doctorsData = doctorsRes.ok ? await doctorsRes.json() : [];
         const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : [];
+        const productsPayload = Array.isArray(productsData)
+          ? productsData
+          : productsData?.products;
         const validAppointments = Array.isArray(appointmentsData)
           ? appointmentsData.filter((appt) => {
               const rawDate = appt.date || appt.startedAt || appt.createdAt;
@@ -79,7 +82,7 @@ export default function Dashboard() {
 
         if (isMounted) {
           setStats({
-            products: Array.isArray(productsData) ? productsData.length : 0,
+            products: Array.isArray(productsPayload) ? productsPayload.length : 0,
             doctors: Array.isArray(doctorsData) ? doctorsData.length : 0,
             appointments: validAppointments.length,
           });

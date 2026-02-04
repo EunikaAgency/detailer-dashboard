@@ -10,12 +10,30 @@ const toSlug = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const buildProductSlug = (product) =>
+  toSlug(`${product?.name || ""}-${product?.brandName || product?.brand || ""}`);
+
 const CONVERTED_PREFIX = "/uploads/converted/";
+
+const toFlatMedia = (media = []) => {
+  if (!Array.isArray(media) || media.length === 0) return [];
+  if (media[0] && Array.isArray(media[0].items)) {
+    return media.flatMap((group) =>
+      (group.items || []).map((item) => ({
+        url: item?.url,
+        groupId: group.groupId || item?.groupId,
+      }))
+    );
+  }
+  return media;
+};
 
 const countMediaGroups = (media = []) => {
   if (!Array.isArray(media) || media.length === 0) return 0;
+  if (media[0] && Array.isArray(media[0].items)) return media.length;
+  const flat = toFlatMedia(media);
   const groups = new Set();
-  media.forEach((item) => {
+  flat.forEach((item) => {
     if (item?.groupId) {
       groups.add(`group:${item.groupId}`);
       return;
@@ -37,14 +55,15 @@ const countMediaGroups = (media = []) => {
 };
 
 const mapProduct = (product) => {
+  const flatMedia = toFlatMedia(product.media);
   const image =
     product.thumbnailUrl ||
-    product.media?.[0]?.url ||
+    flatMedia?.[0]?.url ||
     "/images/product-fallback.svg";
 
   return {
     id: product._id,
-    slug: toSlug(product.name),
+    slug: buildProductSlug(product),
     name: product.name,
     brand: product.brandName || "",
     category: product.category,
@@ -128,8 +147,9 @@ export default function ProductsPage() {
         const response = await fetch("/api/products");
         if (!response.ok) return;
         const data = await response.json();
-        if (Array.isArray(data) && isMounted) {
-          const sorted = [...data].sort(
+        const productsPayload = Array.isArray(data) ? data : data?.products;
+        if (Array.isArray(productsPayload) && isMounted) {
+          const sorted = [...productsPayload].sort(
             (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
           );
           const mapped = sorted.map(mapProduct);

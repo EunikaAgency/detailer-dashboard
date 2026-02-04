@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
 const queueDir = path.join(uploadsDir, "queue");
+const convertedDir = path.join(uploadsDir, "converted");
 
 const getMediaType = (value) => {
   const lower = value.toLowerCase();
@@ -22,15 +23,129 @@ const getMediaType = (value) => {
 
 const cleanFilename = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-export async function GET() {
+const normalizeKey = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const buildConvertedIndex = async () => {
   try {
-    const auth = await requireAuth();
-    if (auth.error) {
+    const folders = await fs.readdir(convertedDir, { withFileTypes: true });
+    const entries = [];
+    for (const entry of folders) {
+      if (!entry.isDirectory()) continue;
+      const folder = entry.name;
+      const imagesDir = path.join(convertedDir, folder, "images");
+      let images = [];
+      try {
+        const files = await fs.readdir(imagesDir);
+        images = files
+          .filter((name) => name.match(/\.(png|jpg|jpeg|webp|gif)$/i))
+          .map((name) => `/uploads/converted/${folder}/images/${name}`);
+      } catch {
+        images = [];
+      }
+      if (images.length) {
+        entries.push({ folder, normalized: normalizeKey(folder), images });
+      }
+    }
+    return entries;
+  } catch {
+    return [];
+  }
+};
+
+const attachConvertedMedia = (product, convertedIndex) => {
+  const nameKey = normalizeKey(product?.name);
+  if (!nameKey) return product;
+
+  const existing = Array.isArray(product.media) ? product.media : [];
+  const existingUrls = new Set(existing.map((item) => item?.url).filter(Boolean));
+
+  const matchedImages = convertedIndex
+    .filter((entry) => entry.normalized.includes(nameKey))
+    .flatMap((entry) =>
+      entry.images.map((url) => ({
+        type: "image",
+        url,
+        groupId: entry.folder,
+        sourceName: product?.name || "",
+      }))
+    )
+    .filter((item) => !existingUrls.has(item.url));
+
+  if (!matchedImages.length) return product;
+  return { ...product, media: [...existing, ...matchedImages] };
+};
+
+const CONVERTED_PREFIX = "/uploads/converted/";
+
+const getConvertedFolderFromUrl = (url) => {
+  const value = typeof url === "string" ? url : "";
+  const index = value.indexOf(CONVERTED_PREFIX);
+  if (index === -1) return "";
+  const rest = value.slice(index + CONVERTED_PREFIX.length);
+  return rest.split("/")[0] || "";
+};
+
+const buildMediaGroupsFromMedia = (media = []) => {
+  if (!Array.isArray(media) || media.length === 0) return [];
+  const groups = new Map();
+
+  media.forEach((item) => {
+    const url = item?.url;
+    if (!url) return;
+    const folder = item?.groupId || getConvertedFolderFromUrl(url);
+    if (!folder) return;
+    const entry = groups.get(folder) || [];
+    entry.push({ url });
+    groups.set(folder, entry);
+  });
+
+  return Array.from(groups.entries()).map(([groupId, items]) => ({
+    groupId,
+    items,
+  }));
+};
+
+const hasValidApiKey = (request) => {
+  const configuredApiKey = String(process.env.API_KEY || "").trim();
+  if (!configuredApiKey || !request) return false;
+
+  const headerApiKey =
+    request.headers.get("x-api-key") ||
+    request.headers.get("api-key") ||
+    request.headers.get("authorization")?.replace(/^ApiKey\s+/i, "");
+
+  const queryApiKey = new URL(request.url).searchParams.get("api_key");
+  const providedApiKey = String(headerApiKey || queryApiKey || "").trim();
+  return providedApiKey && providedApiKey === configuredApiKey;
+};
+
+export async function GET(request) {
+  try {
+    const auth = await requireAuth(request);
+    const apiKeyAllowed = hasValidApiKey(request);
+    if (auth.error && !apiKeyAllowed) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+
     await connectDB();
+    const convertedIndex = await buildConvertedIndex();
     const products = await Product.find().sort({ createdAt: -1 }).lean();
-    return NextResponse.json(products);
+    const enriched = convertedIndex.length
+      ? products.map((product) => {
+          const withMedia = attachConvertedMedia(product, convertedIndex);
+          const mediaGroups = buildMediaGroupsFromMedia(withMedia.media);
+          return { ...withMedia, media: mediaGroups };
+        })
+      : products.map((product) => ({
+          ...product,
+          media: buildMediaGroupsFromMedia(product.media),
+        }));
+    const version = Math.floor(Date.now() / 3600000) * 3600000;
+    return NextResponse.json({ version, products: enriched });
   } catch (error) {
     console.error("Fetch products error:", error);
     return NextResponse.json({ error: "Failed to fetch products." }, { status: 500 });
@@ -43,6 +158,7 @@ export async function POST(request) {
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+
     const formData = await request.formData();
     const name = String(formData.get("name") || "").trim();
     const brandName = String(formData.get("brandName") || "").trim();

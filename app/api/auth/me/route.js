@@ -1,33 +1,13 @@
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { cookies } from 'next/headers';
-import connectDB from '@/lib/db';
-import User from '@/models/User';
+import { requireAuth } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token');
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    const auth = await requireAuth(request);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    // Verify token
-    const decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'secret');
-
-    await connectDB();
-    const user = await User.findById(decoded.userId).select('-password');
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
+    const user = auth.user;
 
     return NextResponse.json({
       user: {
