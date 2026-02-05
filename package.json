@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "reset-admin": "node scripts/reset-admin.js",
+    "reset-admin:prod": "NODE_ENV=production node scripts/reset-admin.js",
+    "sync-db": "node scripts/sync-staging-to-live.js",
+    "sync-db:preview": "node scripts/sync-staging-to-live-preview.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -23,6 +27,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4"

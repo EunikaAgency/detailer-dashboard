@@ -12,6 +12,8 @@ if (typeof global.DOMMatrix === 'undefined') {
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+const CONVERSION_WIDTH = Number(process.env.CONVERSION_WIDTH || '1920');
+const CONVERSION_HEIGHT = Number(process.env.CONVERSION_HEIGHT || '1080');
 
 export async function POST(request) {
   try {
@@ -62,8 +64,8 @@ export async function POST(request) {
       saveFilename: `page`,
       savePath: imagesDir,
       format: 'png',
-      width: 2000,
-      height: 2000
+      width: CONVERSION_WIDTH,
+      height: CONVERSION_HEIGHT
     };
 
     console.log('Conversion options:', options);

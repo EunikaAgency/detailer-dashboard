@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import {
@@ -12,39 +13,93 @@ import {
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, licenseKey } = await request.json();
 
-    console.log('Login attempt:', { email, passwordLength: password?.length });
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
+    console.log('Login attempt:', {
+      email,
+      passwordLength: password?.length,
+      hasLicenseKey: Boolean(licenseKey),
+    });
 
     await connectDB();
 
-    // Find user
-    const user = await User.findOne({ email });
-    console.log('User found:', user ? 'yes' : 'no');
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+    let user = null;
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log('Password valid:', isValidPassword);
-    
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+    if (licenseKey) {
+      if (!process.env.JWT_SECRET) {
+        return NextResponse.json(
+          { error: 'Auth server is misconfigured' },
+          { status: 500 }
+        );
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(licenseKey.trim(), process.env.JWT_SECRET);
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Invalid license key' },
+          { status: 401 }
+        );
+      }
+      console.log('Keygen decoded:', decoded);
+
+      const userId = decoded?.userId;
+      const decodedEmail = decoded?.email;
+      if (!userId && !decodedEmail) {
+        return NextResponse.json(
+          { error: 'Invalid license key' },
+          { status: 401 }
+        );
+      }
+
+      user = userId ? await User.findById(userId) : await User.findOne({ email: decodedEmail });
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Invalid license key' },
+          { status: 401 }
+        );
+      }
+
+      const trimmedKey = licenseKey.trim();
+      if (!user.keygen) {
+        user.keygen = trimmedKey;
+        await user.save();
+      } else if (user.keygen !== trimmedKey) {
+        return NextResponse.json(
+          { error: 'Invalid license key' },
+          { status: 401 }
+        );
+      }
+    } else {
+      if (!email || !password) {
+        return NextResponse.json(
+          { error: 'Email and password are required' },
+          { status: 400 }
+        );
+      }
+
+      // Find user
+      user = await User.findOne({ email });
+      console.log('User found:', user ? 'yes' : 'no');
+      
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
+
+      // Check password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log('Password valid:', isValidPassword);
+      
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
     }
 
     const accessToken = signAccessToken(user);
@@ -60,6 +115,7 @@ export async function POST(request) {
     const response = NextResponse.json(
       { 
         success: true,
+        token: accessToken,
         user: { 
           id: user._id, 
           email: user.email 

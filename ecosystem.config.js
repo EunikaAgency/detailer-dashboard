@@ -6,7 +6,7 @@ module.exports = {
       args: 'start',
       env: {
         NODE_ENV: 'production',
-        PORT: 8081,
+        PORT: 7001,
         MONGO_URI: 'mongodb://localhost:27017/otsuka_prod'
       },
       instances: 1,
@@ -24,7 +24,7 @@ module.exports = {
       args: 'run dev',
       env: {
         NODE_ENV: 'development',
-        PORT: 8080,
+        PORT: 7000,
         MONGO_URI: 'mongodb://localhost:27017/otsuka_dev'
       },
       instances: 1,
@@ -42,7 +42,7 @@ module.exports = {
       args: 'scripts/conversion-cron.js',
       env: {
         NODE_ENV: 'production',
-        CONVERSION_CRON_URL: 'http://localhost:8080/api/conversion/worker',
+        CONVERSION_CRON_URL: 'http://localhost:7001/api/conversion/worker',
         CONVERSION_CRON_SECRET: 'c0470b6a5069cb73e61e27bb0c00e7d2877aaef809ba66b064a13e2ce5dd26d1caae6f840f807a8b757f45355799cf15bfd30315872e7bd7ce74a60b44569e2f',
         CONVERSION_CRON_INTERVAL_MS: '60000'
       },

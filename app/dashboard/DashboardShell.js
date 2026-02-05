@@ -59,6 +59,11 @@ export default function DashboardShell({ children }) {
                 </Link>
               </li>
               <li>
+                <Link href="/dashboard/users" className={linkClass("/dashboard/users")} onClick={() => setSidebarOpen(false)}>
+                  Users
+                </Link>
+              </li>
+              <li>
                 <Link href="/dashboard/settings" className={linkClass("/dashboard/settings")} onClick={() => setSidebarOpen(false)}>
                   Settings
                 </Link>

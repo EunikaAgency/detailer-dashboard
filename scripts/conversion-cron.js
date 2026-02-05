@@ -1,4 +1,4 @@
-const url = process.env.CONVERSION_CRON_URL || "http://localhost:6060/api/conversion/worker";
+const url = process.env.CONVERSION_CRON_URL || "http://localhost:8041/api/conversion/worker";
 const secret = process.env.CONVERSION_CRON_SECRET || "";
 
 const run = async () => {
