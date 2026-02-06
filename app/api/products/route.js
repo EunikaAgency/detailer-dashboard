@@ -99,7 +99,16 @@ const buildMediaGroupsFromMedia = (media = []) => {
     const folder = item?.groupId || getConvertedFolderFromUrl(url);
     if (!folder) return;
     const entry = groups.get(folder) || [];
-    entry.push({ url });
+    entry.push({
+      url,
+      type: item?.type,
+      title: item?.title,
+      size: item?.size,
+      status: item?.status,
+      groupId: item?.groupId,
+      sourceName: item?.sourceName,
+      hotspots: Array.isArray(item?.hotspots) ? item.hotspots : [],
+    });
     groups.set(folder, entry);
   });
 

@@ -8,6 +8,20 @@ const MediaSchema = new mongoose.Schema({
   status: String,
   groupId: String,
   sourceName: String,
+  hotspots: [
+    new mongoose.Schema(
+      {
+        id: String,
+        x: Number,
+        y: Number,
+        w: Number,
+        h: Number,
+        shape: String,
+        targetPageId: String,
+      },
+      { _id: false }
+    ),
+  ],
 }, { _id: false });
 
 const ProductSchema = new mongoose.Schema(
