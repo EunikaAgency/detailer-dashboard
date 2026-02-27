@@ -81,6 +81,25 @@ node scripts/check-users.js
 
 ---
 
+### 4. Export Database Backup
+
+**Purpose:** Create a `mongodump` backup for staging or live.
+
+**Commands:**
+```bash
+# Export staging database (otsuka_dev)
+npm run export-db:staging
+
+# Export live database (otsuka_prod)
+npm run export-db:live
+```
+
+**Output:**
+- Backups are written to `web/backups/db/<target>-<timestamp>/`
+- Uses `mongodump --gzip`
+
+---
+
 ## Database Configuration
 
 The scripts automatically detect and use the correct database based on environment:
@@ -97,7 +116,7 @@ The scripts automatically detect and use the correct database based on environme
 
 2. **Backup production before major changes:**
    ```bash
-   mongodump --uri="mongodb://localhost:27017/otsuka_prod" --out=/path/to/backup
+   npm run export-db:live
    ```
 
 3. **Test in development first:**
@@ -158,6 +177,8 @@ All scripts include:
 **Files:**
 - `reset-admin.js` - Admin user reset
 - `sync-staging-to-live.js` - Database sync
+- `sync-live-to-staging.js` - Reverse database sync
 - `sync-staging-to-live-preview.js` - Sync preview (dry run)
+- `export-db.js` - Database export using mongodump
 - `check-users.js` - User listing
 - `conversion-cron.js` - File conversion cron job

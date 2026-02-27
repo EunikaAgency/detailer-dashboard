@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "reset-admin": "node scripts/reset-admin.js",
     "reset-admin:prod": "NODE_ENV=production node scripts/reset-admin.js",
-    "sync-db": "node scripts/sync-staging-to-live.js",
-    "sync-db:preview": "node scripts/sync-staging-to-live-preview.js"
+    "sync-db": "npm run sync-db:staging-to-live",
+    "sync-db:staging-to-live": "node scripts/sync-staging-to-live.js",
+    "sync-db:live-to-staging": "node scripts/sync-live-to-staging.js",
+    "sync-db:preview": "node scripts/sync-staging-to-live-preview.js",
+    "export-db:staging": "node scripts/export-db.js staging",
+    "export-db:live": "node scripts/export-db.js live"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -22,7 +22,12 @@ const prodEnv = dotenv.parse(fs.readFileSync(prodEnvPath));
 const STAGING_URI = devEnv.MONGO_URI || 'mongodb://localhost:27017/otsuka_dev';
 const LIVE_URI = prodEnv.MONGO_URI || 'mongodb://localhost:27017/otsuka_prod';
 
-const COLLECTIONS = ['users', 'doctors', 'appointments', 'products', 'presentations'];
+const getUserCollections = async (conn) => {
+  const collections = await conn.db.listCollections({}, { nameOnly: true }).toArray();
+  return collections
+    .map((entry) => entry.name)
+    .filter((name) => typeof name === 'string' && !name.startsWith('system.'));
+};
 
 async function previewSync() {
   console.log('\n╔════════════════════════════════════════════════════════════╗');
@@ -40,13 +45,17 @@ async function previewSync() {
     stagingConn = await mongoose.createConnection(STAGING_URI).asPromise();
     liveConn = await mongoose.createConnection(LIVE_URI).asPromise();
     console.log('✓ Connected\n');
+
+    const stagingCollections = await getUserCollections(stagingConn);
+    const liveCollections = await getUserCollections(liveConn);
+    const allCollections = Array.from(new Set([...stagingCollections, ...liveCollections])).sort();
     
     console.log('📊 Current State:\n');
     
     let totalStagingDocs = 0;
     let totalLiveDocs = 0;
     
-    for (const collectionName of COLLECTIONS) {
+    for (const collectionName of allCollections) {
       try {
         const stagingCollections = await stagingConn.db.listCollections({ name: collectionName }).toArray();
         const liveCollections = await liveConn.db.listCollections({ name: collectionName }).toArray();
@@ -72,11 +81,15 @@ async function previewSync() {
       }
     }
     
+    const staleInLive = liveCollections.filter((name) => !stagingCollections.includes(name));
+
     console.log(`\n   ${'TOTAL'.padEnd(20)} ${String(totalStagingDocs).padStart(4)} → ${String(totalLiveDocs).padStart(4)}`);
+    console.log(`   ${'COLLECTIONS'.padEnd(20)} ${String(stagingCollections.length).padStart(4)} → ${String(liveCollections.length).padStart(4)}`);
     
     console.log('\n📝 What would happen:');
     console.log(`   • ${totalLiveDocs} documents in LIVE would be deleted`);
     console.log(`   • ${totalStagingDocs} documents from STAGING would be copied to LIVE`);
+    console.log(`   • ${staleInLive.length} stale collection(s) in LIVE would be dropped`);
     console.log(`   • All indexes would be recreated\n`);
     
     console.log('ℹ️  To perform actual sync, run: npm run sync-db\n');

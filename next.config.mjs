@@ -1,7 +1,37 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  reactCompiler: true,
+  reactCompiler: process.env.NODE_ENV === "production",
+  reactStrictMode: false,
+  allowedDevOrigins: ["staging.otsukadetailer.site"],
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 50,
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      const currentIgnored = config.watchOptions?.ignored;
+      const ignoredList = [];
+
+      if (typeof currentIgnored === "string" && currentIgnored.trim()) {
+        ignoredList.push(currentIgnored.trim());
+      }
+      if (Array.isArray(currentIgnored)) {
+        currentIgnored.forEach((entry) => {
+          if (typeof entry === "string" && entry.trim()) {
+            ignoredList.push(entry.trim());
+          }
+        });
+      }
+
+      const nextIgnored = ["**/logs/**"];
+
+      config.watchOptions = {
+        ...(config.watchOptions || {}),
+        ignored: [...new Set([...ignoredList, ...nextIgnored])],
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

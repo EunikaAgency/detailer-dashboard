@@ -14,9 +14,9 @@ module.exports = {
       exec_mode: 'fork',
       watch: false,
       max_memory_restart: '1G',
-      error_file: './logs/prod-err.log',
-      out_file: './logs/prod-out.log',
-      log_file: './logs/prod-combined.log',
+      error_file: '/tmp/detailer-web-prod-err.log',
+      out_file: '/tmp/detailer-web-prod-out.log',
+      log_file: '/tmp/detailer-web-prod-combined.log',
       time: true
     },
     {
@@ -33,9 +33,9 @@ module.exports = {
       exec_mode: 'fork',
       watch: false,
       max_memory_restart: '1G',
-      error_file: './logs/dev-err.log',
-      out_file: './logs/dev-out.log',
-      log_file: './logs/dev-combined.log',
+      error_file: '/tmp/detailer-web-dev-err.log',
+      out_file: '/tmp/detailer-web-dev-out.log',
+      log_file: '/tmp/detailer-web-dev-combined.log',
       time: true
     },
     {
@@ -53,9 +53,9 @@ module.exports = {
       exec_mode: 'fork',
       watch: false,
       max_memory_restart: '256M',
-      error_file: './logs/cron-err.log',
-      out_file: './logs/cron-out.log',
-      log_file: './logs/cron-combined.log',
+      error_file: '/tmp/detailer-conversion-cron-err.log',
+      out_file: '/tmp/detailer-conversion-cron-out.log',
+      log_file: '/tmp/detailer-conversion-cron-combined.log',
       time: true
     }
   ]

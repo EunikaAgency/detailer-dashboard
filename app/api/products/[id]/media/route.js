@@ -22,8 +22,9 @@ const getMediaType = (value) => {
 
 const cleanFilename = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-const getIdFromRequest = (request, params) => {
-  if (params?.id) return params.id;
+const getIdFromRequest = async (request, params) => {
+  const resolvedParams = await params;
+  if (resolvedParams?.id) return resolvedParams.id;
   const url = new URL(request.url);
   const parts = url.pathname.split("/").filter(Boolean);
   return parts[parts.length - 2] || "";
@@ -36,7 +37,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const id = getIdFromRequest(request, params);
+    const id = await getIdFromRequest(request, params);
     if (!id) {
       return NextResponse.json({ error: "Product id is required." }, { status: 400 });
     }

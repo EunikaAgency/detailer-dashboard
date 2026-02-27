@@ -1,16 +1,16 @@
 /**
- * Sync Staging to Live Database
- * 
- * This script copies ALL data from staging (otsuka_dev) to live (otsuka_prod).
- * ⚠️  WARNING: This will COMPLETELY REPLACE all data in the production database!
- * 
+ * Sync Live to Staging Database
+ *
+ * This script copies ALL data from live (otsuka_prod) to staging (otsuka_dev).
+ * ⚠️  WARNING: This will COMPLETELY REPLACE all data in the staging database!
+ *
  * Usage:
- *   npm run sync-db
- * 
+ *   npm run sync-db:live-to-staging
+ *
  * The script will:
- * 1. Connect to both staging and live databases
- * 2. Drop all collections in live database
- * 3. Copy all documents from staging to live
+ * 1. Connect to both live and staging databases
+ * 2. Drop all collections in staging database
+ * 3. Copy all documents from live to staging
  * 4. Maintain indexes and relationships
  */
 
@@ -54,58 +54,58 @@ function askQuestion(query) {
 
 async function syncDatabase() {
   console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║         SYNC STAGING TO LIVE DATABASE                     ║');
+  console.log('║         SYNC LIVE TO STAGING DATABASE                     ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
-  
+
   console.log('📋 Configuration:');
-  console.log(`   Staging: ${STAGING_URI}`);
   console.log(`   Live:    ${LIVE_URI}`);
-  console.log('   Collections: auto-detected from STAGING source database\n');
-  
-  console.log('⚠️  WARNING: This will completely replace all data in LIVE database!');
-  console.log('⚠️  All existing data in production will be DELETED!\n');
-  
+  console.log(`   Staging: ${STAGING_URI}`);
+  console.log('   Collections: auto-detected from LIVE source database\n');
+
+  console.log('⚠️  WARNING: This will completely replace all data in STAGING database!');
+  console.log('⚠️  All existing data in staging will be DELETED!\n');
+
   const answer = await askQuestion('❓ Type "YES" to confirm and proceed: ');
-  
+
   if (answer.trim().toUpperCase() !== 'YES') {
     console.log('\n❌ Operation cancelled.');
     rl.close();
     process.exit(0);
   }
-  
+
   console.log('\n🚀 Starting database sync...\n');
-  
-  let stagingConn, liveConn;
-  
+
+  let liveConn, stagingConn;
+
   try {
-    // Connect to staging database
-    console.log('📡 Connecting to staging database...');
-    stagingConn = await mongoose.createConnection(STAGING_URI).asPromise();
-    console.log('✓ Connected to staging\n');
-    
     // Connect to live database
     console.log('📡 Connecting to live database...');
     liveConn = await mongoose.createConnection(LIVE_URI).asPromise();
     console.log('✓ Connected to live\n');
 
-    const stagingCollections = await getUserCollections(stagingConn);
-    const liveCollections = await getUserCollections(liveConn);
+    // Connect to staging database
+    console.log('📡 Connecting to staging database...');
+    stagingConn = await mongoose.createConnection(STAGING_URI).asPromise();
+    console.log('✓ Connected to staging\n');
 
-    console.log(`📚 Source collections (staging): ${stagingCollections.length}`);
-    console.log(`📚 Target collections before sync (live): ${liveCollections.length}\n`);
+    const liveCollections = await getUserCollections(liveConn);
+    const stagingCollections = await getUserCollections(stagingConn);
+
+    console.log(`📚 Source collections (live): ${liveCollections.length}`);
+    console.log(`📚 Target collections before sync (staging): ${stagingCollections.length}\n`);
 
     let totalDocuments = 0;
     let totalCollections = 0;
 
-    const staleCollections = liveCollections.filter(
-      (collectionName) => !stagingCollections.includes(collectionName)
+    const staleCollections = stagingCollections.filter(
+      (collectionName) => !liveCollections.includes(collectionName)
     );
 
     if (staleCollections.length) {
-      console.log(`🧹 Removing ${staleCollections.length} stale collection(s) in live...`);
+      console.log(`🧹 Removing ${staleCollections.length} stale collection(s) in staging...`);
       for (const collectionName of staleCollections) {
         try {
-          await liveConn.collection(collectionName).drop();
+          await stagingConn.collection(collectionName).drop();
           console.log(`   ✓ Dropped stale collection: ${collectionName}`);
         } catch (err) {
           if (err.codeName !== 'NamespaceNotFound') {
@@ -117,39 +117,39 @@ async function syncDatabase() {
     }
 
     // Sync each source collection
-    for (const collectionName of stagingCollections) {
+    for (const collectionName of liveCollections) {
       console.log(`📦 Processing collection: ${collectionName}`);
-      
+
       try {
-        const stagingCollection = stagingConn.collection(collectionName);
         const liveCollection = liveConn.collection(collectionName);
-        
-        // Get all documents from staging
-        const documents = await stagingCollection.find({}).toArray();
+        const stagingCollection = stagingConn.collection(collectionName);
+
+        // Get all documents from live
+        const documents = await liveCollection.find({}).toArray();
         console.log(`   Found ${documents.length} documents`);
-        
-        // Drop the collection in live database
+
+        // Drop the collection in staging database
         try {
-          await liveCollection.drop();
-          console.log(`   ✓ Cleared live collection`);
+          await stagingCollection.drop();
+          console.log('   ✓ Cleared staging collection');
         } catch (err) {
           // Collection might not exist, which is fine
           if (err.codeName !== 'NamespaceNotFound') {
             throw err;
           }
         }
-        
-        // Insert documents into live database
+
+        // Insert documents into staging database
         if (documents.length > 0) {
-          await liveCollection.insertMany(documents, { ordered: false });
+          await stagingCollection.insertMany(documents, { ordered: false });
           console.log(`   ✓ Inserted ${documents.length} documents`);
           totalDocuments += documents.length;
         } else {
           console.log('   ℹ️  Source collection is empty');
         }
-        
+
         // Copy indexes
-        const indexes = await stagingCollection.indexes();
+        const indexes = await liveCollection.indexes();
         if (indexes.length > 1) { // More than just _id index
           for (const index of indexes) {
             if (index.name !== '_id_') {
@@ -159,44 +159,44 @@ async function syncDatabase() {
                 if (index.unique) options.unique = true;
                 if (index.sparse) options.sparse = true;
                 if (index.name) options.name = index.name;
-                
-                await liveCollection.createIndex(key, options);
+
+                await stagingCollection.createIndex(key, options);
               } catch (err) {
                 console.log(`   ⚠️  Index creation warning: ${err.message}`);
               }
             }
           }
-          console.log(`   ✓ Copied indexes`);
+          console.log('   ✓ Copied indexes');
         }
-        
+
         totalCollections++;
-        console.log(`   ✅ Completed\n`);
-        
+        console.log('   ✅ Completed\n');
+
       } catch (err) {
         console.error(`   ❌ Error syncing collection "${collectionName}":`, err.message);
         console.log();
       }
     }
-    
+
     console.log('╔════════════════════════════════════════════════════════════╗');
     console.log('║                    SYNC COMPLETE                           ║');
     console.log('╚════════════════════════════════════════════════════════════╝\n');
     console.log(`✅ Successfully synced ${totalCollections} collections`);
     console.log(`✅ Total documents copied: ${totalDocuments}\n`);
-    
+
   } catch (error) {
     console.error('\n❌ Sync failed:', error.message);
     console.error(error.stack);
     process.exit(1);
   } finally {
     // Close connections
-    if (stagingConn) {
-      await stagingConn.close();
-      console.log('✓ Closed staging connection');
-    }
     if (liveConn) {
       await liveConn.close();
       console.log('✓ Closed live connection');
+    }
+    if (stagingConn) {
+      await stagingConn.close();
+      console.log('✓ Closed staging connection');
     }
     rl.close();
     process.exit(0);

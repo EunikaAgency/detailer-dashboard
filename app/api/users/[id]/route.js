@@ -1,21 +1,70 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { requireAuth } from "@/lib/auth";
+import { getOfflineCredentialSecret, issueOfflineCredential, normalizeIdentity } from "@/lib/offlineCredential";
 
 export const runtime = "nodejs";
 
-const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET;
-  return typeof secret === "string" && secret.trim() ? secret : null;
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeText = (value) => String(value || "").trim();
+
+const mapUser = (user) => ({
+  id: user?._id?.toString?.() || user?.id || "",
+  name: user?.name || "",
+  username: user?.username || "",
+  email: user?.email || "",
+  repId: user?.repId || "",
+  role: user?.role || "",
+  keygen: user?.keygen || "",
+  keygenIssuedAt: user?.keygenIssuedAt || null,
+  createdAt: user?.createdAt,
+});
+
+const parseUserIdFromRequest = async (request, params) => {
+  const url = new URL(request.url);
+  const body = await request.json().catch(() => ({}));
+  const resolvedParams = await params;
+
+  let userId = resolvedParams?.id;
+  if (!userId) userId = url.searchParams.get("id");
+  if (!userId) {
+    const parts = url.pathname.split("/").filter(Boolean);
+    userId = parts[parts.length - 1];
+  }
+  if (!userId) userId = body?.id || body?.userId;
+
+  return {
+    userId,
+    body,
+  };
 };
 
-const buildKeygen = (user) => {
-  const secret = getJwtSecret();
-  if (!secret) return null;
-  return jwt.sign({ userId: user._id?.toString?.() || user.id, email: user.email }, secret);
+const findDuplicate = async (field, value, userId) => {
+  const normalized = normalizeText(value);
+  if (!normalized) return null;
+
+  const duplicate = await User.findOne({
+    [field]: new RegExp(`^${escapeRegex(normalized)}$`, "i"),
+    _id: { $ne: userId },
+  });
+
+  return duplicate;
+};
+
+const buildCredentialForUser = (user, issuedAt) => {
+  const identity = normalizeIdentity({
+    userId: user?._id?.toString?.() || user?.id,
+    username: user?.username || user?.name || user?.email,
+    name: user?.name,
+    repId: user?.repId,
+    role: user?.role,
+    email: user?.email,
+  });
+
+  return issueOfflineCredential(identity, { issuedAt });
 };
 
 export async function PUT(request, { params }) {
@@ -25,85 +74,112 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const url = new URL(request.url);
-    const body = await request.json().catch(() => ({}));
-
-    let userId = params?.id;
-    if (!userId) {
-      userId = url.searchParams.get("id");
-    }
-    if (!userId) {
-      const parts = url.pathname.split("/").filter(Boolean);
-      userId = parts[parts.length - 1];
-    }
-    if (!userId) {
-      userId = body?.id || body?.userId;
-    }
+    const { userId, body } = await parseUserIdFromRequest(request, params);
     if (!userId) {
       return NextResponse.json({ error: "User id is required." }, { status: 400 });
     }
 
-    const { name, password } = body || {};
-    
-    console.log('[UPDATE USER] Extracted fields:', { name, password: password ? '[PRESENT]' : '[ABSENT]' });
-    
-    const update = {};
-    if (typeof name === "string") {
-      const trimmedName = name.trim();
-      if (trimmedName.length === 0) {
-        return NextResponse.json({ error: "Name cannot be empty." }, { status: 400 });
-      }
-      update.name = trimmedName;
-      console.log('[UPDATE USER] Will update name to:', trimmedName);
-    }
-    if (typeof password === "string" && password) {
-      update.password = await bcrypt.hash(password, 10);
-    }
-
-    if (!Object.keys(update).length) {
-      return NextResponse.json({ error: "No update fields provided." }, { status: 400 });
-    }
-
-    const secret = getJwtSecret();
-    if (!secret) {
-      return NextResponse.json(
-        { error: "JWT secret is missing. Configure JWT_SECRET." },
-        { status: 500 }
-      );
-    }
-
     await connectDB();
+
     const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    console.log('[UPDATE USER] Before update:', { id: user._id, name: user.name, email: user.email });
-    
-    Object.assign(user, update);
-    
-    console.log('[UPDATE USER] After assign:', { id: user._id, name: user.name, email: user.email });
+    const hasName = typeof body?.name === "string";
+    const hasUsername = typeof body?.username === "string";
+    const hasRepId = typeof body?.repId === "string";
+    const hasRole = typeof body?.role === "string";
+    const hasPassword = typeof body?.password === "string";
 
-    // Ensure keygen exists
-    if (!user.keygen) {
-      user.keygen = jwt.sign(
-        { userId: user._id?.toString?.() || user.id, email: user.email },
-        secret
-      );
+    if (!hasName && !hasUsername && !hasRepId && !hasRole && !hasPassword && !body?.reissueKeygen) {
+      return NextResponse.json({ error: "No update fields provided." }, { status: 400 });
+    }
+
+    if (hasName) {
+      const name = normalizeText(body.name);
+      if (!name) {
+        return NextResponse.json({ error: "Name cannot be empty." }, { status: 400 });
+      }
+      user.name = name;
+    }
+
+    if (hasUsername) {
+      const username = normalizeText(body.username);
+      if (!username) {
+        return NextResponse.json({ error: "Username cannot be empty." }, { status: 400 });
+      }
+      const duplicate = await findDuplicate("username", username, user._id);
+      if (duplicate) {
+        return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+      }
+      user.username = username;
+    }
+
+    if (hasRepId) {
+      const repId = normalizeText(body.repId);
+      if (!repId) {
+        return NextResponse.json({ error: "Rep ID cannot be empty." }, { status: 400 });
+      }
+      const duplicate = await findDuplicate("repId", repId, user._id);
+      if (duplicate) {
+        return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+      }
+      user.repId = repId;
+    }
+
+    if (hasRole) {
+      const role = normalizeText(body.role);
+      if (!role) {
+        return NextResponse.json({ error: "Role cannot be empty." }, { status: 400 });
+      }
+      user.role = role;
+    }
+
+    if (hasPassword && body.password) {
+      user.password = await bcrypt.hash(String(body.password), 10);
+    }
+
+    let issuedCredential = null;
+    const shouldReissue = Boolean(body?.reissueKeygen) || hasUsername || hasRepId || hasRole;
+
+    if (shouldReissue || !user.keygen) {
+      const secret = getOfflineCredentialSecret();
+      if (!secret) {
+        return NextResponse.json(
+          { error: "JWT secret is missing. Configure JWT_SECRET." },
+          { status: 500 }
+        );
+      }
+
+      const issuedAt = new Date();
+      const credential = buildCredentialForUser(user, issuedAt);
+
+      if (!credential) {
+        return NextResponse.json(
+          { error: "Failed to generate offline credential." },
+          { status: 500 }
+        );
+      }
+
+      user.keygen = credential;
+      user.keygenIssuedAt = issuedAt;
+      user.password = await bcrypt.hash(credential, 10);
+
+      issuedCredential = {
+        username: user.username || user.name,
+        password: credential,
+        createdAt: issuedAt,
+        repId: user.repId || "",
+        role: user.role || "",
+      };
     }
 
     await user.save();
-    
-    console.log('[UPDATE USER] After save:', { id: user._id, name: user.name, email: user.email });
 
     return NextResponse.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        keygen: user.keygen,
-        createdAt: user.createdAt,
-      },
+      user: mapUser(user),
+      issuedCredential,
     });
   } catch (error) {
     console.error("Update user error:", error);
@@ -118,20 +194,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const url = new URL(request.url);
-    const body = await request.json().catch(() => ({}));
-
-    let userId = params?.id;
-    if (!userId) {
-      userId = url.searchParams.get("id");
-    }
-    if (!userId) {
-      const parts = url.pathname.split("/").filter(Boolean);
-      userId = parts[parts.length - 1];
-    }
-    if (!userId) {
-      userId = body?.id || body?.userId;
-    }
+    const { userId } = await parseUserIdFromRequest(request, params);
     if (!userId) {
       return NextResponse.json({ error: "User id is required." }, { status: 400 });
     }

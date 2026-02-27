@@ -11,8 +11,11 @@ export async function GET(request) {
 
     return NextResponse.json({
       user: {
-        id: user._id,
+        id: user._id?.toString?.() || user.id,
         email: user.email,
+        username: user.username || "",
+        repId: user.repId || "",
+        role: user.role || "",
       }
     });
   } catch (error) {

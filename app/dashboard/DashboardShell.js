@@ -1,20 +1,41 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function DashboardShell({ children }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/dashboard/products", label: "Products" },
+    { href: "/dashboard/users", label: "Users" },
+    { href: "/dashboard/logins", label: "Logins" },
+    { href: "/dashboard/reports", label: "Reports" },
+    { href: "/dashboard/settings", label: "Settings" },
+  ];
+
+  const isRouteActive = (href) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
 
   const linkClass = (href) =>
     `block px-3 py-2 rounded-lg font-medium ${
-      pathname === href
+      isRouteActive(href)
         ? "bg-blue-50 text-blue-700"
         : "text-gray-700 hover:bg-gray-100"
     }`;
+
+  useEffect(() => {
+    if (!pathname || !pathname.startsWith("/dashboard")) return;
+    try {
+      const search = typeof window !== "undefined" ? window.location.search || "" : "";
+      window.localStorage.setItem("last_dashboard_path", `${pathname}${search}`);
+    } catch {
+      // Ignore storage failures (private mode, browser policies, etc.)
+    }
+  }, [pathname]);
 
   const handleLogout = async () => {
     try {
@@ -48,31 +69,24 @@ export default function DashboardShell({ children }) {
               </button>
             </div>
             <ul className="flex flex-col gap-4">
-              <li>
-                <Link href="/dashboard" className={linkClass("/dashboard")} onClick={() => setSidebarOpen(false)}>
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/products" className={linkClass("/dashboard/products")} onClick={() => setSidebarOpen(false)}>
-                  Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/users" className={linkClass("/dashboard/users")} onClick={() => setSidebarOpen(false)}>
-                  Users
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/logins" className={linkClass("/dashboard/logins")} onClick={() => setSidebarOpen(false)}>
-                  Logins
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/settings" className={linkClass("/dashboard/settings")} onClick={() => setSidebarOpen(false)}>
-                  Settings
-                </Link>
-              </li>
+              {navLinks.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    replace
+                    scroll={false}
+                    className={linkClass(item.href)}
+                    onClick={(event) => {
+                      if (isRouteActive(item.href)) {
+                        event.preventDefault();
+                      }
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </div>
@@ -99,7 +113,7 @@ export default function DashboardShell({ children }) {
         </button>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="mx-auto w-full max-w-[1500px] px-6 py-8">
         {children}
       </main>
     </div>

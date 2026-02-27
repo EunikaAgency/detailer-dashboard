@@ -1019,25 +1019,27 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Product Card */}
-          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm px-8 py-10">
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="border border-blue-300 text-blue-600 px-6 py-2 font-semibold">
-                {product.brand}
-              </div>
-              <div className="text-blue-600 font-semibold">{product.name}</div>
-              <div className="w-full max-w-xl">
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 md:p-6">
+            <div className="grid gap-4 md:grid-cols-[minmax(220px,340px)_minmax(0,1fr)] md:items-center">
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <img
                   src={product.image}
                   alt={product.name}
                   onError={(event) => {
                     event.currentTarget.src = FALLBACK_IMAGE;
                   }}
-                  className="w-full h-56 object-contain"
+                  className="h-40 w-full object-contain md:h-44"
                 />
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
-                {product.description}
-              </p>
+              <div className="space-y-3 text-left">
+                <div className="inline-flex border border-blue-300 px-4 py-1.5 text-sm font-semibold text-blue-600">
+                  {product.brand}
+                </div>
+                <div className="text-base font-semibold text-blue-600">{product.name}</div>
+                <p className="text-sm leading-relaxed text-gray-600">
+                  {product.description}
+                </p>
+              </div>
             </div>
           </section>
 
