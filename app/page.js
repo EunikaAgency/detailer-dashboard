@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const normalizeDashboardPath = (value) => {
   const normalized = String(value || "").trim();
@@ -147,6 +148,13 @@ function HomeContent() {
           <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
             Need an account? <span className="font-semibold">Sign up</span>
           </a>
+          <p className="mt-2 text-xs text-gray-500">
+            By continuing, you agree to our{" "}
+            <Link href="/privacy-policy" className="text-blue-600 hover:text-blue-700">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
       </main>
     </div>

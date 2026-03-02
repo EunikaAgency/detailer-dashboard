@@ -188,6 +188,15 @@ const ExportButtons = ({ filenameBase, rows }) => {
   );
 };
 
+const ExpandCollapseIcon = ({ expanded }) => (
+  <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" aria-hidden="true">
+    <path d="M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    {expanded ? null : (
+      <path d="M8 3v10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    )}
+  </svg>
+);
+
 export default function ReportsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -206,7 +215,21 @@ export default function ReportsPage() {
   const [topFilesByDay, setTopFilesByDay] = useState([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState(null);
+  const [expandedCards, setExpandedCards] = useState({
+    sessionLogs: true,
+    dailyActivity: false,
+    topUsers: false,
+    topProducts: false,
+    topFiles: false,
+  });
   const selectedUserId = String(searchParams.get("userId") || "").trim();
+
+  const toggleCard = (cardKey) => {
+    setExpandedCards((previous) => ({
+      ...previous,
+      [cardKey]: !previous[cardKey],
+    }));
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -769,151 +792,264 @@ export default function ReportsPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="w-full sm:max-w-md">
-            <label
-              htmlFor="session-report-user-filter"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Filter by User
-            </label>
-            <select
-              id="session-report-user-filter"
-              value={selectedUserId}
-              onChange={(event) => handleUserFilterChange(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
-              disabled={isUsersLoading}
-            >
-              <option value="">All users</option>
-              {userOptions.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.label}
-                </option>
-              ))}
-            </select>
+        <div
+          className={`flex items-center justify-between gap-3${
+            expandedCards.sessionLogs ? " mb-4" : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900">Session Logs</h3>
+          <button
+            type="button"
+            onClick={() => toggleCard("sessionLogs")}
+            aria-expanded={expandedCards.sessionLogs}
+            aria-label={expandedCards.sessionLogs ? "Collapse Session Logs" : "Expand Session Logs"}
+            aria-controls="session-logs-card-content"
+            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ExpandCollapseIcon expanded={expandedCards.sessionLogs} />
+          </button>
+        </div>
+
+        {expandedCards.sessionLogs ? (
+          <div id="session-logs-card-content">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="w-full sm:max-w-md">
+                <label
+                  htmlFor="session-report-user-filter"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Filter by User
+                </label>
+                <select
+                  id="session-report-user-filter"
+                  value={selectedUserId}
+                  onChange={(event) => handleUserFilterChange(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
+                  disabled={isUsersLoading}
+                >
+                  <option value="">All users</option>
+                  {userOptions.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <ExportButtons
+                filenameBase={
+                  selectedUserId
+                    ? `session-logs-daily-user-${selectedUserId}`
+                    : "session-logs-daily-all-users"
+                }
+                rows={sessionExportRows}
+              />
+            </div>
+
+            {isLoading ? (
+              <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
+            ) : error ? (
+              <div className="text-sm text-red-600">{error}</div>
+            ) : rows.length === 0 ? (
+              <div className="text-sm text-gray-500">No session logs found for the selected range.</div>
+            ) : (
+              <div className="h-[360px]">
+                <Line data={chartData} options={chartOptions} />
+              </div>
+            )}
           </div>
-          <ExportButtons
-            filenameBase={
-              selectedUserId
-                ? `session-logs-daily-user-${selectedUserId}`
-                : "session-logs-daily-all-users"
+        ) : null}
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <div
+          className={`flex items-center justify-between gap-3${
+            expandedCards.dailyActivity ? " mb-4" : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900">Daily Activity Count (All Users)</h3>
+          <button
+            type="button"
+            onClick={() => toggleCard("dailyActivity")}
+            aria-expanded={expandedCards.dailyActivity}
+            aria-label={
+              expandedCards.dailyActivity
+                ? "Collapse Daily Activity Count"
+                : "Expand Daily Activity Count"
             }
-            rows={sessionExportRows}
-          />
+            aria-controls="daily-activity-card-content"
+            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ExpandCollapseIcon expanded={expandedCards.dailyActivity} />
+          </button>
         </div>
 
-        {isLoading ? (
-          <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
-        ) : error ? (
-          <div className="text-sm text-red-600">{error}</div>
-        ) : rows.length === 0 ? (
-          <div className="text-sm text-gray-500">No session logs found for the selected range.</div>
-        ) : (
-          <div className="h-[360px]">
-            <Line data={chartData} options={chartOptions} />
+        {expandedCards.dailyActivity ? (
+          <div id="daily-activity-card-content">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="text-sm text-gray-600">
+                Each line represents one activity action, with daily counts from day -30 to today.
+              </p>
+              <ExportButtons filenameBase="activities-daily-all-users" rows={activitiesExportRows} />
+            </div>
+            <div className="mb-4 text-sm text-gray-700">
+              Total activities:{" "}
+              <span className="font-semibold">{isInsightsLoading ? "-" : totalActivities}</span>
+            </div>
+            {isInsightsLoading ? (
+              <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
+            ) : insightsError ? (
+              <div className="text-sm text-red-600">{insightsError}</div>
+            ) : !hasActivityBreakdown ? (
+              <div className="text-sm text-gray-500">No activities found for the selected range.</div>
+            ) : (
+              <div className="h-[380px]">
+                <Line data={activityBreakdownLineData} options={activityBreakdownLineOptions} />
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Daily Activity Count (All Users)</h3>
-            <p className="text-sm text-gray-600">
-              Each line represents one activity action, with daily counts from day -30 to today.
-            </p>
-          </div>
-          <ExportButtons filenameBase="activities-daily-all-users" rows={activitiesExportRows} />
+        <div
+          className={`flex items-center justify-between gap-3${expandedCards.topUsers ? " mb-4" : ""}`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900">Top 3 Active Users Per Day (All Users)</h3>
+          <button
+            type="button"
+            onClick={() => toggleCard("topUsers")}
+            aria-expanded={expandedCards.topUsers}
+            aria-label={
+              expandedCards.topUsers
+                ? "Collapse Top 3 Active Users"
+                : "Expand Top 3 Active Users"
+            }
+            aria-controls="top-users-card-content"
+            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ExpandCollapseIcon expanded={expandedCards.topUsers} />
+          </button>
         </div>
-        <div className="mb-4 text-sm text-gray-700">
-          Total activities: <span className="font-semibold">{isInsightsLoading ? "-" : totalActivities}</span>
-        </div>
-        {isInsightsLoading ? (
-          <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
-        ) : insightsError ? (
-          <div className="text-sm text-red-600">{insightsError}</div>
-        ) : !hasActivityBreakdown ? (
-          <div className="text-sm text-gray-500">No activities found for the selected range.</div>
-        ) : (
-          <div className="h-[380px]">
-            <Line data={activityBreakdownLineData} options={activityBreakdownLineOptions} />
+
+        {expandedCards.topUsers ? (
+          <div id="top-users-card-content">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="text-sm text-gray-600">
+                Per day, the top 3 users with the highest session counts from day -30 to today.
+              </p>
+              <ExportButtons filenameBase="top-users-daily-all-users" rows={topUsersExportRows} />
+            </div>
+            {isInsightsLoading ? (
+              <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
+            ) : insightsError ? (
+              <div className="text-sm text-red-600">{insightsError}</div>
+            ) : !hasTopUserSessions ? (
+              <div className="text-sm text-gray-500">No session data found for the selected range.</div>
+            ) : (
+              <div className="h-[380px]">
+                <Bar data={topUsersChartData} options={topUsersChartOptions} />
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Top 3 Active Users Per Day (All Users)</h3>
-            <p className="text-sm text-gray-600">
-              Per day, the top 3 users with the highest session counts from day -30 to today.
-            </p>
-          </div>
-          <ExportButtons filenameBase="top-users-daily-all-users" rows={topUsersExportRows} />
+        <div
+          className={`flex items-center justify-between gap-3${
+            expandedCards.topProducts ? " mb-4" : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900">
+            Top 3 Products Most Visited/Clicked Per Day (All Users)
+          </h3>
+          <button
+            type="button"
+            onClick={() => toggleCard("topProducts")}
+            aria-expanded={expandedCards.topProducts}
+            aria-label={
+              expandedCards.topProducts
+                ? "Collapse Top 3 Products"
+                : "Expand Top 3 Products"
+            }
+            aria-controls="top-products-card-content"
+            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ExpandCollapseIcon expanded={expandedCards.topProducts} />
+          </button>
         </div>
-        {isInsightsLoading ? (
-          <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
-        ) : insightsError ? (
-          <div className="text-sm text-red-600">{insightsError}</div>
-        ) : !hasTopUserSessions ? (
-          <div className="text-sm text-gray-500">No session data found for the selected range.</div>
-        ) : (
-          <div className="h-[380px]">
-            <Bar data={topUsersChartData} options={topUsersChartOptions} />
+
+        {expandedCards.topProducts ? (
+          <div id="top-products-card-content">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="text-sm text-gray-600">
+                Per day, the top 3 products with the highest visit/click interactions from day -30 to
+                today.
+              </p>
+              <ExportButtons filenameBase="top-products-daily-all-users" rows={topProductsExportRows} />
+            </div>
+            {isInsightsLoading ? (
+              <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
+            ) : insightsError ? (
+              <div className="text-sm text-red-600">{insightsError}</div>
+            ) : !hasTopProductInteractions ? (
+              <div className="text-sm text-gray-500">
+                No product interactions found for the selected range.
+              </div>
+            ) : (
+              <div className="h-[380px]">
+                <Bar data={topProductsChartData} options={topProductsChartOptions} />
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Top 3 Products Most Visited/Clicked Per Day (All Users)
-            </h3>
-            <p className="text-sm text-gray-600">
-              Per day, the top 3 products with the highest visit/click interactions from day -30 to
-              today.
-            </p>
-          </div>
-          <ExportButtons filenameBase="top-products-daily-all-users" rows={topProductsExportRows} />
+        <div
+          className={`flex items-center justify-between gap-3${expandedCards.topFiles ? " mb-4" : ""}`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900">
+            Top 3 Most Visited/Open Files Per Day (Presentation Viewer)
+          </h3>
+          <button
+            type="button"
+            onClick={() => toggleCard("topFiles")}
+            aria-expanded={expandedCards.topFiles}
+            aria-label={
+              expandedCards.topFiles
+                ? "Collapse Top 3 Most Visited Open Files"
+                : "Expand Top 3 Most Visited Open Files"
+            }
+            aria-controls="top-files-card-content"
+            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ExpandCollapseIcon expanded={expandedCards.topFiles} />
+          </button>
         </div>
-        {isInsightsLoading ? (
-          <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
-        ) : insightsError ? (
-          <div className="text-sm text-red-600">{insightsError}</div>
-        ) : !hasTopProductInteractions ? (
-          <div className="text-sm text-gray-500">No product interactions found for the selected range.</div>
-        ) : (
-          <div className="h-[380px]">
-            <Bar data={topProductsChartData} options={topProductsChartOptions} />
-          </div>
-        )}
-      </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Top 3 Most Visited/Open Files Per Day (Presentation Viewer)
-            </h3>
-            <p className="text-sm text-gray-600">
-              Based on `activitylogs` where screen is `presentation-viewer`, counting open/view and
-              click/tap actions per day.
-            </p>
+        {expandedCards.topFiles ? (
+          <div id="top-files-card-content">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="text-sm text-gray-600">
+                Based on `activitylogs` where screen is `presentation-viewer`, counting open/view and
+                click/tap actions per day.
+              </p>
+              <ExportButtons filenameBase="top-files-daily-presentation-viewer" rows={topFilesExportRows} />
+            </div>
+            {isInsightsLoading ? (
+              <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
+            ) : insightsError ? (
+              <div className="text-sm text-red-600">{insightsError}</div>
+            ) : !hasTopFileInteractions ? (
+              <div className="text-sm text-gray-500">No file interactions found for the selected range.</div>
+            ) : (
+              <div className="h-[380px]">
+                <Bar data={topFilesChartData} options={topFilesChartOptions} />
+              </div>
+            )}
           </div>
-          <ExportButtons filenameBase="top-files-daily-presentation-viewer" rows={topFilesExportRows} />
-        </div>
-        {isInsightsLoading ? (
-          <div className="text-sm text-gray-500">{CHART_LOADING_TEXT}</div>
-        ) : insightsError ? (
-          <div className="text-sm text-red-600">{insightsError}</div>
-        ) : !hasTopFileInteractions ? (
-          <div className="text-sm text-gray-500">No file interactions found for the selected range.</div>
-        ) : (
-          <div className="h-[380px]">
-            <Bar data={topFilesChartData} options={topFilesChartOptions} />
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
