@@ -40,10 +40,10 @@ export default function DashboardShell({ children }) {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      router.push("/");
+      router.push("/login");
     }
   };
 

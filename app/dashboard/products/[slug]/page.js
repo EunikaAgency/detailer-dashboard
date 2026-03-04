@@ -19,6 +19,40 @@ const CONVERTED_PREFIX = "/uploads/converted/";
 
 const isImageUrl = (value = "") => /(png|jpg|jpeg|gif|webp)$/i.test(value);
 
+const getFilenameFromUrl = (value = "") => {
+  const clean = String(value || "").split("#")[0].split("?")[0];
+  return clean.split("/").pop() || clean;
+};
+
+const getPageNumberFromFilename = (filename = "") => {
+  const value = String(filename || "");
+  const namedMatch = value.match(/(?:^|[._\-\s])(page|slide)[._\-\s]?(\d+)(?=\.[^.]+$|$)/i);
+  if (namedMatch) {
+    const parsed = Number.parseInt(namedMatch[2], 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  const trailingMatch = value.match(/(\d+)(?=\.[^.]+$|$)/);
+  if (!trailingMatch) return null;
+  const parsed = Number.parseInt(trailingMatch[1], 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const compareMediaItems = (left, right) => {
+  const leftName = getFilenameFromUrl(left?.url || "");
+  const rightName = getFilenameFromUrl(right?.url || "");
+  const leftPage = getPageNumberFromFilename(leftName);
+  const rightPage = getPageNumberFromFilename(rightName);
+
+  if (leftPage !== null && rightPage !== null && leftPage !== rightPage) {
+    return leftPage - rightPage;
+  }
+
+  return leftName.localeCompare(rightName, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+};
+
 const toFlatMedia = (media = []) => {
   if (!Array.isArray(media) || media.length === 0) return [];
   if (media[0] && Array.isArray(media[0].items)) {
@@ -125,7 +159,10 @@ const groupExistingMedia = (mediaItems) => {
     groups.get(key).items.push(item);
   });
 
-  return Array.from(groups.values());
+  return Array.from(groups.values()).map((group) => ({
+    ...group,
+    items: [...(group.items || [])].sort(compareMediaItems),
+  }));
 };
 
 const getGroupId = (group) => {
@@ -144,7 +181,7 @@ const buildGroupPages = (group) =>
       pageId: item.url,
       index: idx + 1,
       imageUrl: item.url,
-      filename: item.url.split("/").pop() || item.url,
+      filename: getFilenameFromUrl(item.url),
     }));
 
 const getHotspotCount = (item) =>
@@ -165,10 +202,16 @@ const HotspotEditor = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawMode, setDrawMode] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [draft, setDraft] = useState(null);
   const [isPreview, setIsPreview] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   const [shape, setShape] = useState("rectangle");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionDraft, setSelectionDraft] = useState(null);
+  const [clipboardHotspots, setClipboardHotspots] = useState([]);
+  const idCounterRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -176,17 +219,27 @@ const HotspotEditor = ({
     setCurrentPageId(preferredPage);
     setHotspotsByPage(initialHotspotsByPage || {});
     setSelectedId(null);
+    setSelectedIds([]);
     setDraft(null);
     setDrawMode(false);
     setIsPreview(false);
     setActiveAction(null);
     setShape("rectangle");
+    setSelectionMode(false);
+    setIsSelecting(false);
+    setSelectionDraft(null);
+    setClipboardHotspots([]);
   }, [isOpen, pages, initialHotspotsByPage, initialPageId]);
 
   if (!isOpen) return null;
 
   const currentPage = pages.find((page) => page.pageId === currentPageId) || pages[0];
+  const currentPageIndex = pages.findIndex((page) => page.pageId === currentPage?.pageId);
   const hotspots = hotspotsByPage[currentPage?.pageId] || [];
+  const selectedSet = new Set(selectedIds);
+  const isHotspotSelected = (hotspotId) =>
+    selectedSet.has(hotspotId) || (!selectedSet.size && selectedId === hotspotId);
+  const selectedCount = selectedSet.size || (selectedId ? 1 : 0);
   const totalHotspots = Object.values(hotspotsByPage || {}).reduce(
     (sum, list) => sum + (Array.isArray(list) ? list.length : 0),
     0
@@ -209,6 +262,64 @@ const HotspotEditor = ({
   };
   const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
   const minSize = 0.02;
+  const selectSingle = (id) => {
+    setSelectedId(id || null);
+    setSelectedIds(id ? [id] : []);
+  };
+  const makeEditorId = (prefix = "hotspot") => {
+    idCounterRef.current += 1;
+    return `${prefix}-${idCounterRef.current}`;
+  };
+  const makeHotspotId = () => makeEditorId("hotspot");
+  const normalizeRect = (rect) => {
+    if (!rect) return { x: 0, y: 0, w: 0, h: 0 };
+    const x = Math.min(rect.startX, rect.x);
+    const y = Math.min(rect.startY, rect.y);
+    const w = Math.abs(rect.x - rect.startX);
+    const h = Math.abs(rect.y - rect.startY);
+    return { x, y, w, h };
+  };
+  const intersects = (a, b) =>
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y;
+  const getSelectedHotspots = () => {
+    if (selectedIds.length) {
+      const ids = new Set(selectedIds);
+      return hotspots.filter((spot) => ids.has(spot.id));
+    }
+    if (selectedId) {
+      const found = hotspots.find((spot) => spot.id === selectedId);
+      return found ? [found] : [];
+    }
+    return [];
+  };
+  const cloneHotspots = (source, { withOffset = false } = {}) =>
+    source.map((spot, index) => {
+      const delta = withOffset ? 0.02 * (index + 1) : 0;
+      const w = clamp(spot.w || 0, minSize, 1);
+      const h = clamp(spot.h || 0, minSize, 1);
+      const x = clamp((spot.x || 0) + delta, 0, 1 - w);
+      const y = clamp((spot.y || 0) + delta, 0, 1 - h);
+      return {
+        ...spot,
+        id: makeHotspotId(),
+        x,
+        y,
+        w,
+        h,
+      };
+    });
+  const pasteToPage = (pageId, source, { withOffset = false } = {}) => {
+    if (!pageId || !Array.isArray(source) || source.length === 0) return [];
+    const clones = cloneHotspots(source, { withOffset });
+    setHotspotsByPage((prev) => ({
+      ...prev,
+      [pageId]: [...(prev[pageId] || []), ...clones],
+    }));
+    return clones;
+  };
 
   const handlePointerDown = (event) => {
     if (!drawMode || !currentPage) return;
@@ -216,7 +327,7 @@ const HotspotEditor = ({
     const start = getRelativePoint(event);
     setIsDrawing(true);
     setDraft({
-      id: `draft-${Date.now()}`,
+      id: makeEditorId("draft"),
       x: start.x,
       y: start.y,
       w: 0,
@@ -249,7 +360,7 @@ const HotspotEditor = ({
       return;
     }
     const newHotspot = {
-      id: `hotspot-${Date.now()}`,
+      id: makeHotspotId(),
       x: draft.x,
       y: draft.y,
       w: draft.w,
@@ -258,16 +369,59 @@ const HotspotEditor = ({
       targetPageId: "",
     };
     updateHotspotsForCurrentPage([...hotspots, newHotspot]);
-    setSelectedId(newHotspot.id);
+    selectSingle(newHotspot.id);
     setDraft(null);
   };
 
+  const handleSelectionStart = (event) => {
+    if (!selectionMode || drawMode || isPreview || !currentPage) return;
+    event.preventDefault();
+    const start = getRelativePoint(event);
+    setIsSelecting(true);
+    setSelectionDraft({
+      startX: start.x,
+      startY: start.y,
+      x: start.x,
+      y: start.y,
+    });
+    selectSingle(null);
+  };
+
+  const handleSelectionMove = (event) => {
+    if (!isSelecting || !selectionDraft) return;
+    event.preventDefault();
+    const current = getRelativePoint(event);
+    setSelectionDraft((prev) => ({
+      ...prev,
+      x: current.x,
+      y: current.y,
+    }));
+  };
+
+  const handleSelectionEnd = () => {
+    if (!isSelecting || !selectionDraft) return;
+    const area = normalizeRect(selectionDraft);
+    const minSelectSize = 0.005;
+    if (area.w < minSelectSize || area.h < minSelectSize) {
+      setIsSelecting(false);
+      setSelectionDraft(null);
+      return;
+    }
+    const ids = hotspots
+      .filter((spot) => intersects(area, { x: spot.x, y: spot.y, w: spot.w, h: spot.h }))
+      .map((spot) => spot.id);
+    setSelectedIds(ids);
+    setSelectedId(ids[0] || null);
+    setIsSelecting(false);
+    setSelectionDraft(null);
+  };
+
   const beginMove = (event, spot) => {
-    if (drawMode || isPreview) return;
+    if (drawMode || isPreview || selectionMode) return;
     event.preventDefault();
     event.stopPropagation();
     const start = getRelativePoint(event);
-    setSelectedId(spot.id);
+    selectSingle(spot.id);
     setActiveAction({
       type: "move",
       id: spot.id,
@@ -277,11 +431,11 @@ const HotspotEditor = ({
   };
 
   const beginResize = (event, spot, handle) => {
-    if (drawMode || isPreview) return;
+    if (drawMode || isPreview || selectionMode) return;
     event.preventDefault();
     event.stopPropagation();
     const start = getRelativePoint(event);
-    setSelectedId(spot.id);
+    selectSingle(spot.id);
     setActiveAction({
       type: "resize",
       id: spot.id,
@@ -352,9 +506,35 @@ const HotspotEditor = ({
   };
 
   const handleDeleteSelected = () => {
-    if (!selectedId) return;
-    updateHotspotsForCurrentPage(hotspots.filter((spot) => spot.id !== selectedId));
-    setSelectedId(null);
+    const ids = selectedIds.length ? selectedIds : selectedId ? [selectedId] : [];
+    if (!ids.length) return;
+    const selected = new Set(ids);
+    updateHotspotsForCurrentPage(hotspots.filter((spot) => !selected.has(spot.id)));
+    selectSingle(null);
+  };
+
+  const handleCopySelected = () => {
+    const selected = getSelectedHotspots();
+    if (!selected.length) return;
+    const clipboard = selected.map(({ id, ...rest }) => ({ ...rest }));
+    setClipboardHotspots(clipboard);
+  };
+
+  const handlePasteCurrentPage = () => {
+    if (!currentPage?.pageId || !clipboardHotspots.length) return;
+    const inserted = pasteToPage(currentPage.pageId, clipboardHotspots, { withOffset: true });
+    setSelectedIds(inserted.map((item) => item.id));
+    setSelectedId(inserted[0]?.id || null);
+  };
+
+  const handlePasteNextPage = () => {
+    if (!clipboardHotspots.length) return;
+    if (currentPageIndex < 0 || currentPageIndex >= pages.length - 1) return;
+    const nextPageId = pages[currentPageIndex + 1]?.pageId;
+    const inserted = pasteToPage(nextPageId, clipboardHotspots);
+    setCurrentPageId(nextPageId);
+    setSelectedIds(inserted.map((item) => item.id));
+    setSelectedId(inserted[0]?.id || null);
   };
 
   const handleSave = () => {
@@ -370,7 +550,8 @@ const HotspotEditor = ({
       setCurrentPageId(spot.targetPageId);
       return;
     }
-    setSelectedId(spot.id);
+    if (selectionMode) return;
+    selectSingle(spot.id);
   };
   const shapeClassName = (value) => {
     if (value === "circle" || value === "pill") return "rounded-full";
@@ -398,6 +579,7 @@ const HotspotEditor = ({
                 onClick={() => {
                   setDrawMode((prev) => !prev);
                   setIsPreview(false);
+                  setSelectionMode(false);
                 }}
                 className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
                   drawMode
@@ -410,8 +592,24 @@ const HotspotEditor = ({
               <button
                 type="button"
                 onClick={() => {
+                  setSelectionMode((prev) => !prev);
+                  setDrawMode(false);
+                  setIsPreview(false);
+                }}
+                className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                  selectionMode
+                    ? "border-amber-500 bg-amber-50 text-amber-700"
+                    : "border-gray-200 text-gray-600"
+                }`}
+              >
+                {selectionMode ? "Selecting" : "Select Hotspots"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   setIsPreview((prev) => !prev);
                   setDrawMode(false);
+                  setSelectionMode(false);
                 }}
                 className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
                   isPreview
@@ -420,6 +618,30 @@ const HotspotEditor = ({
                 }`}
               >
                 {isPreview ? "Preview On" : "Preview"}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopySelected}
+                disabled={selectedCount === 0}
+                className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40"
+              >
+                Copy
+              </button>
+              <button
+                type="button"
+                onClick={handlePasteCurrentPage}
+                disabled={clipboardHotspots.length === 0}
+                className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40"
+              >
+                Paste Here
+              </button>
+              <button
+                type="button"
+                onClick={handlePasteNextPage}
+                disabled={clipboardHotspots.length === 0 || currentPageIndex >= pages.length - 1}
+                className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40"
+              >
+                Paste to Next Slide
               </button>
               <div className="flex items-center gap-2">
                 {[
@@ -443,27 +665,43 @@ const HotspotEditor = ({
                 ))}
               </div>
               <span className="text-xs text-gray-400">
-                {drawMode ? "Drag to draw" : "Select a hotspot"}
+                {drawMode
+                  ? "Drag to draw"
+                  : selectionMode
+                  ? "Drag area to select multiple hotspots"
+                  : "Select a hotspot"}
               </span>
               <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
                 {totalHotspots} total
+              </span>
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                {selectedCount} selected
+              </span>
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                {clipboardHotspots.length} copied
               </span>
             </div>
             <div
               ref={containerRef}
               className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
-              onMouseDown={handlePointerDown}
+              onMouseDown={(event) => {
+                handlePointerDown(event);
+                handleSelectionStart(event);
+              }}
               onMouseMove={(event) => {
                 handlePointerMove(event);
                 handleActionMove(event);
+                handleSelectionMove(event);
               }}
               onMouseUp={() => {
                 handlePointerUp();
                 handleActionEnd();
+                handleSelectionEnd();
               }}
               onMouseLeave={() => {
                 handlePointerUp();
                 handleActionEnd();
+                handleSelectionEnd();
               }}
             >
               {currentPage?.imageUrl ? (
@@ -486,17 +724,28 @@ const HotspotEditor = ({
                   tabIndex={0}
                   onClick={() => handleHotspotClick(spot)}
                   onMouseDown={(event) => {
+                    if (selectionMode && !drawMode && !isPreview) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setSelectedIds((prev) =>
+                        prev.includes(spot.id)
+                          ? prev.filter((id) => id !== spot.id)
+                          : [...prev, spot.id]
+                      );
+                      setSelectedId(spot.id);
+                      return;
+                    }
                     if (drawMode) {
                       event.stopPropagation();
                       setDrawMode(false);
                     }
-                    setSelectedId(spot.id);
+                    selectSingle(spot.id);
                     if (!drawMode && !isPreview) {
                       beginMove(event, spot);
                     }
                   }}
                   className={`absolute ${shapeClassName(spot.shape)} border-2 ${
-                    selectedId === spot.id
+                    isHotspotSelected(spot.id)
                       ? "border-blue-500 bg-blue-100/40"
                       : "border-amber-400 bg-amber-100/30"
                   } z-10`}
@@ -510,7 +759,7 @@ const HotspotEditor = ({
                   <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                     {index + 1}
                   </span>
-                  {selectedId === spot.id && !isPreview && !drawMode && (
+                  {selectedId === spot.id && !isPreview && !drawMode && !selectionMode && (
                     <>
                       <button
                         type="button"
@@ -547,6 +796,17 @@ const HotspotEditor = ({
                   }}
                 />
               )}
+              {selectionDraft && (
+                <div
+                  className="absolute border-2 border-dashed border-amber-500 bg-amber-200/20"
+                  style={{
+                    left: `${normalizeRect(selectionDraft).x * 100}%`,
+                    top: `${normalizeRect(selectionDraft).y * 100}%`,
+                    width: `${normalizeRect(selectionDraft).w * 100}%`,
+                    height: `${normalizeRect(selectionDraft).h * 100}%`,
+                  }}
+                />
+              )}
             </div>
           </div>
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -576,7 +836,7 @@ const HotspotEditor = ({
                 <button
                   type="button"
                   onClick={handleDeleteSelected}
-                  disabled={!selectedId}
+                  disabled={selectedCount === 0}
                   className="text-xs font-semibold text-red-500 disabled:opacity-40"
                 >
                   Delete Selected
@@ -595,14 +855,14 @@ const HotspotEditor = ({
                   <div
                     key={spot.id}
                     className={`rounded-lg border px-3 py-2 text-xs ${
-                      selectedId === spot.id
+                      isHotspotSelected(spot.id)
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200"
                     }`}
                   >
                     <button
                       type="button"
-                      onClick={() => setSelectedId(spot.id)}
+                      onClick={() => selectSingle(spot.id)}
                       className="mb-2 text-left font-semibold text-gray-700"
                     >
                       Hotspot {index + 1}

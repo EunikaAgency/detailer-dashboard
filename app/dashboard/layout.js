@@ -5,7 +5,7 @@ import DashboardShell from "./DashboardShell";
 export default async function DashboardLayout({ children }) {
   const auth = await requireAuth();
   if (auth.error) {
-    redirect("/");
+    redirect("/login");
   }
 
   return <DashboardShell>{children}</DashboardShell>;

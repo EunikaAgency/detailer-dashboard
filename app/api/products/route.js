@@ -34,6 +34,130 @@ const normalizeKey = (value) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
+const getUrlWithoutQuery = (value = "") =>
+  String(value || "").split("#")[0].split("?")[0];
+
+const withQueryParam = (url = "", key, value) => {
+  const hasQuery = url.includes("?");
+  return `${url}${hasQuery ? "&" : "?"}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+};
+
+const toPublicFilePath = (url = "") => {
+  const clean = getUrlWithoutQuery(url);
+  if (!clean.startsWith("/uploads/")) return null;
+  return path.join(process.cwd(), "public", clean);
+};
+
+const applyCacheBustToProductPayload = async (products = []) => {
+  const versionByUrl = new Map();
+
+  const resolveUrl = async (url) => {
+    const clean = getUrlWithoutQuery(url);
+    if (!clean.startsWith("/uploads/")) return url;
+
+    if (versionByUrl.has(clean)) {
+      const version = versionByUrl.get(clean);
+      return version ? withQueryParam(clean, "v", version) : clean;
+    }
+
+    const filePath = toPublicFilePath(clean);
+    if (!filePath) {
+      versionByUrl.set(clean, null);
+      return clean;
+    }
+
+    try {
+      const stat = await fs.stat(filePath);
+      const version = Math.floor(stat.mtimeMs);
+      versionByUrl.set(clean, version);
+      return withQueryParam(clean, "v", version);
+    } catch {
+      versionByUrl.set(clean, null);
+      return clean;
+    }
+  };
+
+  const applyToMedia = async (media = []) => {
+    if (!Array.isArray(media)) return media;
+    if (media[0] && Array.isArray(media[0].items)) {
+      return Promise.all(
+        media.map(async (group) => ({
+          ...group,
+          items: await Promise.all(
+            (group.items || []).map(async (item) => ({
+              ...item,
+              url: await resolveUrl(item?.url || ""),
+            }))
+          ),
+        }))
+      );
+    }
+
+    return Promise.all(
+      media.map(async (item) => ({
+        ...item,
+        url: await resolveUrl(item?.url || ""),
+      }))
+    );
+  };
+
+  return Promise.all(
+    products.map(async (product) => ({
+      ...product,
+      thumbnailUrl: await resolveUrl(product?.thumbnailUrl || ""),
+      media: await applyToMedia(product?.media || []),
+    }))
+  );
+};
+
+const getFilenameFromUrl = (value = "") => {
+  const clean = getUrlWithoutQuery(value);
+  return clean.split("/").pop() || clean;
+};
+
+const getPageNumberFromFilename = (filename = "") => {
+  const value = String(filename || "");
+  const namedMatch = value.match(/(?:^|[._\-\s])(page|slide)[._\-\s]?(\d+)(?=\.[^.]+$|$)/i);
+  if (namedMatch) {
+    const parsed = Number.parseInt(namedMatch[2], 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  const trailingMatch = value.match(/(\d+)(?=\.[^.]+$|$)/);
+  if (!trailingMatch) return null;
+  const parsed = Number.parseInt(trailingMatch[1], 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const sortMediaItems = (left, right) => {
+  const leftName = getFilenameFromUrl(left?.url || "");
+  const rightName = getFilenameFromUrl(right?.url || "");
+  const leftPage = getPageNumberFromFilename(leftName);
+  const rightPage = getPageNumberFromFilename(rightName);
+
+  if (leftPage !== null && rightPage !== null && leftPage !== rightPage) {
+    return leftPage - rightPage;
+  }
+
+  return leftName.localeCompare(rightName, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+};
+
+const sortConvertedFilenames = (left, right) => {
+  const leftPage = getPageNumberFromFilename(left);
+  const rightPage = getPageNumberFromFilename(right);
+
+  if (leftPage !== null && rightPage !== null && leftPage !== rightPage) {
+    return leftPage - rightPage;
+  }
+
+  return String(left).localeCompare(String(right), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+};
+
 const buildConvertedIndex = async () => {
   try {
     const folders = await fs.readdir(convertedDir, { withFileTypes: true });
@@ -47,6 +171,7 @@ const buildConvertedIndex = async () => {
         const files = await fs.readdir(imagesDir);
         images = files
           .filter((name) => name.match(/\.(png|jpg|jpeg|webp|gif)$/i))
+          .sort(sortConvertedFilenames)
           .map((name) => `/uploads/converted/${folder}/images/${name}`);
       } catch {
         images = [];
@@ -119,7 +244,7 @@ const buildMediaGroupsFromMedia = (media = []) => {
 
   return Array.from(groups.entries()).map(([groupId, items]) => ({
     groupId,
-    items,
+    items: [...items].sort(sortMediaItems),
   }));
 };
 
@@ -158,8 +283,11 @@ export async function GET(request) {
           ...product,
           media: buildMediaGroupsFromMedia(product.media),
         }));
+    const responseProducts = auth.error && apiKeyAllowed
+      ? await applyCacheBustToProductPayload(enriched)
+      : enriched;
     const version = Math.floor(Date.now() / 3600000) * 3600000;
-    return NextResponse.json({ version, products: enriched });
+    return NextResponse.json({ version, products: responseProducts });
   } catch (error) {
     console.error("Fetch products error:", error);
     return NextResponse.json({ error: "Failed to fetch products." }, { status: 500 });

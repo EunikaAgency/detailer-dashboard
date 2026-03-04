@@ -1,180 +1,136 @@
-"use client";
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import BetaBadge from "@/components/public-site/BetaBadge";
+import PrimaryButton from "@/components/public-site/PrimaryButton";
+import PublicNavigation from "@/components/public-site/PublicNavigation";
+import QuickLinkCard from "@/components/public-site/QuickLinkCard";
 
-const normalizeDashboardPath = (value) => {
-  const normalized = String(value || "").trim();
-  if (!normalized) return "";
-  if (!normalized.startsWith("/dashboard")) return "";
-  if (normalized.startsWith("//")) return "";
-  return normalized;
+export const metadata = {
+  title: "Otsuka One Detailer",
+  description: "Official internal portal for Otsuka One Detailer resources and Android distribution.",
 };
 
-function HomeContent() {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const normalizedIdentifier = identifier.trim();
-      const looksLikeEmail = normalizedIdentifier.includes("@");
-
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: looksLikeEmail ? normalizedIdentifier : "",
-          username: looksLikeEmail ? "" : normalizedIdentifier,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Login failed");
-        setLoading(false);
-        return;
-      }
-
-      const nextFromQuery = normalizeDashboardPath(searchParams.get("next"));
-      let nextFromStorage = "";
-      try {
-        nextFromStorage = normalizeDashboardPath(window.localStorage.getItem("last_dashboard_path"));
-      } catch {
-        nextFromStorage = "";
-      }
-      router.push(nextFromQuery || nextFromStorage || "/dashboard");
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      setLoading(false);
-    }
-  };
-
+function ShieldIcon() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <main className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Otsuka Admin
-          </h1>
-          <p className="text-gray-600">Sign in to manage the dashboard</p>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Email or username"
-              className="w-full px-4 py-3 bg-blue-50 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-              required
-            />
-          </div>
-          
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-              className="w-full px-4 py-3 pr-12 bg-blue-50 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                >
-                  <path d="M3 3l18 18" />
-                  <path d="M10.58 10.58A2 2 0 0012 14a2 2 0 001.42-.58" />
-                  <path d="M9.88 5.09A10.94 10.94 0 0112 5c5.05 0 9.27 3.11 10 7-.2 1.06-.66 2.06-1.31 2.95M6.61 6.61C4.62 7.84 3.22 9.77 2 12c.73 3.89 4.95 7 10 7 1.72 0 3.34-.36 4.78-1" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  className="h-5 w-5"
-                  aria-hidden="true"
-                >
-                  <path d="M2 12s3.64-7 10-7 10 7 10 7-3.64 7-10 7-10-7-10-7z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
-            Need an account? <span className="font-semibold">Sign up</span>
-          </a>
-          <p className="mt-2 text-xs text-gray-500">
-            By continuing, you agree to our{" "}
-            <Link href="/privacy-policy" className="text-blue-600 hover:text-blue-700">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </div>
-      </main>
-    </div>
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M12 3l7 3v6c0 5-3.5 8.7-7 10-3.5-1.3-7-5-7-10V6l7-3z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 
-function HomeFallback() {
+function MobileIcon() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <main className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl text-center text-gray-600">
-        Loading...
-      </main>
-    </div>
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="18.2" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M4 19.5h16M7 16V9m5 7V5m5 11v-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
 export default function Home() {
   return (
-    <Suspense fallback={<HomeFallback />}>
-      <HomeContent />
-    </Suspense>
+    <div className="min-h-screen bg-slate-50">
+      <PublicNavigation activeKey="home" />
+
+      <section className="bg-gradient-to-br from-blue-50 via-white to-slate-50 py-14 sm:py-20">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1">
+                <span className="text-sm font-medium text-blue-700">Internal Distribution Portal</span>
+                <BetaBadge />
+              </div>
+              <h1 className="mb-4 text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+                Otsuka One Detailer
+              </h1>
+              <p className="mb-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
+                A secure internal platform for medical representatives and field detailers to
+                download Android builds and access operational resources.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <PrimaryButton href="/download">Go to Download Page</PrimaryButton>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                >
+                  Admin Sign In
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8">
+              <h2 className="mb-5 text-xl font-semibold text-slate-900">Portal Highlights</h2>
+              <div className="space-y-4">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Latest Android Build</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Centralized APK distribution from an official internal page.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Structured Installation Guide</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Clear steps for installation and troubleshooting on Android devices.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Connected Admin Dashboard</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Manage products, users, reports, and login monitoring in one system.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+        <h2 className="mb-6 text-2xl font-semibold text-slate-900">Quick Access</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <QuickLinkCard
+            href="/download"
+            title="Android Download"
+            description="Get the latest APK release package."
+            icon={<MobileIcon />}
+          />
+          <QuickLinkCard
+            href="/dashboard"
+            title="Dashboard"
+            description="Open the admin portal for daily operations."
+            icon={<ChartIcon />}
+          />
+          <QuickLinkCard
+            href="/privacy-policy"
+            title="Privacy Policy"
+            description="Review platform data handling and policy details."
+            icon={<ShieldIcon />}
+          />
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white py-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-2 px-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:px-6">
+          <p className="font-semibold text-slate-800">Otsuka One Detailer</p>
+          <p>Internal Beta Distribution System</p>
+        </div>
+      </footer>
+    </div>
   );
 }

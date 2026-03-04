@@ -39,6 +39,7 @@ This app is the Next.js admin/API backend for Otsuka Detailer. It handles authen
 - Product read contract: `GET /api/products` returns `{ version, products }`, grouped media, and allows API-key-based access.
 - Conversion: `POST /api/conversion/worker`, plus standalone `POST /api/convert-pdf` and `POST /api/convert-ppt`.
 - Activity/reports: `POST /api/login-events`, `GET /api/login-events`, `GET /api/reports/sessions-daily`, `GET /api/reports/engagement-summary`.
+- Mobile UI config: `GET /api/mobile-config` (returns account-scoped text config for mobile placeholders).
 - Other secured resources: `GET /api/doctors`, `GET /api/appointments`.
 
 ## Conversion Pipeline
