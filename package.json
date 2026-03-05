@@ -14,7 +14,9 @@
     "sync-db:live-to-staging": "node scripts/sync-live-to-staging.js",
     "sync-db:preview": "node scripts/sync-staging-to-live-preview.js",
     "export-db:staging": "node scripts/export-db.js staging",
-    "export-db:live": "node scripts/export-db.js live"
+    "export-db:live": "node scripts/export-db.js live",
+    "import-db:staging": "node scripts/import-db.js staging",
+    "import-db:live": "node scripts/import-db.js live"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

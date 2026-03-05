@@ -100,6 +100,30 @@ npm run export-db:live
 
 ---
 
+### 5. Import Database Backup
+
+**Purpose:** Restore a database from a `mongodump` backup.
+
+**Commands:**
+```bash
+# Import latest staging backup into staging database (otsuka_dev)
+npm run import-db:staging
+
+# Import latest live backup into live database (otsuka_prod)
+npm run import-db:live
+
+# Import from a specific backup folder
+npm run import-db:staging -- backups/db/staging-2026-03-05_04-18-19
+```
+
+**What it does:**
+- Loads target DB URI from `.env.development` or `.env.production`
+- Selects latest matching backup by default (`backups/db/<target>-*`)
+- Runs `mongorestore --drop --gzip`
+- Requires typing `YES` before restore
+
+---
+
 ## Database Configuration
 
 The scripts automatically detect and use the correct database based on environment:
