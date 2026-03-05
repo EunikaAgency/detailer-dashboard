@@ -109,6 +109,46 @@ export default function DownloadPage() {
         </div>
       </section>
 
+      <section className="mx-auto mt-10 w-full max-w-4xl px-4 sm:px-6">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="mb-2 text-2xl font-semibold text-slate-900">Expo Installation</h2>
+          <p className="mb-5 text-slate-600">
+            Need the full Expo Go setup tutorial? Follow the steps below and watch the installation
+            video.
+          </p>
+
+          <div className="grid gap-6 md:grid-cols-2 md:items-start">
+            <ol className="list-decimal space-y-2 pl-5 text-slate-700">
+              <li>Go to App Store.</li>
+              <li>Search for <span className="font-semibold">Expo Go</span>.</li>
+              <li>Once you find the app, tap download.</li>
+              <li>Wait until the download is finished.</li>
+              <li>Once completed, tap open.</li>
+              <li>Log in using your Expo username and password.</li>
+              <li>Tap <span className="font-semibold">Detailer App</span>.</li>
+              <li>Tap <span className="font-semibold">Branch: production</span>.</li>
+              <li>Tap <span className="font-semibold">Update</span> at the top.</li>
+              <li>Sign in with your username and password.</li>
+            </ol>
+
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-black">
+              <video
+                className="w-full"
+                controls
+                preload="metadata"
+                aria-label="Tutorial video for installing the Otsuka One Detailer application"
+              >
+                <source
+                  src="/videos/tutorial%20on%20how%20to%20install%20the%20application.mp4"
+                  type="video/mp4"
+                />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto mt-12 w-full max-w-4xl px-4 sm:px-6">
         <h2 className="mb-6 text-2xl font-semibold text-slate-900">Quick Access</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
