@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import ActivityLog from "@/models/ActivityLog";
 
 export const runtime = "nodejs";
@@ -30,7 +30,7 @@ const buildDateRows = (startDate, endDate) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

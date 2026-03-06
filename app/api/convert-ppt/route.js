@@ -4,6 +4,7 @@ import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { existsSync } from 'fs';
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 
 const execPromise = promisify(exec);
 
@@ -21,6 +22,11 @@ const CONVERSION_HEIGHT = Number(process.env.CONVERSION_HEIGHT || '1080');
 
 export async function POST(request) {
   try {
+    const auth = await requireApiAuthIfEnabled(request);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file');
 

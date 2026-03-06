@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectDB from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import ActivityLog from "@/models/ActivityLog";
 import LoginEvent from "@/models/LoginEvent";
 
@@ -164,12 +165,22 @@ const mapLegacyEventsToLogs = (events) => {
 
 export async function POST(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body = await request.json().catch(() => ({}));
+    const requestUserId = normalizeText(body?.userId, 80);
+    const effectiveUserId = auth?.user?._id?.toString?.() || requestUserId;
+    if (!effectiveUserId || !mongoose.Types.ObjectId.isValid(effectiveUserId)) {
+      return NextResponse.json(
+        { error: "A valid userId is required when login is not provided." },
+        { status: 400 }
+      );
+    }
+    const resolvedUserId = new mongoose.Types.ObjectId(effectiveUserId);
+
     const events = Array.isArray(body?.events) ? body.events : [];
     const cleaned = events.map(sanitizeEvent).filter(Boolean);
 
@@ -185,7 +196,7 @@ export async function POST(request) {
 
     for (const group of sessionGroups) {
       const existing = await ActivityLog.findOne({
-        userId: auth.user._id,
+        userId: resolvedUserId,
         sessionId: group.sessionId,
       });
 
@@ -195,7 +206,7 @@ export async function POST(request) {
         const startedAt = initialEvents[0].occurredAt;
         const endedAt = initialEvents[initialEvents.length - 1].occurredAt;
         await ActivityLog.create({
-          userId: auth.user._id,
+          userId: resolvedUserId,
           sessionId: group.sessionId,
           method: group.method,
           source: group.source,
@@ -246,7 +257,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

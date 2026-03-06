@@ -18,39 +18,11 @@ const FALLBACK_IMAGE = "/images/product-fallback.svg";
 const CONVERTED_PREFIX = "/uploads/converted/";
 
 const isImageUrl = (value = "") => /(png|jpg|jpeg|gif|webp)$/i.test(value);
+const isHtmlFilename = (value = "") => /\.(html|htm)$/i.test(value);
 
 const getFilenameFromUrl = (value = "") => {
   const clean = String(value || "").split("#")[0].split("?")[0];
   return clean.split("/").pop() || clean;
-};
-
-const getPageNumberFromFilename = (filename = "") => {
-  const value = String(filename || "");
-  const namedMatch = value.match(/(?:^|[._\-\s])(page|slide)[._\-\s]?(\d+)(?=\.[^.]+$|$)/i);
-  if (namedMatch) {
-    const parsed = Number.parseInt(namedMatch[2], 10);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
-  const trailingMatch = value.match(/(\d+)(?=\.[^.]+$|$)/);
-  if (!trailingMatch) return null;
-  const parsed = Number.parseInt(trailingMatch[1], 10);
-  return Number.isNaN(parsed) ? null : parsed;
-};
-
-const compareMediaItems = (left, right) => {
-  const leftName = getFilenameFromUrl(left?.url || "");
-  const rightName = getFilenameFromUrl(right?.url || "");
-  const leftPage = getPageNumberFromFilename(leftName);
-  const rightPage = getPageNumberFromFilename(rightName);
-
-  if (leftPage !== null && rightPage !== null && leftPage !== rightPage) {
-    return leftPage - rightPage;
-  }
-
-  return leftName.localeCompare(rightName, undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
 };
 
 const toFlatMedia = (media = []) => {
@@ -85,6 +57,7 @@ const mapProduct = (product) => {
     thumbnailUrl: product.thumbnailUrl || "",
     media: flatMedia.map((item) => ({
       url: item.url,
+      thumbnailUrl: item.thumbnailUrl,
       type: item.type,
       title: item.title,
       size: item.size,
@@ -161,7 +134,7 @@ const groupExistingMedia = (mediaItems) => {
 
   return Array.from(groups.values()).map((group) => ({
     ...group,
-    items: [...(group.items || [])].sort(compareMediaItems),
+    items: [...(group.items || [])],
   }));
 };
 
@@ -955,7 +928,18 @@ export default function ProductDetailPage() {
   const [toast, setToast] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isAddingGroupImages, setIsAddingGroupImages] = useState(false);
+  const [targetGroupForAdd, setTargetGroupForAdd] = useState(null);
+  const [isReplacingImage, setIsReplacingImage] = useState(false);
+  const [replaceImageTargetUrl, setReplaceImageTargetUrl] = useState("");
+  const [isSettingMediaThumbnail, setIsSettingMediaThumbnail] = useState(false);
+  const [mediaThumbnailTargetUrl, setMediaThumbnailTargetUrl] = useState("");
+  const [draggingMedia, setDraggingMedia] = useState(null);
+  const [dragOverUrl, setDragOverUrl] = useState("");
   const formRef = useRef(null);
+  const groupImageInputRef = useRef(null);
+  const replaceImageInputRef = useRef(null);
+  const mediaThumbnailInputRef = useRef(null);
   const [hotspotEditor, setHotspotEditor] = useState({
     isOpen: false,
     groupId: "",
@@ -1177,6 +1161,263 @@ export default function ProductDetailPage() {
   };
 
   const groupedExistingMedia = groupExistingMedia(existingMedia);
+  const removeExistingMediaItem = async (targetUrl) => {
+    if (!targetUrl) return;
+    const confirmed = window.confirm("Remove this file?");
+    if (!confirmed) return;
+    const nextMedia = existingMedia.filter((item) => item.url !== targetUrl);
+    if (!formRef.current) {
+      setExistingMedia(nextMedia);
+      return;
+    }
+    const payload = buildPayloadFromForm(formRef.current, nextMedia);
+    const updated = await persistProduct(payload, { silent: true });
+    if (updated) {
+      showToast("success", "File deleted.");
+    }
+  };
+
+  const openReplaceImagePicker = (targetUrl) => {
+    if (!targetUrl || !replaceImageInputRef.current) return;
+    setReplaceImageTargetUrl(targetUrl);
+    replaceImageInputRef.current.value = "";
+    replaceImageInputRef.current.click();
+  };
+
+  const handleReplaceImageSelection = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!product?.id) {
+      showToast("error", "Product id is missing.");
+      return;
+    }
+    if (!replaceImageTargetUrl) {
+      showToast("error", "Target image is missing.");
+      return;
+    }
+    const targetUrl = replaceImageTargetUrl;
+
+    setIsReplacingImage(true);
+    try {
+      const payload = new FormData();
+      payload.append("oldUrl", targetUrl);
+      payload.append("mediaFile", file);
+
+      const response = await fetch(
+        `/api/products/${encodeURIComponent(product.id)}/media/replace`,
+        { method: "POST", body: payload }
+      );
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          [errorPayload.error, errorPayload.details]
+            .filter(Boolean)
+            .join(" ") || "Failed to replace image.";
+        throw new Error(message);
+      }
+
+      await refreshProduct();
+      showToast("success", "Image replaced. Hotspots were kept.");
+    } catch (error) {
+      console.error(error);
+      showToast("error", error.message || "Failed to replace image.");
+    } finally {
+      setIsReplacingImage(false);
+      setReplaceImageTargetUrl("");
+      if (replaceImageInputRef.current) {
+        replaceImageInputRef.current.value = "";
+      }
+    }
+  };
+
+  const openMediaThumbnailPicker = (targetUrl) => {
+    if (!targetUrl || !mediaThumbnailInputRef.current) return;
+    setMediaThumbnailTargetUrl(targetUrl);
+    mediaThumbnailInputRef.current.value = "";
+    mediaThumbnailInputRef.current.click();
+  };
+
+  const handleMediaThumbnailSelection = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setMediaThumbnailTargetUrl("");
+      return;
+    }
+    if (!product?.id) {
+      showToast("error", "Product id is missing.");
+      return;
+    }
+    if (!mediaThumbnailTargetUrl) {
+      showToast("error", "Target media is missing.");
+      return;
+    }
+
+    setIsSettingMediaThumbnail(true);
+    try {
+      const payload = new FormData();
+      payload.append("oldUrl", mediaThumbnailTargetUrl);
+      payload.append("thumbnailFile", file);
+
+      const response = await fetch(
+        `/api/products/${encodeURIComponent(product.id)}/media/thumbnail`,
+        { method: "POST", body: payload }
+      );
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          [errorPayload.error, errorPayload.details]
+            .filter(Boolean)
+            .join(" ") || "Failed to set thumbnail.";
+        throw new Error(message);
+      }
+
+      await refreshProduct();
+      showToast("success", "Thumbnail updated.");
+    } catch (error) {
+      console.error(error);
+      showToast("error", error.message || "Failed to set thumbnail.");
+    } finally {
+      setIsSettingMediaThumbnail(false);
+      setMediaThumbnailTargetUrl("");
+      if (mediaThumbnailInputRef.current) {
+        mediaThumbnailInputRef.current.value = "";
+      }
+    }
+  };
+
+  const reorderMediaInGroup = async (group, sourceUrl, targetUrl) => {
+    if (!group?.key || !sourceUrl || !targetUrl || sourceUrl === targetUrl) return;
+    const groupUrls = (group?.items || []).map((item) => item?.url).filter(Boolean);
+    const sourceIndex = groupUrls.indexOf(sourceUrl);
+    const targetIndex = groupUrls.indexOf(targetUrl);
+    if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return;
+
+    const reorderedUrls = [...groupUrls];
+    const [moved] = reorderedUrls.splice(sourceIndex, 1);
+    reorderedUrls.splice(targetIndex, 0, moved);
+
+    const byUrl = new Map(existingMedia.map((item) => [item.url, item]));
+    const reorderedGroupItems = reorderedUrls.map((url) => byUrl.get(url)).filter(Boolean);
+    const groupUrlSet = new Set(groupUrls);
+    let cursor = 0;
+    const nextMedia = existingMedia.map((item) =>
+      groupUrlSet.has(item.url) ? reorderedGroupItems[cursor++] : item
+    );
+
+    setExistingMedia(nextMedia);
+    if (!formRef.current) return;
+    const payload = buildPayloadFromForm(formRef.current, nextMedia);
+    const updated = await persistProduct(payload, { silent: true });
+    if (!updated) {
+      await refreshProduct();
+      return;
+    }
+    showToast("success", "Order updated.");
+  };
+
+  const handleMediaDragStart = (event, group, item) => {
+    if (!group?.key || !item?.url) return;
+    const payload = { groupKey: group.key, url: item.url };
+    setDraggingMedia(payload);
+    if (event?.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", JSON.stringify(payload));
+    }
+  };
+
+  const handleMediaDragOver = (event, group, item) => {
+    const source = draggingMedia;
+    if (!source?.url || !source?.groupKey) return;
+    if (source.groupKey !== group?.key || source.url === item?.url) return;
+    event.preventDefault();
+    setDragOverUrl(item.url || "");
+    if (event?.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  const handleMediaDrop = async (event, group, item) => {
+    event.preventDefault();
+    let source = draggingMedia;
+    if (!source?.url || !source?.groupKey) {
+      try {
+        const parsed = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}");
+        source = parsed;
+      } catch {
+        source = null;
+      }
+    }
+    setDraggingMedia(null);
+    setDragOverUrl("");
+    if (!source?.url || !source?.groupKey) return;
+    if (source.groupKey !== group?.key || source.url === item?.url) return;
+    await reorderMediaInGroup(group, source.url, item.url);
+  };
+
+  const handleMediaDragEnd = () => {
+    setDraggingMedia(null);
+    setDragOverUrl("");
+  };
+
+  const handleMediaDragLeave = (event, item) => {
+    if (!item?.url) return;
+    const currentTarget = event?.currentTarget;
+    const relatedTarget = event?.relatedTarget;
+    if (currentTarget && relatedTarget && currentTarget.contains(relatedTarget)) return;
+    setDragOverUrl((prev) => (prev === item.url ? "" : prev));
+  };
+
+  const openGroupImagePicker = (group) => {
+    const groupId = getGroupId(group);
+    if (!groupId || !groupImageInputRef.current) return;
+    setTargetGroupForAdd({
+      groupId,
+      sourceName: group.label || "Manual upload",
+    });
+    groupImageInputRef.current.value = "";
+    groupImageInputRef.current.click();
+  };
+
+  const handleGroupImageSelection = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    if (!product?.id) {
+      showToast("error", "Product id is missing.");
+      return;
+    }
+    if (!targetGroupForAdd?.groupId) {
+      showToast("error", "Target media group is missing.");
+      return;
+    }
+
+    setIsAddingGroupImages(true);
+    try {
+      const mediaPayload = new FormData();
+      mediaPayload.append("groupId", targetGroupForAdd.groupId);
+      mediaPayload.append("sourceName", targetGroupForAdd.sourceName || "Manual upload");
+      files.forEach((file) => mediaPayload.append("mediaFile", file));
+
+      const mediaRes = await fetch(
+        `/api/products/${encodeURIComponent(product.id)}/media`,
+        { method: "POST", body: mediaPayload }
+      );
+      if (!mediaRes.ok) {
+        const errorPayload = await mediaRes.json().catch(() => ({}));
+        throw new Error(errorPayload.error || "Failed to add files.");
+      }
+      await refreshProduct();
+      showToast("success", `${files.length} file${files.length === 1 ? "" : "s"} added.`);
+    } catch (error) {
+      console.error(error);
+      showToast("error", error.message || "Failed to add files.");
+    } finally {
+      setIsAddingGroupImages(false);
+      setTargetGroupForAdd(null);
+      if (groupImageInputRef.current) {
+        groupImageInputRef.current.value = "";
+      }
+    }
+  };
 
   const openHotspotEditor = (group, item) => {
     const pages = buildGroupPages(group);
@@ -1238,6 +1479,28 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+      <input
+        type="file"
+        ref={groupImageInputRef}
+        accept="image/*,.html,.htm,text/html"
+        multiple
+        onChange={handleGroupImageSelection}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={replaceImageInputRef}
+        accept="image/*"
+        onChange={handleReplaceImageSelection}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={mediaThumbnailInputRef}
+        accept="image/*"
+        onChange={handleMediaThumbnailSelection}
+        className="hidden"
+      />
       <HotspotEditor
         isOpen={hotspotEditor.isOpen}
         groupId={hotspotEditor.groupId}
@@ -1367,11 +1630,11 @@ export default function ProductDetailPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (ppt/pptx/pdf)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Upload media (images/html/ppt/pptx/pdf)</label>
                 <input
                   type="file"
                   multiple
-                  accept=".ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+                  accept="image/*,.html,.htm,text/html,.ppt,.pptx,.pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
                   onChange={handleMediaChange}
                   ref={mediaInputRef}
                   className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
@@ -1381,6 +1644,9 @@ export default function ProductDetailPage() {
                     <div className="space-y-3">
                       <div className="text-xs font-semibold uppercase text-gray-500">
                         Existing media
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Drag the <span className="font-semibold">⋮⋮</span> handle to reorder files.
                       </div>
                       <div className="space-y-3">
                         {groupedExistingMedia.map((group) => {
@@ -1403,6 +1669,18 @@ export default function ProductDetailPage() {
                                 <span className="text-xs font-medium text-gray-400">
                                   {group.items.length} file{group.items.length === 1 ? "" : "s"}
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    openGroupImagePicker(group);
+                                  }}
+                                  disabled={isAddingGroupImages}
+                                  className="text-xs font-medium text-blue-600 underline disabled:opacity-60"
+                                >
+                                  {isAddingGroupImages ? "Adding..." : "Add files"}
+                                </button>
                                 <button
                                   type="button"
                                   onClick={(event) => {
@@ -1433,29 +1711,60 @@ export default function ProductDetailPage() {
                                   </div>
                                 ) : (
                                   group.items.map((item) => {
-                                    const filename = item.url.split("/").pop() || item.url;
+                                    const filename = getFilenameFromUrl(item.url);
                                     const ext = filename.split(".").pop()?.toUpperCase() || "";
                                     const isImage = isImageUrl(filename);
+                                    const isHtml =
+                                      String(item?.type || "").toLowerCase() === "html" ||
+                                      isHtmlFilename(filename);
+                                    const mediaPreviewUrl = isImage
+                                      ? item.url
+                                      : isHtml
+                                      ? item.thumbnailUrl || ""
+                                      : "";
+                                    const isDropTarget =
+                                      dragOverUrl === item.url &&
+                                      draggingMedia?.groupKey === group.key &&
+                                      draggingMedia?.url !== item.url;
+                                    const isDragging = draggingMedia?.url === item.url;
                                     return (
                                       <div
                                         key={item.url}
-                                        className="flex flex-col gap-2 rounded-md border border-gray-100 p-3 text-sm text-gray-700 sm:flex-row sm:items-center sm:justify-between"
+                                        onDragOver={(event) => handleMediaDragOver(event, group, item)}
+                                        onDragLeave={(event) => handleMediaDragLeave(event, item)}
+                                        onDrop={(event) => handleMediaDrop(event, group, item)}
+                                        className={`flex flex-col gap-2 rounded-md border p-3 text-sm text-gray-700 sm:flex-row sm:items-center sm:justify-between ${
+                                          isDropTarget
+                                            ? "border-blue-300 bg-blue-50/40"
+                                            : isDragging
+                                            ? "border-blue-200 bg-blue-50/20"
+                                            : "border-gray-100"
+                                        }`}
                                       >
                                         <div className="flex items-center gap-3">
-                                          {isImage && (
+                                          <span
+                                            draggable
+                                            onDragStart={(event) => handleMediaDragStart(event, group, item)}
+                                            onDragEnd={handleMediaDragEnd}
+                                            className="inline-flex cursor-grab select-none items-center rounded-md border border-gray-200 bg-white px-1.5 py-1 text-[11px] font-semibold text-gray-400 active:cursor-grabbing"
+                                            title="Drag to reorder"
+                                          >
+                                            ⋮⋮
+                                          </span>
+                                          {mediaPreviewUrl && (
                                             <button
                                               type="button"
                                               onClick={() =>
                                                 setMediaPreview({
                                                   isOpen: true,
-                                                  url: item.url,
-                                                  filename,
+                                                  url: mediaPreviewUrl,
+                                                  filename: isImage ? filename : `${filename} thumbnail`,
                                                 })
                                               }
                                               className="h-12 w-12 overflow-hidden rounded border border-gray-200"
                                             >
                                               <img
-                                                src={item.url}
+                                                src={mediaPreviewUrl}
                                                 alt={filename}
                                                 className="h-full w-full object-cover"
                                               />
@@ -1482,11 +1791,45 @@ export default function ProductDetailPage() {
                                             </button>
                                           )}
                                           {isImage && (
+                                            <button
+                                              type="button"
+                                              onClick={() => openReplaceImagePicker(item.url)}
+                                              disabled={isReplacingImage}
+                                              className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 disabled:opacity-60"
+                                            >
+                                              {isReplacingImage && replaceImageTargetUrl === item.url
+                                                ? "Replacing..."
+                                                : "Replace image"}
+                                            </button>
+                                          )}
+                                          {isImage && (
                                             <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
                                               {getHotspotCount(item)} hotspot
                                               {getHotspotCount(item) === 1 ? "" : "s"}
                                             </span>
                                           )}
+                                          {isHtml && (
+                                            <button
+                                              type="button"
+                                              onClick={() => openMediaThumbnailPicker(item.url)}
+                                              disabled={isSettingMediaThumbnail}
+                                              className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 disabled:opacity-60"
+                                            >
+                                              {isSettingMediaThumbnail &&
+                                              mediaThumbnailTargetUrl === item.url
+                                                ? "Saving..."
+                                                : item.thumbnailUrl
+                                                ? "Change thumbnail"
+                                                : "Set thumbnail"}
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => removeExistingMediaItem(item.url)}
+                                            className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100"
+                                          >
+                                            Delete file
+                                          </button>
                                         </div>
                                       </div>
                                     );

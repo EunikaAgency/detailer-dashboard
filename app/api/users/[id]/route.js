@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import { getOfflineCredentialSecret, issueOfflineCredential, normalizeIdentity } from "@/lib/offlineCredential";
 
 export const runtime = "nodejs";
@@ -69,7 +69,7 @@ const buildCredentialForUser = (user, issuedAt) => {
 
 export async function PUT(request, { params }) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -189,7 +189,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

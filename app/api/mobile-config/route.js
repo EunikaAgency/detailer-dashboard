@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 
 const normalizeText = (value) => String(value || "").trim();
 const normalizeAccountKey = (value) =>
   normalizeText(value)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
-
-const hasValidApiKey = (request) => {
-  const configuredApiKey = normalizeText(process.env.API_KEY);
-  if (!configuredApiKey || !request) return false;
-
-  const headerApiKey =
-    request.headers.get("x-api-key") ||
-    request.headers.get("api-key") ||
-    request.headers.get("authorization")?.replace(/^ApiKey\s+/i, "");
-
-  const queryApiKey = new URL(request.url).searchParams.get("api_key");
-  const providedApiKey = normalizeText(headerApiKey || queryApiKey);
-  return Boolean(providedApiKey && providedApiKey === configuredApiKey);
-};
 
 const BASE_TEXT = {
   loadingLogoText: "APP LOGO",
@@ -72,7 +58,7 @@ const ACCOUNT_CONFIGS = {
         loginLogoText: "OTSUKA",
         headerLogoText: "OTSUKA",
         brandTitle: "One Detailer",
-        loginFooter: "© 2024 Otsuka Pharmaceutical Co., Ltd.\nAll rights reserved.",
+        loginFooter: "© {{year}} Otsuka Pharmaceutical Co., Ltd.\nAll rights reserved.",
         usernamePlaceholder: "Enter your Office ID",
         passwordPlaceholder: "Enter your password",
         productsSubtitle: "Tap a product to open Otsuka presentation content",
@@ -128,9 +114,8 @@ const resolveConfig = ({ requestedAccount, user }) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
-    const apiKeyAllowed = hasValidApiKey(request);
-    if (auth.error && !apiKeyAllowed) {
+    const auth = await requireApiAuthIfEnabled(request);
+    if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 

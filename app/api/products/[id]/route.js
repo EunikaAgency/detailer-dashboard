@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import path from "path";
 import { promises as fs } from "fs";
 import { isPdf, isPpt } from "@/lib/fileConverter";
@@ -18,6 +18,7 @@ const getMediaType = (value) => {
   if (lower.includes("video") || lower.match(/\.(mp4|mov|webm|avi)$/)) return "video";
   if (lower.includes("pdf") || lower.endsWith(".pdf")) return "pdf";
   if (lower.match(/\.(png|jpg|jpeg|gif|webp)$/)) return "image";
+  if (lower.includes("text/html") || lower.match(/\.(html|htm)$/)) return "html";
   return "image";
 };
 
@@ -27,6 +28,36 @@ const isImageFile = (filename = "", mimeType = "") => {
 };
 
 const cleanFilename = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
+const makeGroupId = (seed = "media") =>
+  `${Date.now()}-${Math.round(Math.random() * 1e9)}-${cleanFilename(seed).slice(0, 80) || "media"}`;
+const sanitizePathToken = (value = "", fallback = "media") => {
+  const cleaned = cleanFilename(String(value || "").slice(0, 120));
+  if (!cleaned || /^\.+$/.test(cleaned)) return fallback;
+  return cleaned;
+};
+const toSafeUploadFilename = (originalName = "upload") => {
+  const rawName = String(originalName || "upload").trim() || "upload";
+  const rawExt = path.extname(rawName);
+  const safeBase = sanitizePathToken(path.basename(rawName, rawExt), "upload");
+  const safeExtToken = sanitizePathToken(rawExt, "bin");
+  const safeExt = safeExtToken.startsWith(".") ? safeExtToken : `.${safeExtToken}`;
+  return `${safeBase}${safeExt}`;
+};
+const resolveUniqueFilename = async (targetDir, originalName = "upload") => {
+  const safeName = toSafeUploadFilename(originalName);
+  const ext = path.extname(safeName);
+  const base = path.basename(safeName, ext);
+  for (let index = 0; index < 1000; index += 1) {
+    const suffix = index === 0 ? "" : `-${index + 1}`;
+    const candidate = `${base}${suffix}${ext}`;
+    try {
+      await fs.access(path.join(targetDir, candidate));
+    } catch {
+      return candidate;
+    }
+  }
+  return `${base}-${Date.now()}${ext}`;
+};
 
 const getIdFromRequest = async (request, params) => {
   const resolvedParams = await params;
@@ -47,7 +78,7 @@ const getConvertedFolderFromUrl = (url) => {
 
 export async function PUT(request, { params }) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -114,6 +145,9 @@ export async function PUT(request, { params }) {
 
       // Handle new media files
       const mediaFiles = formData.getAll("mediaFile");
+      const uploadGroupId = makeGroupId(payload?.name || existing?.name || "manual");
+      const uploadFolder = sanitizePathToken(uploadGroupId, "manual_upload");
+      const groupedUploadDir = path.join(convertedDir, uploadFolder);
       for (const mediaFile of mediaFiles) {
         if (mediaFile && typeof mediaFile === "object" && mediaFile.arrayBuffer) {
           const buffer = Buffer.from(await mediaFile.arrayBuffer());
@@ -139,14 +173,17 @@ export async function PUT(request, { params }) {
             });
           } else {
             // Regular file upload (images, videos, etc.)
-            await fs.mkdir(uploadsDir, { recursive: true });
-            const ext = path.extname(filename) || ".bin";
-            const safeName = cleanFilename(path.basename(filename, ext));
-            const newFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
-            const filePath = path.join(uploadsDir, newFilename);
+            await fs.mkdir(groupedUploadDir, { recursive: true });
+            const newFilename = await resolveUniqueFilename(groupedUploadDir, filename);
+            const filePath = path.join(groupedUploadDir, newFilename);
             await fs.writeFile(filePath, buffer);
-            const publicUrl = `/uploads/${newFilename}`;
-            newMediaFiles.push({ type: getMediaType(mimeType || filename), url: publicUrl });
+            const publicUrl = `/uploads/converted/${uploadFolder}/${newFilename}`;
+            newMediaFiles.push({
+              type: getMediaType(mimeType || filename),
+              url: publicUrl,
+              groupId: uploadGroupId,
+              sourceName: "Manual upload",
+            });
           }
         }
       }
@@ -159,12 +196,31 @@ export async function PUT(request, { params }) {
     }
 
     const nextMedia = Array.isArray(payload.media) ? payload.media : existing.media;
-    const existingUrls = new Set((existing.media || []).map((item) => item.url));
-    const nextUrls = new Set((nextMedia || []).map((item) => item.url));
+    const existingMediaItems = Array.isArray(existing.media) ? existing.media : [];
+    const nextMediaItems = Array.isArray(nextMedia) ? nextMedia : [];
+    const existingUrls = new Set(existingMediaItems.map((item) => item?.url).filter(Boolean));
+    const nextUrls = new Set(nextMediaItems.map((item) => item?.url).filter(Boolean));
     const removedUrls = Array.from(existingUrls).filter((url) => !nextUrls.has(url));
     const remainingUrls = Array.from(nextUrls);
+    const nextByUrl = new Map(nextMediaItems.map((item) => [item?.url, item]));
+    const removedFileUrls = new Set(removedUrls);
 
-    for (const url of removedUrls) {
+    existingMediaItems.forEach((item) => {
+      const url = item?.url;
+      const oldThumbnailUrl = item?.thumbnailUrl;
+      if (!url || !oldThumbnailUrl) return;
+      if (!nextUrls.has(url)) {
+        removedFileUrls.add(oldThumbnailUrl);
+        return;
+      }
+      const nextItem = nextByUrl.get(url);
+      const nextThumbnailUrl = nextItem?.thumbnailUrl;
+      if (oldThumbnailUrl !== nextThumbnailUrl) {
+        removedFileUrls.add(oldThumbnailUrl);
+      }
+    });
+
+    for (const url of removedFileUrls) {
       if (typeof url !== "string") continue;
       if (!url.startsWith("/uploads/")) continue;
       const filePath = path.join(process.cwd(), "public", url);
@@ -175,13 +231,18 @@ export async function PUT(request, { params }) {
       }
     }
 
+    const remainingFileUrls = [
+      ...remainingUrls,
+      ...nextMediaItems.map((item) => item?.thumbnailUrl).filter(Boolean),
+    ];
+
     const removedConvertedFolders = new Set(
-      removedUrls
+      Array.from(removedFileUrls)
         .map((url) => (typeof url === "string" ? getConvertedFolderFromUrl(url) : null))
         .filter(Boolean)
     );
     const remainingConvertedFolders = new Set(
-      remainingUrls
+      remainingFileUrls
         .map((url) => (typeof url === "string" ? getConvertedFolderFromUrl(url) : null))
         .filter(Boolean)
     );
@@ -210,7 +271,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -227,7 +288,11 @@ export async function DELETE(request, { params }) {
     }
 
     const mediaItems = Array.isArray(deleted.media) ? deleted.media : [];
-    const mediaUrls = mediaItems.map((item) => item?.url).filter(Boolean);
+    const mediaUrls = new Set();
+    mediaItems.forEach((item) => {
+      if (item?.url) mediaUrls.add(item.url);
+      if (item?.thumbnailUrl) mediaUrls.add(item.thumbnailUrl);
+    });
     const convertedFolders = new Set();
 
     for (const url of mediaUrls) {

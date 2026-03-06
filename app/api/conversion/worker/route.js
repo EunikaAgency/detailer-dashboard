@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import { processOne } from "@/lib/conversionWorker";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
@@ -10,7 +10,7 @@ export async function POST(request) {
   const cronSecret = process.env.CONVERSION_CRON_SECRET || "";
   const providedSecret = request.headers.get("x-cron-secret") || "";
   if (!cronSecret || cronSecret !== providedSecret) {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

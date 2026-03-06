@@ -3,7 +3,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import { isPdf, isPpt } from "@/lib/fileConverter";
 import "@/lib/conversionWorker";
 
@@ -18,6 +18,7 @@ const getMediaType = (value) => {
   if (lower.includes("video") || lower.match(/\.(mp4|mov|webm|avi)$/)) return "video";
   if (lower.includes("pdf") || lower.endsWith(".pdf")) return "pdf";
   if (lower.match(/\.(png|jpg|jpeg|gif|webp)$/)) return "image";
+  if (lower.includes("text/html") || lower.match(/\.(html|htm)$/)) return "html";
   return "image";
 };
 
@@ -27,6 +28,36 @@ const isImageFile = (filename = "", mimeType = "") => {
 };
 
 const cleanFilename = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
+const makeGroupId = (seed = "media") =>
+  `${Date.now()}-${Math.round(Math.random() * 1e9)}-${cleanFilename(seed).slice(0, 80) || "media"}`;
+const sanitizePathToken = (value = "", fallback = "media") => {
+  const cleaned = cleanFilename(String(value || "").slice(0, 120));
+  if (!cleaned || /^\.+$/.test(cleaned)) return fallback;
+  return cleaned;
+};
+const toSafeUploadFilename = (originalName = "upload") => {
+  const rawName = String(originalName || "upload").trim() || "upload";
+  const rawExt = path.extname(rawName);
+  const safeBase = sanitizePathToken(path.basename(rawName, rawExt), "upload");
+  const safeExtToken = sanitizePathToken(rawExt, "bin");
+  const safeExt = safeExtToken.startsWith(".") ? safeExtToken : `.${safeExtToken}`;
+  return `${safeBase}${safeExt}`;
+};
+const resolveUniqueFilename = async (targetDir, originalName = "upload") => {
+  const safeName = toSafeUploadFilename(originalName);
+  const ext = path.extname(safeName);
+  const base = path.basename(safeName, ext);
+  for (let index = 0; index < 1000; index += 1) {
+    const suffix = index === 0 ? "" : `-${index + 1}`;
+    const candidate = `${base}${suffix}${ext}`;
+    try {
+      await fs.access(path.join(targetDir, candidate));
+    } catch {
+      return candidate;
+    }
+  }
+  return `${base}-${Date.now()}${ext}`;
+};
 
 const normalizeKey = (value) =>
   String(value || "")
@@ -87,6 +118,7 @@ const applyCacheBustToProductPayload = async (products = []) => {
             (group.items || []).map(async (item) => ({
               ...item,
               url: await resolveUrl(item?.url || ""),
+              thumbnailUrl: await resolveUrl(item?.thumbnailUrl || ""),
             }))
           ),
         }))
@@ -97,6 +129,7 @@ const applyCacheBustToProductPayload = async (products = []) => {
       media.map(async (item) => ({
         ...item,
         url: await resolveUrl(item?.url || ""),
+        thumbnailUrl: await resolveUrl(item?.thumbnailUrl || ""),
       }))
     );
   };
@@ -110,11 +143,6 @@ const applyCacheBustToProductPayload = async (products = []) => {
   );
 };
 
-const getFilenameFromUrl = (value = "") => {
-  const clean = getUrlWithoutQuery(value);
-  return clean.split("/").pop() || clean;
-};
-
 const getPageNumberFromFilename = (filename = "") => {
   const value = String(filename || "");
   const namedMatch = value.match(/(?:^|[._\-\s])(page|slide)[._\-\s]?(\d+)(?=\.[^.]+$|$)/i);
@@ -126,22 +154,6 @@ const getPageNumberFromFilename = (filename = "") => {
   if (!trailingMatch) return null;
   const parsed = Number.parseInt(trailingMatch[1], 10);
   return Number.isNaN(parsed) ? null : parsed;
-};
-
-const sortMediaItems = (left, right) => {
-  const leftName = getFilenameFromUrl(left?.url || "");
-  const rightName = getFilenameFromUrl(right?.url || "");
-  const leftPage = getPageNumberFromFilename(leftName);
-  const rightPage = getPageNumberFromFilename(rightName);
-
-  if (leftPage !== null && rightPage !== null && leftPage !== rightPage) {
-    return leftPage - rightPage;
-  }
-
-  return leftName.localeCompare(rightName, undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
 };
 
 const sortConvertedFilenames = (left, right) => {
@@ -231,6 +243,7 @@ const buildMediaGroupsFromMedia = (media = []) => {
     const entry = groups.get(folder) || [];
     entry.push({
       url,
+      thumbnailUrl: item?.thumbnailUrl,
       type: item?.type,
       title: item?.title,
       size: item?.size,
@@ -244,7 +257,7 @@ const buildMediaGroupsFromMedia = (media = []) => {
 
   return Array.from(groups.entries()).map(([groupId, items]) => ({
     groupId,
-    items: [...items].sort(sortMediaItems),
+    items,
   }));
 };
 
@@ -264,9 +277,8 @@ const hasValidApiKey = (request) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
-    const apiKeyAllowed = hasValidApiKey(request);
-    if (auth.error && !apiKeyAllowed) {
+    const auth = await requireApiAuthIfEnabled(request);
+    if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
@@ -283,7 +295,8 @@ export async function GET(request) {
           ...product,
           media: buildMediaGroupsFromMedia(product.media),
         }));
-    const responseProducts = auth.error && apiKeyAllowed
+    const apiKeyAllowed = hasValidApiKey(request);
+    const responseProducts = !auth.user && apiKeyAllowed
       ? await applyCacheBustToProductPayload(enriched)
       : enriched;
     const version = Math.floor(Date.now() / 3600000) * 3600000;
@@ -296,7 +309,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -349,6 +362,9 @@ export async function POST(request) {
     }
 
     const mediaFiles = formData.getAll("mediaFile");
+    const uploadGroupId = makeGroupId(name || "manual");
+    const uploadFolder = sanitizePathToken(uploadGroupId, "manual_upload");
+    const groupedUploadDir = path.join(convertedDir, uploadFolder);
     for (const mediaFile of mediaFiles) {
       if (mediaFile && typeof mediaFile === "object" && mediaFile.arrayBuffer) {
         const buffer = Buffer.from(await mediaFile.arrayBuffer());
@@ -374,14 +390,17 @@ export async function POST(request) {
           });
         } else {
           // Regular file upload (images, videos, etc.)
-          await fs.mkdir(uploadsDir, { recursive: true });
-          const ext = path.extname(filename) || ".bin";
-          const safeName = cleanFilename(path.basename(filename, ext));
-          const newFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeName}${ext}`;
-          const filePath = path.join(uploadsDir, newFilename);
+          await fs.mkdir(groupedUploadDir, { recursive: true });
+          const newFilename = await resolveUniqueFilename(groupedUploadDir, filename);
+          const filePath = path.join(groupedUploadDir, newFilename);
           await fs.writeFile(filePath, buffer);
-          const publicUrl = `/uploads/${newFilename}`;
-          media.push({ type: getMediaType(mimeType || filename), url: publicUrl });
+          const publicUrl = `/uploads/converted/${uploadFolder}/${newFilename}`;
+          media.push({
+            type: getMediaType(mimeType || filename),
+            url: publicUrl,
+            groupId: uploadGroupId,
+            sourceName: "Manual upload",
+          });
         }
       }
     }

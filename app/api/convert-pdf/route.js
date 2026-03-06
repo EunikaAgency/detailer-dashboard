@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { writeFile, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 
 // Polyfill for DOMMatrix if needed
 if (typeof global.DOMMatrix === 'undefined') {
@@ -17,6 +18,11 @@ const CONVERSION_HEIGHT = Number(process.env.CONVERSION_HEIGHT || '1080');
 
 export async function POST(request) {
   try {
+    const auth = await requireApiAuthIfEnabled(request);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file');
 

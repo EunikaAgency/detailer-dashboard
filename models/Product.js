@@ -1,13 +1,14 @@
 import mongoose from 'mongoose';
 
 const MediaSchema = new mongoose.Schema({
-  type: { type: String, enum: ['video', 'pdf', 'image'], required: true },
+  type: { type: String, enum: ['video', 'pdf', 'image', 'html'], required: true },
   url: { type: String, required: true },
   title: String,
   size: Number,
   status: String,
   groupId: String,
   sourceName: String,
+  thumbnailUrl: String,
   hotspots: [
     new mongoose.Schema(
       {

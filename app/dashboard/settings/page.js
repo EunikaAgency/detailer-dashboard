@@ -1,6 +1,6 @@
- "use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const EyeIcon = ({ closed = false }) => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -19,6 +19,42 @@ export default function SettingsPage() {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [apiLoginRequired, setApiLoginRequired] = useState(true);
+  const [isLoadingApiSetting, setIsLoadingApiSetting] = useState(true);
+  const [isSavingApiSetting, setIsSavingApiSetting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadApiAccessSetting = async () => {
+      setIsLoadingApiSetting(true);
+      try {
+        const response = await fetch("/api/settings/api-access", {
+          method: "GET",
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Failed to load API access setting.");
+        }
+        if (!active) return;
+        setApiLoginRequired(payload?.apiLoginRequired !== false);
+      } catch (error) {
+        if (!active) return;
+        setToast({
+          type: "error",
+          message: error?.message || "Failed to load API access setting.",
+        });
+      } finally {
+        if (active) setIsLoadingApiSetting(false);
+      }
+    };
+
+    loadApiAccessSetting();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const validationError = useMemo(() => {
     if (!currentPassword || !newPassword || !confirmNewPassword) return "";
@@ -64,6 +100,41 @@ export default function SettingsPage() {
     }
   };
 
+  const handleToggleApiLoginRequired = async () => {
+    if (isLoadingApiSetting || isSavingApiSetting) return;
+    const previousValue = apiLoginRequired;
+    const nextValue = !previousValue;
+
+    setApiLoginRequired(nextValue);
+    setIsSavingApiSetting(true);
+    setToast(null);
+
+    try {
+      const response = await fetch("/api/settings/api-access", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiLoginRequired: nextValue }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || "Failed to update API access setting.");
+      }
+      setApiLoginRequired(payload?.apiLoginRequired !== false);
+      setToast({
+        type: "success",
+        message: "API login requirement updated.",
+      });
+    } catch (error) {
+      setApiLoginRequired(previousValue);
+      setToast({
+        type: "error",
+        message: error?.message || "Failed to update API access setting.",
+      });
+    } finally {
+      setIsSavingApiSetting(false);
+    }
+  };
+
   return (
     <div className="max-w-xl space-y-4">
       {toast && (
@@ -77,6 +148,41 @@ export default function SettingsPage() {
           {toast.message}
         </div>
       )}
+
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-5 space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">API Access</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Enable this to require logged-in users for all non-auth API routes.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900">Require login for all APIs</p>
+            <p className="text-xs text-gray-600 mt-1">
+              {apiLoginRequired ? "Enabled" : "Disabled"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={apiLoginRequired}
+            disabled={isLoadingApiSetting || isSavingApiSetting}
+            onClick={handleToggleApiLoginRequired}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+              apiLoginRequired ? "bg-blue-600" : "bg-gray-300"
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                apiLoginRequired ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
 
       <form
         onSubmit={handleSubmit}

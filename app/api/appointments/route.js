@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Appointment from "@/models/Appointment";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

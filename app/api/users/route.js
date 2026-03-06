@@ -4,7 +4,7 @@ import crypto from "crypto";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import PendingCredential from "@/models/PendingCredential";
-import { requireAuth } from "@/lib/auth";
+import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import {
   getOfflineCredentialSecret,
   issueOfflineCredential,
@@ -83,7 +83,7 @@ const buildCredentialForUser = (user, issuedAt) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -131,7 +131,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireApiAuthIfEnabled(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
