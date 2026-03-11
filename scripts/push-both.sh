@@ -54,7 +54,7 @@ fi
 
 restore_account() {
   if [[ -n "$active_account" ]] && command -v gh >/dev/null 2>&1; then
-    current_account
+    local current_account
     current_account="$(gh auth status 2>/dev/null | awk '
       /Logged in to github.com account/ { acct=$7 }
       /Active account: true/ { print acct; exit }
