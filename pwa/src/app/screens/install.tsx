@@ -3,6 +3,7 @@ import { Card } from "../components/ui/card";
 import { Smartphone, Share, PlusSquare, Home } from "lucide-react";
 
 export default function Install() {
+  const screenId = "install";
   return (
     <div className="min-h-screen pb-6">
       <StickyHeader title="Install App" showBack backTo="/menu" />
@@ -13,7 +14,7 @@ export default function Install() {
         </p>
 
         {/* iOS Instructions */}
-        <Card className="p-6">
+        <Card id={`${screenId}-ios-card`} className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-blue-50 rounded-lg">
               <Smartphone className="w-6 h-6 text-blue-600" />
@@ -42,7 +43,7 @@ export default function Install() {
         </Card>
 
         {/* Android Instructions */}
-        <Card className="p-6">
+        <Card id={`${screenId}-android-card`} className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-green-50 rounded-lg">
               <Smartphone className="w-6 h-6 text-green-600" />
@@ -71,7 +72,7 @@ export default function Install() {
         </Card>
 
         {/* Benefits */}
-        <Card className="p-6 bg-blue-50 border-blue-200">
+        <Card id={`${screenId}-benefits-card`} className="p-6 bg-blue-50 border-blue-200">
           <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <Home className="w-5 h-5 text-blue-600" />
             Benefits of Installing

@@ -10,6 +10,7 @@ import { useAppSettings } from "../lib/settings";
 
 export default function Sessions() {
   const navigate = useNavigate();
+  const screenId = "sessions";
   const settings = useAppSettings();
   const [sessions, setSessions] = useState(() => getSessionsFromEvents());
   const [isSyncing, setIsSyncing] = useState(false);
@@ -65,7 +66,7 @@ export default function Sessions() {
         </p>
 
         {sessions.length === 0 ? (
-          <Card className="p-8 text-center">
+          <Card id={`${screenId}-empty-card`} className="p-8 text-center">
             <p className="text-slate-500">No sessions recorded yet</p>
             <p className="text-sm text-slate-400 mt-2">
               Sessions will appear here as you use the app
@@ -75,6 +76,7 @@ export default function Sessions() {
           <div className="space-y-3">
             {sessions.map((session) => (
               <Card
+                id={`${screenId}-session-card-${session.id}`}
                 key={session.id}
                 onClick={() => navigate(`/sessions/${session.id}`)}
                 className="p-4"

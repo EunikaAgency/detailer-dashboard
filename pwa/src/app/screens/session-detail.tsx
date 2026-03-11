@@ -10,6 +10,7 @@ import { useAppSettings } from "../lib/settings";
 export default function SessionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const screenId = "session-detail";
   const settings = useAppSettings();
   const [expandedEvents, setExpandedEvents] = useState<string[]>([]);
   const [session, setSession] = useState(() => (id ? getSessionById(id) : null));
@@ -44,7 +45,7 @@ export default function SessionDetail() {
       <div className="min-h-screen pb-6">
         <StickyHeader title="Session Details" showBack backTo="/sessions" />
         <div className="max-w-2xl mx-auto px-4 mt-6">
-          <Card className="p-8 text-center">
+          <Card id={`${screenId}-empty-card`} className="p-8 text-center">
             <p className="text-slate-500">Session not found</p>
             <button
               onClick={() => navigate("/sessions")}
@@ -72,7 +73,7 @@ export default function SessionDetail() {
 
       <div className="max-w-2xl mx-auto px-4 mt-6 space-y-4">
         {/* Session Summary */}
-        <Card className="p-5">
+        <Card id={`${screenId}-summary-card`} className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <h2 className="font-semibold text-slate-900 flex-1">{session.title}</h2>
             <Pill variant={session.status === "synced" ? "success" : "warning"}>
@@ -97,7 +98,7 @@ export default function SessionDetail() {
         </Card>
 
         {/* Session Statistics */}
-        <Card className="p-5">
+        <Card id={`${screenId}-statistics-card`} className="p-5">
           <h3 className="font-semibold text-slate-900 mb-4">Session Summary</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -139,6 +140,7 @@ export default function SessionDetail() {
               
               return (
                 <Card
+                  id={`${screenId}-event-card-${event.id}`}
                   key={event.id}
                   className={`p-4 ${hasMetadata ? 'cursor-pointer hover:bg-slate-50' : ''}`}
                   onClick={hasMetadata ? () => toggleEvent(event.id) : undefined}

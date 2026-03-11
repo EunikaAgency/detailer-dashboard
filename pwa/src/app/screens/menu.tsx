@@ -9,6 +9,7 @@ import { trackEvent } from "../lib/sessions";
 
 export default function Menu() {
   const navigate = useNavigate();
+  const screenId = "menu";
   const [installState, setInstallState] = useState(getInstallState());
   const settings = useAppSettings();
 
@@ -45,6 +46,7 @@ export default function Menu() {
       <div className="max-w-2xl mx-auto px-4 mt-6 space-y-3">
         {/* My Account */}
         <Card
+          id={`${screenId}-account-card`}
           onClick={() => navigate("/account")}
           className="p-4 flex items-center gap-3"
         >
@@ -60,6 +62,7 @@ export default function Menu() {
 
         {settings.showSessions && (
           <Card
+            id={`${screenId}-sessions-card`}
             onClick={() => navigate("/sessions")}
             className="p-4 flex items-center gap-3"
           >
@@ -76,6 +79,7 @@ export default function Menu() {
 
         {/* Settings */}
         <Card
+          id={`${screenId}-settings-card`}
           onClick={() => navigate("/settings")}
           className="p-4 flex items-center gap-3"
         >
@@ -92,6 +96,7 @@ export default function Menu() {
         {/* Install App (conditional) */}
         {installState.showAction && (
           <Card
+            id={`${screenId}-install-card`}
             onClick={handleInstallClick}
             className="p-4 flex items-center gap-3"
           >

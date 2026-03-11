@@ -16,6 +16,7 @@ import { trackEvent } from "../lib/sessions";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const screenId = "settings";
   const settings = useAppSettings();
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function Settings() {
         <div>
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Appearance</h2>
           
-          <Card className="divide-y divide-slate-200">
+          <Card id={`${screenId}-appearance-card`} className="divide-y divide-slate-200">
             {/* Actions */}
             <div className="p-4">
               <div className="font-medium text-slate-900 mb-1">Buttons and navigation</div>
@@ -108,7 +109,7 @@ export default function Settings() {
         <div>
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Presentation</h2>
           
-          <Card className="divide-y divide-slate-200">
+          <Card id={`${screenId}-presentation-card`} className="divide-y divide-slate-200">
             {/* Dynamic Slide Backdrop */}
             <div className="p-4 flex items-center justify-between">
               <div>
@@ -130,6 +131,7 @@ export default function Settings() {
 
         {/* Advanced Settings Link */}
         <Card
+          id={`${screenId}-advanced-card`}
           onClick={() => navigate("/settings/advanced")}
           className="p-4 flex items-center justify-between"
         >

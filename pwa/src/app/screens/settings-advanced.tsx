@@ -10,6 +10,7 @@ import { SegmentedControl } from "../components/ui/segmented-control";
 
 export default function SettingsAdvanced() {
   const navigate = useNavigate();
+  const screenId = "settings-advanced";
   const [settings, setSettings] = useState<AppSettings>(getSettings());
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function SettingsAdvanced() {
 
       <div className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
         {/* Warning Banner */}
-        <Card className="p-4 bg-amber-50 border-amber-200 flex items-start gap-3">
+        <Card id={`${screenId}-warning-card`} className="p-4 bg-amber-50 border-amber-200 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <div className="font-medium text-amber-900 mb-1">Advanced Settings</div>
@@ -69,7 +70,7 @@ export default function SettingsAdvanced() {
         <div>
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Developer Options</h2>
           
-          <Card className="divide-y divide-slate-200">
+          <Card id={`${screenId}-developer-options-card`} className="divide-y divide-slate-200">
             <div className="p-4">
               <div className="font-medium text-slate-900 mb-1">Offline presentation caching</div>
               <div className="text-sm text-slate-500 mb-3">
@@ -154,7 +155,7 @@ export default function SettingsAdvanced() {
         <div>
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Diagnostics</h2>
           
-          <Card className="divide-y divide-slate-200">
+          <Card id={`${screenId}-diagnostics-card`} className="divide-y divide-slate-200">
             <button
               onClick={() => navigate("/offline")}
               className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
@@ -194,7 +195,7 @@ export default function SettingsAdvanced() {
         <div>
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Cache Management</h2>
           
-          <Card>
+          <Card id={`${screenId}-cache-management-card`}>
             <button
               onClick={handleResetCache}
               className="w-full p-4 flex items-center gap-3 hover:bg-red-50 transition-colors text-left"
@@ -209,7 +210,7 @@ export default function SettingsAdvanced() {
         </div>
 
         {/* App Info */}
-        <Card className="p-4">
+        <Card id={`${screenId}-app-info-card`} className="p-4">
           <h3 className="font-medium text-slate-900 mb-3">App Information</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">

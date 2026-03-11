@@ -6,6 +6,7 @@ import { clearMediaCache, clearPresentationCache, getOfflinePresentationSummary,
 import { getSessionSyncDiagnostics } from "../lib/sessions";
 
 export default function OfflineSupport() {
+  const screenId = "offline-support";
   const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
   const [offlineSummary, setOfflineSummary] = useState(() => getOfflinePresentationSummary());
   const [storageEstimate, setStorageEstimate] = useState<Awaited<ReturnType<typeof getStorageEstimateSnapshot>>>(null);
@@ -40,14 +41,14 @@ export default function OfflineSupport() {
       <StickyHeader title="Offline Support" showBack backTo="/presentations" />
 
       <div className="max-w-3xl mx-auto px-4 mt-6 space-y-4">
-        <Card className="p-5">
+        <Card id={`${screenId}-connectivity-card`} className="p-5">
           <div className="text-lg font-semibold text-slate-900">Connectivity</div>
           <p className={`mt-2 text-sm ${online ? "text-green-700" : "text-amber-700"}`}>
             {online ? "Online. Sync and repair actions are available." : "Offline. Only downloaded and verified decks are expected to work."}
           </p>
         </Card>
 
-        <Card className="p-5">
+        <Card id={`${screenId}-library-card`} className="p-5">
           <div className="text-lg font-semibold text-slate-900">Offline Library</div>
           <div className="mt-3 space-y-2 text-sm text-slate-600">
             <div>{offlineSummary.downloadedProducts} ready presentations</div>
@@ -78,7 +79,7 @@ export default function OfflineSupport() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card id={`${screenId}-storage-card`} className="p-5">
           <div className="text-lg font-semibold text-slate-900">Storage</div>
           <div className="mt-3 space-y-2 text-sm text-slate-600">
             <div>Quota: {storageEstimate?.quota ? `${Math.round(storageEstimate.quota / 1024 / 1024)} MB` : "Unavailable"}</div>
@@ -87,7 +88,7 @@ export default function OfflineSupport() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card id={`${screenId}-session-sync-card`} className="p-5">
           <div className="text-lg font-semibold text-slate-900">Session Sync</div>
           <div className="mt-3 space-y-2 text-sm text-slate-600">
             <div>Queued events: {syncDiagnostics?.queueSize ?? "Unavailable"}</div>

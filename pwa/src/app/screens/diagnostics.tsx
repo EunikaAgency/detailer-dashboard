@@ -24,6 +24,7 @@ import { getAppUpdateState } from '../lib/pwa';
 
 export default function Diagnostics() {
   const navigate = useNavigate();
+  const screenId = "diagnostics";
   const [testing, setTesting] = useState(false);
   const [mediaCacheEntries, setMediaCacheEntries] = useState(0);
   const [presentationCacheEntries, setPresentationCacheEntries] = useState(0);
@@ -82,7 +83,7 @@ export default function Diagnostics() {
 
       <div className="max-w-4xl mx-auto px-4 mt-6 space-y-4">
         {/* API Test */}
-        <Card className="p-5">
+        <Card id={`${screenId}-api-test-card`} className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-900">API Connection Test</h2>
             <button
@@ -131,7 +132,7 @@ export default function Diagnostics() {
         </Card>
 
         {/* Authentication Status */}
-        <Card className="p-5">
+        <Card id={`${screenId}-auth-status-card`} className="p-5">
           <h2 className="font-semibold text-slate-900 mb-4">Authentication Status</h2>
           
           <div className="space-y-3 text-sm">
@@ -184,7 +185,7 @@ export default function Diagnostics() {
         </Card>
 
         {/* Cache Status */}
-        <Card className="p-5">
+        <Card id={`${screenId}-cache-status-card`} className="p-5">
           <h2 className="font-semibold text-slate-900 mb-4">Cache Status</h2>
           
           <div className="space-y-3 text-sm">
@@ -278,7 +279,7 @@ export default function Diagnostics() {
         </Card>
 
         {/* API Endpoint Info */}
-        <Card className="p-5">
+        <Card id={`${screenId}-api-config-card`} className="p-5">
           <h2 className="font-semibold text-slate-900 mb-4">API Configuration</h2>
           
           <div className="space-y-3 text-sm">
@@ -309,7 +310,7 @@ export default function Diagnostics() {
         </Card>
 
         {/* localStorage Dump */}
-        <Card className="p-5">
+        <Card id={`${screenId}-local-storage-card`} className="p-5">
           <h2 className="font-semibold text-slate-900 mb-4">localStorage Contents</h2>
           
           <div className="space-y-2 text-sm">
@@ -327,7 +328,7 @@ export default function Diagnostics() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="p-5">
+        <Card id={`${screenId}-quick-actions-card`} className="p-5">
           <h2 className="font-semibold text-slate-900 mb-4">Quick Actions</h2>
           
           <div className="flex flex-wrap gap-2">
