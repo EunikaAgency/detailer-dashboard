@@ -24,6 +24,7 @@ export interface Session {
   startTime: number;
   endTime: number;
   events: SessionEvent[];
+  userAgent?: string;
   persistedTitle?: string; // Persisted deterministic title
 }
 
@@ -272,6 +273,15 @@ function notifySessionStateChanged() {
   window.dispatchEvent(new CustomEvent(SESSION_STATE_EVENT));
 }
 
+function getRuntimeUserAgent() {
+  if (typeof navigator === 'undefined') {
+    return undefined;
+  }
+
+  const userAgent = String(navigator.userAgent || "").trim();
+  return userAgent || undefined;
+}
+
 export function subscribeSessionState(listener: () => void) {
   if (typeof window === 'undefined') {
     return () => {};
@@ -317,6 +327,11 @@ export function trackEvent(
   const events = getStoredEvents();
   const timestampMs = Date.now();
   const sessionId = resolveSessionId(action, events, timestampMs);
+  const userAgent = getRuntimeUserAgent();
+  const enrichedMetadata =
+    userAgent && metadata?.userAgent === undefined
+      ? { ...metadata, userAgent }
+      : metadata;
 
   const event: SessionEvent = {
     id: `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -327,7 +342,7 @@ export function trackEvent(
     source,
     timestamp,
     timestampMs,
-    metadata,
+    metadata: enrichedMetadata,
     sessionId,
   };
 
@@ -432,6 +447,8 @@ function createSession(
     persistSessionTitle(sessionId, title);
   }
 
+  const userAgent = events.find((event) => typeof event.metadata?.userAgent === 'string')?.metadata?.userAgent;
+
   return {
     id: sessionId,
     title,
@@ -442,6 +459,7 @@ function createSession(
     startTime,
     endTime,
     events,
+    userAgent: typeof userAgent === 'string' ? userAgent : undefined,
   };
 }
 

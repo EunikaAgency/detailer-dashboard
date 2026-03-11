@@ -122,6 +122,13 @@ export default function SessionDetail() {
               </div>
             </div>
           </div>
+
+          {session.userAgent && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="text-sm text-slate-600 mb-1">Device</div>
+              <div className="text-sm text-slate-900 break-words">{session.userAgent}</div>
+            </div>
+          )}
         </Card>
 
         {/* Event Timeline */}
