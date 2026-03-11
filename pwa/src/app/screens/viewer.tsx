@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Menu, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { getLocallyAvailableProducts, getProductById, normalizeSlides, type NormalizedSlide } from "../lib/products";
 import { trackEvent } from "../lib/sessions";
 import { useAppSettings } from "../lib/settings";
@@ -331,18 +331,32 @@ export default function Viewer() {
   const currentSlideData = slides[currentSlide];
   const slideId = buildDomId(viewerId, "slide", currentSlide + 1, currentSlideData.type);
   const thumbnailToggleLabel = showThumbnails ? "Hide thumbnails" : "Show thumbnails";
+  const goHome = () => navigate("/presentations#presentations-screen-content");
 
   return (
     <div id={`${viewerId}-root`} className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       {/* Top Bar */}
       <div id={`${viewerId}-topbar`} className="bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 px-4 py-3 flex items-center justify-between">
-        <button
-          id={`${viewerId}-menu-button`}
-          onClick={() => navigate("/menu")}
-          className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-        >
-          <Menu className="w-5 h-5 text-white" />
-        </button>
+        <div id={`${viewerId}-primary-actions`} className="flex items-center gap-2">
+          <ActionButton
+            id={`${viewerId}-menu-button`}
+            onClick={() => navigate("/menu")}
+            className="backdrop-blur-sm"
+            aria-label="Open menu"
+            label="Menu"
+            tone="dark"
+            icon={<Menu className="w-5 h-5" />}
+          />
+          <ActionButton
+            id={`${viewerId}-home-button`}
+            onClick={goHome}
+            className="backdrop-blur-sm"
+            aria-label="Go to presentations"
+            label="Home"
+            tone="dark"
+            icon={<Home className="w-5 h-5" />}
+          />
+        </div>
         
         <div id={`${viewerId}-title-group`} className="text-center flex-1 px-4">
           <div id={`${viewerId}-title`} className="font-semibold text-white">{deckTitle}</div>

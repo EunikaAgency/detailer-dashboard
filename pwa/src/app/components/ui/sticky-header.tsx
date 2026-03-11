@@ -39,14 +39,6 @@ export function StickyHeader({
           id={idPrefix ? `${idPrefix}-primary` : undefined}
           className="flex items-center gap-3 flex-1 min-w-0"
         >
-          <ActionButton
-            id={idPrefix ? `${idPrefix}-home-button` : undefined}
-            onClick={goHome}
-            className={showMenu ? "shrink-0" : "-ml-2 shrink-0"}
-            aria-label="Go to presentations"
-            label="Home"
-            icon={<Home className="w-5 h-5" />}
-          />
           {showMenu && (
             <ActionButton
               id={idPrefix ? `${idPrefix}-menu-button` : undefined}
@@ -57,6 +49,14 @@ export function StickyHeader({
               icon={<Menu className="w-5 h-5" />}
             />
           )}
+          <ActionButton
+            id={idPrefix ? `${idPrefix}-home-button` : undefined}
+            onClick={goHome}
+            className={showMenu ? "shrink-0" : "-ml-2 shrink-0"}
+            aria-label="Go to presentations"
+            label="Home"
+            icon={<Home className="w-5 h-5" />}
+          />
           <div
             id={idPrefix ? `${idPrefix}-title-group` : undefined}
             className="flex items-center gap-2 min-w-0 flex-1"

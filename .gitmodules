@@ -1,0 +1,4 @@
+[submodule "app-capacitor"]
+	path = app-capacitor
+	url = https://github.com/EunikaAgency/one-detailer-app-paw-capacitor.git
+	branch = live
