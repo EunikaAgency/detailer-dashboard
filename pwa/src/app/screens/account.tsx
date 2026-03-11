@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, KeyRound } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { StickyHeader } from "../components/ui/sticky-header";
 import { Card } from "../components/ui/card";
 import { getAccountProfile, getAuthMode, syncStoredPassword } from "../lib/auth";
@@ -17,13 +17,16 @@ export default function Account() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const passwordHint = useMemo(() => {
     if (passwordChangeBlocked) {
-      return "Password replacement requires an online session.";
+      return "Changing your login password requires an online session. It does not change the admin secret keygen.";
     }
 
-    return "Use at least 8 characters. This also refreshes your saved offline sync credentials on this device.";
+    return "Use at least 8 characters";
   }, [passwordChangeBlocked]);
 
   // If no profile, show minimal state
@@ -150,7 +153,7 @@ export default function Account() {
               <KeyRound className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-slate-900">Replace Password</h2>
+              <h2 className="font-semibold text-slate-900">Change Login Password</h2>
               <p className="text-sm text-slate-500 mt-1">{passwordHint}</p>
             </div>
           </div>
@@ -172,59 +175,92 @@ export default function Account() {
           <form onSubmit={handlePasswordReplace} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                Current password
+                Current login password
               </label>
-              <input
-                id={`${screenId}-current-password-input`}
-                type="password"
-                value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                  setError("");
-                  setSuccess("");
-                }}
-                disabled={isSubmitting || passwordChangeBlocked}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
-                placeholder="Enter current password"
-              />
+              <div className="relative">
+                <input
+                  id={`${screenId}-current-password-input`}
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="w-full px-3 py-2.5 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  placeholder="Enter current login password"
+                />
+                <button
+                  type="button"
+                  aria-label={showCurrentPassword ? "Hide current login password" : "Show current login password"}
+                  onClick={() => setShowCurrentPassword((current) => !current)}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-slate-500 hover:text-slate-700 disabled:text-slate-300"
+                >
+                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                New password
+                New login password
               </label>
-              <input
-                id={`${screenId}-new-password-input`}
-                type="password"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setError("");
-                  setSuccess("");
-                }}
-                disabled={isSubmitting || passwordChangeBlocked}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
-                placeholder="Enter new password"
-              />
+              <div className="relative">
+                <input
+                  id={`${screenId}-new-password-input`}
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="w-full px-3 py-2.5 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  placeholder="Enter new login password"
+                />
+                <button
+                  type="button"
+                  aria-label={showNewPassword ? "Hide new login password" : "Show new login password"}
+                  onClick={() => setShowNewPassword((current) => !current)}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-slate-500 hover:text-slate-700 disabled:text-slate-300"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                Confirm new password
+                Confirm new login password
               </label>
-              <input
-                id={`${screenId}-confirm-password-input`}
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setError("");
-                  setSuccess("");
-                }}
-                disabled={isSubmitting || passwordChangeBlocked}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
-                placeholder="Confirm new password"
-              />
+              <div className="relative">
+                <input
+                  id={`${screenId}-confirm-password-input`}
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="w-full px-3 py-2.5 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  placeholder="Confirm new login password"
+                />
+                <button
+                  type="button"
+                  aria-label={showConfirmPassword ? "Hide confirmed login password" : "Show confirmed login password"}
+                  onClick={() => setShowConfirmPassword((current) => !current)}
+                  disabled={isSubmitting || passwordChangeBlocked}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-slate-500 hover:text-slate-700 disabled:text-slate-300"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -233,7 +269,7 @@ export default function Account() {
               disabled={isSubmitting || passwordChangeBlocked}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Replacing password..." : "Replace password"}
+              {isSubmitting ? "Changing login password..." : "Change login password"}
             </button>
           </form>
         </Card>

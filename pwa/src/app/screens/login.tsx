@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { AlertCircle, LoaderCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { login as performLogin, getSavedCredentials } from "../lib/auth";
 import { initializeSession, trackOfflineGranted } from "../lib/sessions";
 
@@ -51,6 +51,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoginPending, setAutoLoginPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submitSignIn = async (identifier: string, secret: string, rememberCredentials: boolean) => {
     setError("");
@@ -165,19 +166,30 @@ export default function Login() {
             {/* Password */}
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                Pass
+                Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError("");
-                }}
-                disabled={isLoading}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
-                placeholder="Enter password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  disabled={isLoading}
+                  className="w-full px-3 py-2.5 pr-11 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  placeholder="Enter password"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((current) => !current)}
+                  disabled={isLoading}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-slate-500 hover:text-slate-700 disabled:text-slate-300"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {/* Remember Checkbox */}
