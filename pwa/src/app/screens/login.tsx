@@ -66,10 +66,10 @@ export default function Login() {
 
           {/* Form */}
           <form onSubmit={handleSignIn} className="space-y-4">
-            {/* Username */}
+            {/* OPPI */}
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                User
+                OPPI
               </label>
               <input
                 type="text"
@@ -80,7 +80,7 @@ export default function Login() {
                 }}
                 disabled={isLoading}
                 className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
-                placeholder="Enter username"
+                placeholder="Enter OPPI"
               />
             </div>
 

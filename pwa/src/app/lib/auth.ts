@@ -292,7 +292,7 @@ export async function login(
 ): Promise<{ success: true; mode: AuthMode } | { success: false; error: string }> {
   // Validation
   if (!identifier || !password) {
-    return { success: false, error: 'Please enter both username and password' };
+    return { success: false, error: 'Please enter both OPPI and password' };
   }
 
   try {
