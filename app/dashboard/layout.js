@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import DashboardShell from "./DashboardShell";
 
 export default async function DashboardLayout({ children }) {
-  const auth = await requireAuth();
+  const auth = await requireAdmin();
   if (auth.error) {
-    redirect("/login");
+    redirect(auth.status === 401 ? "/login" : "/");
   }
 
   return <DashboardShell>{children}</DashboardShell>;

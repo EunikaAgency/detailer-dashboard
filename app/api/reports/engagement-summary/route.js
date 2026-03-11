@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/db";
-import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
+import { requireAdmin } from "@/lib/auth";
 import ActivityLog from "@/models/ActivityLog";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -50,7 +50,7 @@ const buildProductLabel = (productEntry, productDoc) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

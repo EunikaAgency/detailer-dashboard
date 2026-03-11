@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
-import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
+import { requireAdmin } from "@/lib/auth";
+import { getUserAccessType } from "@/lib/userAccess";
 import { getOfflineCredentialSecret, issueOfflineCredential, normalizeIdentity } from "@/lib/offlineCredential";
 
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
+  accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
   keygenIssuedAt: user?.keygenIssuedAt || null,
   createdAt: user?.createdAt,
@@ -69,7 +71,7 @@ const buildCredentialForUser = (user, issuedAt) => {
 
 export async function PUT(request, { params }) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -91,6 +93,8 @@ export async function PUT(request, { params }) {
     const hasRepId = typeof body?.repId === "string";
     const hasRole = typeof body?.role === "string";
     const hasPassword = typeof body?.password === "string";
+    const rawPassword = hasPassword ? String(body.password || "") : "";
+    const hasManualPassword = hasPassword && rawPassword.length > 0;
 
     if (!hasName && !hasUsername && !hasRepId && !hasRole && !hasPassword && !body?.reissueKeygen) {
       return NextResponse.json({ error: "No update fields provided." }, { status: 400 });
@@ -136,12 +140,16 @@ export async function PUT(request, { params }) {
       user.role = role;
     }
 
-    if (hasPassword && body.password) {
-      user.password = await bcrypt.hash(String(body.password), 10);
+    if (hasManualPassword && rawPassword.length < 8) {
+      return NextResponse.json(
+        { error: "Manual password must be at least 8 characters." },
+        { status: 400 }
+      );
     }
 
     let issuedCredential = null;
     const shouldReissue = Boolean(body?.reissueKeygen) || hasUsername || hasRepId || hasRole;
+    const manualPasswordHash = hasManualPassword ? await bcrypt.hash(rawPassword, 10) : null;
 
     if (shouldReissue || !user.keygen) {
       const secret = getOfflineCredentialSecret();
@@ -164,7 +172,9 @@ export async function PUT(request, { params }) {
 
       user.keygen = credential;
       user.keygenIssuedAt = issuedAt;
-      user.password = await bcrypt.hash(credential, 10);
+      if (!manualPasswordHash) {
+        user.password = await bcrypt.hash(credential, 10);
+      }
 
       issuedCredential = {
         username: user.username || user.name,
@@ -173,6 +183,10 @@ export async function PUT(request, { params }) {
         repId: user.repId || "",
         role: user.role || "",
       };
+    }
+
+    if (manualPasswordHash) {
+      user.password = manualPasswordHash;
     }
 
     await user.save();
@@ -189,7 +203,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

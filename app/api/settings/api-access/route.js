@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getApiLoginRequired, setApiLoginRequired } from "@/lib/apiAccess";
 
 export const runtime = "nodejs";
 
 export async function GET(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -24,7 +24,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const auth = await requireAuth(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

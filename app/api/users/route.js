@@ -4,7 +4,8 @@ import crypto from "crypto";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import PendingCredential from "@/models/PendingCredential";
-import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
+import { requireAdmin } from "@/lib/auth";
+import { getUserAccessType } from "@/lib/userAccess";
 import {
   getOfflineCredentialSecret,
   issueOfflineCredential,
@@ -52,6 +53,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
+  accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
   keygenIssuedAt: user?.keygenIssuedAt || null,
   createdAt: user?.createdAt,
@@ -83,7 +85,7 @@ const buildCredentialForUser = (user, issuedAt) => {
 
 export async function GET(request) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -131,7 +133,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

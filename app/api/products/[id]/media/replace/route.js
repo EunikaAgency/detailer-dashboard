@@ -3,7 +3,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
-import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
+import { requireAdmin } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -40,7 +40,7 @@ const isPathInsideUploads = (targetPath) => {
 
 export async function POST(request, { params }) {
   try {
-    const auth = await requireApiAuthIfEnabled(request);
+    const auth = await requireAdmin(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
