@@ -72,6 +72,73 @@ export function getSavedCredentials(): SavedCredentials | null {
   return saved ? JSON.parse(saved) : null;
 }
 
+export function syncStoredPassword(newPassword: string) {
+  const trimmedPassword = String(newPassword || "").trim();
+  if (!trimmedPassword) {
+    return;
+  }
+
+  const profile = getAccountProfile();
+  const identifier = String(profile?.issuedLoginUsername || profile?.username || "").trim();
+  if (!identifier) {
+    return;
+  }
+
+  const timestamp = new Date().toISOString();
+
+  const savedCredentials = getSavedCredentials();
+  if (savedCredentials) {
+    localStorage.setItem(
+      'savedCredentials',
+      JSON.stringify({
+        ...savedCredentials,
+        identifier,
+        password: trimmedPassword,
+        createdAt: timestamp,
+      } satisfies SavedCredentials)
+    );
+  }
+
+  localStorage.setItem(
+    'offlineSyncCredentials',
+    JSON.stringify({
+      identifier,
+      password: trimmedPassword,
+      createdAt: timestamp,
+    })
+  );
+
+  const existingOfflineAuth = localStorage.getItem('offlineAuth');
+  const baseOfflineAuth: OfflineAuth = existingOfflineAuth
+    ? JSON.parse(existingOfflineAuth)
+    : {
+        method: 'password',
+        username: identifier.trim().toLowerCase(),
+        passwordHash: '',
+        keygenHash: null,
+        repId: profile?.repId,
+        role: profile?.role,
+        credentialCreatedAt: timestamp,
+        grantedAt: Date.now(),
+        validUntil: Date.now() + (30 * 24 * 60 * 60 * 1000),
+      };
+
+  localStorage.setItem(
+    'offlineAuth',
+    JSON.stringify({
+      ...baseOfflineAuth,
+      username: identifier.trim().toLowerCase(),
+      passwordHash: simpleHash(trimmedPassword),
+      keygenHash: null,
+      repId: profile?.repId || baseOfflineAuth.repId,
+      role: profile?.role || baseOfflineAuth.role,
+      credentialCreatedAt: timestamp,
+      grantedAt: Date.now(),
+      validUntil: Date.now() + (30 * 24 * 60 * 60 * 1000),
+    } satisfies OfflineAuth)
+  );
+}
+
 /**
  * Simple hash function for offline password validation
  */

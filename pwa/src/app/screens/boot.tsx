@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { isAuthenticated } from "../lib/auth";
 import { initializeConfig } from "../lib/config";
 
 export default function Boot() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     let active = true;
@@ -17,7 +18,18 @@ export default function Boot() {
           return;
         }
 
-        navigate(isAuthenticated() ? "/presentations" : "/login", { replace: true });
+        if (isAuthenticated()) {
+          navigate("/presentations", { replace: true });
+          return;
+        }
+
+        navigate(
+          {
+            pathname: "/login",
+            search: location.search,
+          },
+          { replace: true }
+        );
       } catch {
         if (!active) {
           return;
@@ -32,7 +44,7 @@ export default function Boot() {
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [location.search, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">

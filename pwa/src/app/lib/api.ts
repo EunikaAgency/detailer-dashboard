@@ -119,6 +119,16 @@ export interface LoginEventsResponse {
   success: boolean;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message?: string;
+}
+
 /**
  * API Client with auth header support
  */
@@ -277,6 +287,14 @@ class ApiClient {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(payload),
+    });
+  }
+
+  async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+    return this.requestJson<ChangePasswordResponse>(buildRelativeOrAbsoluteUrl(API_BASE_URL, "/auth/change-password"), {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
     });
   }
 }
