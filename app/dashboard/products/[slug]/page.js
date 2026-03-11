@@ -20,6 +20,15 @@ const CONVERTED_PREFIX = "/uploads/converted/";
 const isImageUrl = (value = "") => /(png|jpg|jpeg|gif|webp)$/i.test(value);
 const isHtmlFilename = (value = "") => /\.(html|htm)$/i.test(value);
 
+const isHtmlMediaItem = (item = {}) =>
+  String(item?.type || "").toLowerCase() === "html" || isHtmlFilename(item?.url || "");
+
+const getHotspotPreviewUrl = (item = {}) => {
+  if (isImageUrl(item?.url || "")) return item.url;
+  if (isHtmlMediaItem(item)) return String(item?.thumbnailUrl || "").trim();
+  return "";
+};
+
 const getFilenameFromUrl = (value = "") => {
   const clean = String(value || "").split("#")[0].split("?")[0];
   return clean.split("/").pop() || clean;
@@ -149,12 +158,17 @@ const getGroupId = (group) => {
 
 const buildGroupPages = (group) =>
   (group.items || [])
-    .filter((item) => isImageUrl(item.url))
-    .map((item, idx) => ({
+    .map((item) => ({
+      item,
+      previewUrl: getHotspotPreviewUrl(item),
+    }))
+    .filter(({ previewUrl }) => Boolean(previewUrl))
+    .map(({ item, previewUrl }, idx) => ({
       pageId: item.url,
       index: idx + 1,
-      imageUrl: item.url,
+      imageUrl: previewUrl,
       filename: getFilenameFromUrl(item.url),
+      type: item.type,
     }));
 
 const getHotspotCount = (item) =>
@@ -1421,18 +1435,25 @@ export default function ProductDetailPage() {
 
   const openHotspotEditor = (group, item) => {
     const pages = buildGroupPages(group);
+    if (!pages.length) {
+      showToast("error", "Add an image or set an HTML thumbnail before editing hotspots.");
+      return;
+    }
     const groupId = getGroupId(group);
     const initialHotspotsByPage = pages.reduce((acc, page) => {
       const mediaItem = existingMedia.find((entry) => entry.url === page.pageId);
       acc[page.pageId] = Array.isArray(mediaItem?.hotspots) ? mediaItem.hotspots : [];
       return acc;
     }, {});
+    const initialPageId = pages.some((page) => page.pageId === item.url)
+      ? item.url
+      : pages[0]?.pageId || "";
     setHotspotEditor({
       isOpen: true,
       groupId,
       pages,
       initialHotspotsByPage,
-      initialPageId: item.url,
+      initialPageId,
     });
   };
 
@@ -1717,6 +1738,8 @@ export default function ProductDetailPage() {
                                     const isHtml =
                                       String(item?.type || "").toLowerCase() === "html" ||
                                       isHtmlFilename(filename);
+                                    const hotspotPreviewUrl = getHotspotPreviewUrl(item);
+                                    const supportsHotspots = Boolean(hotspotPreviewUrl);
                                     const mediaPreviewUrl = isImage
                                       ? item.url
                                       : isHtml
@@ -1781,11 +1804,21 @@ export default function ProductDetailPage() {
                                           </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                          {isImage && (
+                                          {supportsHotspots && (
                                             <button
                                               type="button"
                                               onClick={() => openHotspotEditor(group, item)}
                                               className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+                                            >
+                                              Hotspot
+                                            </button>
+                                          )}
+                                          {isHtml && !supportsHotspots && (
+                                            <button
+                                              type="button"
+                                              disabled
+                                              className="rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-400"
+                                              title="Set a thumbnail first to place hotspots on this HTML slide."
                                             >
                                               Hotspot
                                             </button>
@@ -1802,7 +1835,7 @@ export default function ProductDetailPage() {
                                                 : "Replace image"}
                                             </button>
                                           )}
-                                          {isImage && (
+                                          {supportsHotspots && (
                                             <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
                                               {getHotspotCount(item)} hotspot
                                               {getHotspotCount(item) === 1 ? "" : "s"}
