@@ -206,3 +206,29 @@ All scripts include:
 - `export-db.js` - Database export using mongodump
 - `check-users.js` - User listing
 - `conversion-cron.js` - File conversion cron job
+
+---
+
+### 6. Daily Server Security Audit Report
+
+**Purpose:** Generate a passive daily audit report for the Ubuntu production server.
+
+**Command:**
+```bash
+bash scripts/security-audit-report.sh --config /etc/server-audit-report.conf
+```
+
+**What it does:**
+- Collects a last-24-hour security and change summary
+- Stores a dated machine-readable snapshot for comparisons
+- Compares today with the previous snapshot and recent 5-day history
+- Writes a human-readable plain text report
+
+**Important:**
+- Reporting only
+- No blocking, deleting, restarting, or remediation by default
+- Intended to run as `root` from cron for complete visibility
+
+**Docs:**
+- `scripts/SECURITY_AUDIT.md`
+- `scripts/security-audit.conf.example`

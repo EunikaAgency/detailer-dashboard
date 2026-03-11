@@ -1,0 +1,83 @@
+# Copy this file to /etc/server-audit-report.conf and edit it there.
+# The script is passive by default. Pruning is optional and disabled unless
+# you explicitly set ENABLE_PRUNE=1.
+
+BASE_DIR="/var/local/server-audit"
+REPORT_DIR="$BASE_DIR/reports"
+STATE_DIR="$BASE_DIR/state"
+
+WINDOW_HOURS=24
+HISTORY_DAYS=5
+MAX_DETAIL_LINES=40
+
+ENABLE_PRUNE=0
+REPORT_RETENTION_DAYS=90
+STATE_RETENTION_DAYS=30
+
+# Add app-specific docroots if they are not defined in Apache.
+EXTRA_WEBROOTS=(
+  "/var/public/otsukadetailer/detailer/web/public"
+)
+
+# Keep these focused so the report highlights system-level drift instead of
+# routine application content churn.
+SENSITIVE_DIRS=(
+  "/etc"
+  "/usr/local/bin"
+  "/usr/local/sbin"
+  "/var/spool/cron"
+  "/etc/cron.d"
+  "/etc/cron.daily"
+  "/etc/cron.hourly"
+  "/etc/cron.monthly"
+  "/etc/cron.weekly"
+  "/etc/systemd/system"
+  "/lib/systemd/system"
+  "/etc/apache2"
+  "/etc/ssh"
+  "/etc/sudoers.d"
+  "/etc/logrotate.d"
+  "/etc/ufw"
+  "/etc/fail2ban"
+)
+
+CONFIG_HASH_PATHS=(
+  "/etc/passwd"
+  "/etc/group"
+  "/etc/shadow"
+  "/etc/gshadow"
+  "/etc/sudoers"
+  "/etc/sudoers.d"
+  "/etc/ssh/sshd_config"
+  "/etc/ssh/sshd_config.d"
+  "/etc/apache2"
+  "/etc/systemd/system"
+  "/lib/systemd/system"
+  "/etc/crontab"
+  "/etc/cron.d"
+  "/etc/cron.daily"
+  "/etc/cron.hourly"
+  "/etc/cron.monthly"
+  "/etc/cron.weekly"
+  "/var/spool/cron"
+  "/etc/anacrontab"
+  "/etc/logrotate.conf"
+  "/etc/logrotate.d"
+  "/etc/default/ufw"
+  "/etc/ufw"
+  "/etc/nftables.conf"
+  "/etc/fail2ban"
+  "/root/.bashrc"
+  "/root/.profile"
+  "/root/.bash_profile"
+)
+
+# These reduce repeated noise from certificate churn and symlink farms.
+SENSITIVE_EXCLUDE_REGEX='^/etc/(ssl/certs|alternatives)/|^/etc/letsencrypt/(archive|live)/'
+
+# Keep normal app build/cache churn out of the suspicious webroot section.
+WEBROOT_EXCLUDE_REGEX='/(cache|tmp|node_modules|\.git|\.next)(/|$)|/wp-content/cache(/|$)|/uploads/converted(/|$)'
+
+# Packages matching this regex are called out separately if they are newly
+# installed compared with the previous snapshot.
+SECURITY_SENSITIVE_PACKAGE_REGEX='^(openssh|nmap|tcpdump|wireshark|netcat|ncat|hydra|john|hashcat|rkhunter|chkrootkit|telnet|vsftpd|ftp|socat|ngrok|cloudflared|teamviewer|anydesk|docker|podman|kubectl|kubelet|openvpn|wireguard|fail2ban)'
