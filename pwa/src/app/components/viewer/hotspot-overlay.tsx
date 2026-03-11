@@ -1,0 +1,154 @@
+/**
+ * Hotspot Overlay Component
+ * Renders interactive regions on image slides
+ */
+
+import { useEffect, useState, useRef } from "react";
+import { getSetting } from "../../lib/settings";
+
+export interface Hotspot {
+  id?: string;
+  x: number;  // normalized 0-1
+  y: number;  // normalized 0-1
+  w: number;  // normalized 0-1
+  h: number;  // normalized 0-1
+  shape?: string;
+  targetIndex: number;
+}
+
+interface HotspotOverlayProps {
+  idPrefix?: string;
+  hotspots: Hotspot[];
+  imageElement: HTMLImageElement | null;
+  onHotspotClick: (targetIndex: number, hotspot: Hotspot) => void;
+}
+
+export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClick }: HotspotOverlayProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [imageBounds, setImageBounds] = useState<DOMRect | null>(null);
+  const [showAreas, setShowAreas] = useState(getSetting('showHotspotAreas'));
+
+  // Calculate actual image bounds considering object-fit: contain
+  useEffect(() => {
+    if (!imageElement || !containerRef.current) {
+      setImageBounds(null);
+      return;
+    }
+
+    const updateBounds = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Get natural image dimensions
+      const naturalWidth = imageElement.naturalWidth;
+      const naturalHeight = imageElement.naturalHeight;
+      
+      // Get container dimensions
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      // Calculate aspect ratios
+      const imageAspect = naturalWidth / naturalHeight;
+      const containerAspect = containerWidth / containerHeight;
+
+      let renderedWidth: number;
+      let renderedHeight: number;
+      let offsetX: number;
+      let offsetY: number;
+
+      // object-fit: contain logic
+      if (imageAspect > containerAspect) {
+        // Image is wider - fit to width
+        renderedWidth = containerWidth;
+        renderedHeight = containerWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - renderedHeight) / 2;
+      } else {
+        // Image is taller - fit to height
+        renderedHeight = containerHeight;
+        renderedWidth = containerHeight * imageAspect;
+        offsetX = (containerWidth - renderedWidth) / 2;
+        offsetY = 0;
+      }
+
+      setImageBounds({
+        left: offsetX,
+        top: offsetY,
+        width: renderedWidth,
+        height: renderedHeight,
+        right: offsetX + renderedWidth,
+        bottom: offsetY + renderedHeight,
+        x: offsetX,
+        y: offsetY,
+        toJSON: () => ({}),
+      } as DOMRect);
+    };
+
+    // Initial calculation
+    updateBounds();
+
+    // Update on resize
+    const resizeObserver = new ResizeObserver(updateBounds);
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [imageElement]);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowAreas(getSetting('showHotspotAreas'));
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!imageBounds || hotspots.length === 0) {
+    return (
+      <div
+        id={idPrefix ? `${idPrefix}-hotspots-empty` : undefined}
+        ref={containerRef}
+        className="absolute inset-0 pointer-events-none"
+      />
+    );
+  }
+
+  return (
+    <div
+      id={idPrefix ? `${idPrefix}-hotspots` : undefined}
+      ref={containerRef}
+      className="absolute inset-0 pointer-events-none"
+    >
+      {hotspots.map((hotspot, index) => {
+        // Calculate pixel positions from normalized coordinates
+        const left = imageBounds.left + (hotspot.x * imageBounds.width);
+        const top = imageBounds.top + (hotspot.y * imageBounds.height);
+        const width = hotspot.w * imageBounds.width;
+        const height = hotspot.h * imageBounds.height;
+
+        return (
+          <button
+            id={idPrefix ? `${idPrefix}-hotspot-${index + 1}` : undefined}
+            key={hotspot.id || `hotspot-${index}`}
+            onClick={() => onHotspotClick(hotspot.targetIndex, hotspot)}
+            className={`absolute pointer-events-auto cursor-pointer transition-colors ${
+              showAreas
+                ? 'bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30'
+                : 'bg-transparent hover:bg-blue-500/10'
+            }`}
+            style={{
+              left: `${left}px`,
+              top: `${top}px`,
+              width: `${width}px`,
+              height: `${height}px`,
+            }}
+            aria-label={`Navigate to slide ${hotspot.targetIndex + 1}`}
+          />
+        );
+      })}
+    </div>
+  );
+}

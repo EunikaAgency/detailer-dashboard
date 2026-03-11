@@ -23,7 +23,7 @@ const nextConfig = {
         });
       }
 
-      const nextIgnored = ["**/logs/**"];
+      const nextIgnored = ["**/logs/**", "**/app-capacitor/**"];
 
       config.watchOptions = {
         ...(config.watchOptions || {}),

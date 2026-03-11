@@ -42,6 +42,18 @@ yarn-error.log*
 next-env.d.ts
 
 /public/uploads/
+/public/pwa/
+/public/uploads (Copy)/
+/pwa/node_modules/
+/pwa/dist/
+/pwa/.playwright-cli/
+/pwa/output/
+/app-capacitor/.git/
+/app-capacitor/node_modules/
+/app-capacitor/dist/
+/app-capacitor/.playwright-cli/
+/app-capacitor/detailer-dashboard-main.zip
+/.server-audit-test*/
 
 *.apk
 *.log

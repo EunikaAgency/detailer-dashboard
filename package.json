@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "npm run build:pwa && next build --webpack",
+    "build:pwa": "npm --prefix ./pwa run build",
     "start": "next start",
     "lint": "eslint",
     "reset-admin": "node scripts/reset-admin.js",

@@ -1,0 +1,188 @@
+Offline login still records activity and syncs later
+
+Important: an initial offline login is still an authenticated session, not a dead-end local mode. The app continues logging user activity immediately, stores it locally, and syncs it to the backend once internet returns.
+
+How it works
+
+1. Offline login succeeds
+- User logs in using a valid offline credential
+- App sets:
+  - authToken = "offline-granted"
+- App creates a local session
+- App enters the app and loads cached/bundled content
+
+2. Activity logging starts immediately
+Even while offline, the app still records:
+- auth events
+- app launches
+- session started/stopped
+- screen views
+- product/presentation activity
+- slide changes
+- logout/background/foreground events
+
+These events are appended to:
+- a local sync queue
+- a local activity history used to build the Sessions screen
+
+3. Sessions screen still works offline
+- Sessions list/detail is built from locally stored activity events
+- Events can appear as Pending until sync succeeds
+- The user still sees a real session timeline even without network
+
+4. When internet comes back
+The app listens for:
+- browser `online` event
+- visibility/app foreground changes
+- periodic background polling
+
+When connectivity returns, the app:
+- tries to upgrade offline auth to online auth using saved credentials
+- POSTs queued events to `/api/login-events`
+- marks synced events as synced
+- clears the sent queue
+
+5. If sync fails
+- queue is kept locally
+- app retries later
+- user can continue using the app
+
+Sample offline-login-created events
+
+Immediately after offline login succeeds, events like these are queued locally:
+
+[
+  {
+    "eventType": "auth",
+    "action": "offline_granted",
+    "screen": "login",
+    "method": "password",
+    "source": "offline",
+    "timestamp": "2026-03-11T08:16:00.000Z"
+  },
+  {
+    "eventType": "activity",
+    "action": "session_started",
+    "screen": "products",
+    "method": "password",
+    "source": "offline",
+    "timestamp": "2026-03-11T08:16:01.000Z",
+    "details": {
+      "reason": "offline_token_login"
+    }
+  },
+  {
+    "eventType": "activity",
+    "action": "screen_view",
+    "screen": "products",
+    "method": "password",
+    "source": "offline",
+    "timestamp": "2026-03-11T08:16:03.000Z"
+  }
+]
+
+Example later activity while still offline
+
+[
+  {
+    "eventType": "activity",
+    "action": "presentation_selected",
+    "screen": "presentation",
+    "method": "password",
+    "source": "offline",
+    "timestamp": "2026-03-11T08:18:10.000Z",
+    "details": {
+      "deckId": "abilify-maintena-hcp-overview"
+    }
+  },
+  {
+    "eventType": "activity",
+    "action": "slide_changed",
+    "screen": "presentation",
+    "method": "password",
+    "source": "offline",
+    "timestamp": "2026-03-11T08:18:20.000Z",
+    "details": {
+      "deckId": "abilify-maintena-hcp-overview",
+      "fromIndex": 0,
+      "toIndex": 1
+    }
+  }
+]
+
+Example sync request after internet returns
+
+POST https://otsukadetailer.site/api/login-events
+
+{
+  "userId": "65dc3a2bd1234567890abcd",
+  "login": "rep.username",
+  "username": "rep.username",
+  "issuedLoginUsername": "rep.username",
+  "events": [
+    {
+      "eventType": "auth",
+      "action": "offline_granted",
+      "screen": "login",
+      "method": "password",
+      "source": "offline",
+      "timestamp": "2026-03-11T08:16:00.000Z"
+    },
+    {
+      "eventType": "activity",
+      "action": "session_started",
+      "screen": "products",
+      "method": "password",
+      "source": "offline",
+      "timestamp": "2026-03-11T08:16:01.000Z",
+      "details": {
+        "reason": "offline_token_login"
+      }
+    },
+    {
+      "eventType": "activity",
+      "action": "slide_changed",
+      "screen": "presentation",
+      "method": "password",
+      "source": "offline",
+      "timestamp": "2026-03-11T08:18:20.000Z",
+      "details": {
+        "deckId": "abilify-maintena-hcp-overview",
+        "fromIndex": 0,
+        "toIndex": 1
+      }
+    }
+  ]
+}
+
+Example sync success response
+
+{
+  "success": true
+}
+
+What happens when online auth is restored
+- App attempts `/api/auth/login` again using saved credentials
+- If successful, offline session is upgraded
+- App logs another auth event like:
+  - `offline_upgrade_login_success`
+- Then queued activity is synced
+
+Design implications for Figma
+
+Login frame note
+- “Offline login still creates a real authenticated local session and begins activity tracking immediately.”
+
+Sessions frame note
+- “Sessions are built from local activity first. Unsynced offline activity can still appear here before backend sync.”
+
+Sync/status note
+- “Offline sessions may appear as Pending until internet returns and `/api/login-events` succeeds.”
+
+Prototype branch to include
+1. Offline login success
+2. User browses gallery and presentation offline
+3. Sessions screen shows pending activity
+4. Network returns
+5. Silent auth upgrade + event sync
+6. Sessions can transition to synced state
