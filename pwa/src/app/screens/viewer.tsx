@@ -36,6 +36,7 @@ export default function Viewer() {
   const slideTransitionDirectionRef = useRef<'forward' | 'backward'>('forward');
   const slideContentRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRailRef = useRef<HTMLDivElement | null>(null);
+  const viewerRootRef = useRef<HTMLDivElement | null>(null);
 
   // Get settings
   const dynamicBackdrop = settings.dynamicSlideBackdrop;
@@ -169,6 +170,25 @@ export default function Viewer() {
     };
   }, [currentSlide, showThumbnails]);
 
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      const fullscreenElement =
+        document.fullscreenElement ||
+        (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement ||
+        null;
+
+      setIsFullscreen(Boolean(fullscreenElement));
+    };
+
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenState as EventListener);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+      document.removeEventListener("webkitfullscreenchange", syncFullscreenState as EventListener);
+    };
+  }, []);
+
   const totalSlides = slides.length;
   const viewerId = "viewer";
   const showOrientationControls = typeof window !== "undefined" ? !isIOS() : true;
@@ -244,11 +264,43 @@ export default function Viewer() {
     });
   };
 
-  const toggleFullscreen = () => {
-    const newState = !isFullscreen;
-    setIsFullscreen(newState);
+  const toggleFullscreen = async () => {
+    const rootElement = viewerRootRef.current;
+    const fullscreenDocument = document as Document & {
+      webkitExitFullscreen?: () => Promise<void> | void;
+      webkitFullscreenElement?: Element | null;
+    };
+    const fullscreenElement =
+      document.fullscreenElement ||
+      fullscreenDocument.webkitFullscreenElement ||
+      null;
+
+    try {
+      if (fullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (fullscreenDocument.webkitExitFullscreen) {
+          await fullscreenDocument.webkitExitFullscreen();
+        }
+      } else if (rootElement) {
+        const fullscreenTarget = rootElement as HTMLDivElement & {
+          webkitRequestFullscreen?: () => Promise<void> | void;
+        };
+
+        if (rootElement.requestFullscreen) {
+          await rootElement.requestFullscreen();
+        } else if (fullscreenTarget.webkitRequestFullscreen) {
+          await fullscreenTarget.webkitRequestFullscreen();
+        }
+      }
+    } catch (error) {
+      console.warn("Fullscreen toggle failed:", error);
+    }
+
+    const nextFullscreenState = !fullscreenElement;
+    setIsFullscreen(nextFullscreenState);
     trackEvent('activity', 'fullscreen_toggled', 'presentation', {
-      fullscreen: newState
+      fullscreen: nextFullscreenState
     });
   };
 
@@ -355,7 +407,7 @@ export default function Viewer() {
   const goHome = () => navigate("/presentations#presentations-screen-content");
 
   return (
-    <div id={`${viewerId}-root`} className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+    <div id={`${viewerId}-root`} ref={viewerRootRef} className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       {/* Top Bar */}
       <div
         id={`${viewerId}-topbar`}
