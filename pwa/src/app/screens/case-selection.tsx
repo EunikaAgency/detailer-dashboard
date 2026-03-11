@@ -13,7 +13,14 @@ import {
 } from "../lib/products";
 import { trackEvent } from "../lib/sessions";
 import { buildDomId } from "../lib/dom-ids";
-import { cacheProductForOffline, getOfflinePresentationRecord, type OfflinePresentationRecord } from "../lib/media-cache";
+import {
+  cacheProductForOffline,
+  estimateOfflineDownloadNeed,
+  getOfflinePresentationRecord,
+  repairOfflinePresentation,
+  verifyOfflinePresentation,
+  type OfflinePresentationRecord,
+} from "../lib/media-cache";
 import { useAppSettings } from "../lib/settings";
 
 export default function CaseSelection() {
@@ -45,7 +52,12 @@ export default function CaseSelection() {
     }
 
     setProduct(foundProduct);
-    setOfflineRecord(getOfflinePresentationRecord(foundProduct._id || foundProduct.id || ""));
+    const currentProductId = foundProduct._id || foundProduct.id || "";
+    const existingRecord = getOfflinePresentationRecord(currentProductId);
+    setOfflineRecord(existingRecord);
+    if (existingRecord) {
+      void verifyOfflinePresentation(foundProduct).then(setOfflineRecord);
+    }
     
     // Get decks/cases from product
     const productDecks = getProductDecks(foundProduct);
@@ -68,8 +80,13 @@ export default function CaseSelection() {
       return;
     }
 
-    void cacheProductForOffline(product).then(() => {
-      setOfflineRecord(getOfflinePresentationRecord(product._id || product.id || ""));
+    void estimateOfflineDownloadNeed(product).then((estimate) => {
+      if (estimate.lowHeadroom) {
+        return;
+      }
+      return cacheProductForOffline(product).then(() => {
+        setOfflineRecord(getOfflinePresentationRecord(product._id || product.id || ""));
+      });
     });
   }, [product, settings.offlineAccessMode]);
 
@@ -78,13 +95,21 @@ export default function CaseSelection() {
       return;
     }
 
+    const estimate = await estimateOfflineDownloadNeed(product);
+    if (
+      estimate.lowHeadroom &&
+      !window.confirm("Storage is running low. Continue downloading this presentation for offline use?")
+    ) {
+      return;
+    }
+
     setIsSavingOffline(true);
 
     try {
-      const result = await cacheProductForOffline(product);
+      const result = await repairOfflinePresentation(product);
       setOfflineRecord(getOfflinePresentationRecord(product._id || product.id || ""));
       window.alert(
-        `Presentation saved for offline use.\nCached ${result.cached} assets for ${product.name}.`
+        `Presentation saved for offline use.\nStatus: ${result.status}.\nCached ${result.cached} assets for ${product.name}.`
       );
     } catch (error) {
       console.error("Failed to cache presentation:", error);
@@ -127,7 +152,7 @@ export default function CaseSelection() {
                 <div className="font-medium text-emerald-900">Offline Access</div>
                 <div className="text-sm text-emerald-700 mt-1">
                   {offlineRecord
-                    ? `Saved offline with ${offlineRecord.assetCount} cached assets across ${offlineRecord.deckIds.length} cases.`
+                    ? `Status: ${offlineRecord.status}. ${offlineRecord.assetCount} cached assets across ${offlineRecord.deckIds.length} cases.`
                     : "Download this presentation now so its decks, slides, and media remain available offline."}
                 </div>
               </div>

@@ -12,14 +12,37 @@ export interface InstallState {
   showAction: boolean;
 }
 
+export interface AppUpdateState {
+  updateAvailable: boolean;
+  refreshing: boolean;
+  readyOffline: boolean;
+}
+
 let deferredPrompt: any = null;
 const subscribers = new Set<(state: InstallState) => void>();
-let pendingReload = false;
+const updateSubscribers = new Set<(state: AppUpdateState) => void>();
 let initialized = false;
+let serviceWorkerUpdater: ((reloadPage?: boolean) => Promise<void>) | null = null;
+let appUpdateState: AppUpdateState = {
+  updateAvailable: false,
+  refreshing: false,
+  readyOffline: false,
+};
 
 function publishInstallState() {
   const snapshot = getInstallState();
   subscribers.forEach((listener) => {
+    try {
+      listener(snapshot);
+    } catch {
+      // Ignore subscriber errors.
+    }
+  });
+}
+
+function publishAppUpdateState() {
+  const snapshot = { ...appUpdateState };
+  updateSubscribers.forEach((listener) => {
     try {
       listener(snapshot);
     } catch {
@@ -167,27 +190,71 @@ export function subscribeInstallState(listener: (state: InstallState) => void) {
   return () => subscribers.delete(listener);
 }
 
+export function getAppUpdateState() {
+  return { ...appUpdateState };
+}
+
+export function subscribeAppUpdateState(listener: (state: AppUpdateState) => void) {
+  updateSubscribers.add(listener);
+  listener(getAppUpdateState());
+  return () => updateSubscribers.delete(listener);
+}
+
+export async function refreshAppNow() {
+  if (!serviceWorkerUpdater) {
+    return false;
+  }
+
+  appUpdateState = {
+    ...appUpdateState,
+    refreshing: true,
+  };
+  publishAppUpdateState();
+
+  await serviceWorkerUpdater(true);
+  return true;
+}
+
+export function dismissAppUpdate() {
+  appUpdateState = {
+    ...appUpdateState,
+    updateAvailable: false,
+  };
+  publishAppUpdateState();
+}
+
 const isSecureOrigin =
   typeof window !== "undefined" &&
   (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1");
 
 if (typeof window !== "undefined" && import.meta.env.PROD && isSecureOrigin && "serviceWorker" in navigator) {
-  const updateServiceWorker = registerSW({
+  serviceWorkerUpdater = registerSW({
     immediate: true,
     onNeedRefresh() {
-      if (pendingReload) return;
-      pendingReload = true;
-      navigator.serviceWorker?.addEventListener?.(
-        "controllerchange",
-        () => {
-          window.location.reload();
-        },
-        { once: true }
-      );
-      void updateServiceWorker(true);
+      appUpdateState = {
+        ...appUpdateState,
+        updateAvailable: true,
+        refreshing: false,
+      };
+      publishAppUpdateState();
+    },
+    onOfflineReady() {
+      appUpdateState = {
+        ...appUpdateState,
+        readyOffline: true,
+      };
+      publishAppUpdateState();
     },
     onRegisterError(error) {
       console.error("[PWA] service worker registration failed", error);
     },
   });
+
+  navigator.serviceWorker?.addEventListener?.(
+    "controllerchange",
+    () => {
+      window.location.reload();
+    },
+    { once: false }
+  );
 }

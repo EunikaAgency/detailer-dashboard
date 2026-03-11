@@ -1,6 +1,6 @@
 import { StickyHeader } from "../components/ui/sticky-header";
 import { Card } from "../components/ui/card";
-import { AlertTriangle, Download, FileText, Trash2 } from "lucide-react";
+import { AlertTriangle, Download, FileText, Trash2, WifiOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getSettings, updateSettings, exportDiagnostics, downloadDiagnostics, setSessionsVisibility, type AppSettings } from "../lib/settings";
 import { clearAllData } from "../lib/auth";
@@ -155,6 +155,17 @@ export default function SettingsAdvanced() {
           <h2 className="text-sm font-semibold text-slate-700 mb-3 px-1">Diagnostics</h2>
           
           <Card className="divide-y divide-slate-200">
+            <button
+              onClick={() => navigate("/offline")}
+              className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
+            >
+              <WifiOff className="w-5 h-5 text-slate-600" />
+              <div className="flex-1">
+                <div className="font-medium text-slate-900">Offline support</div>
+                <div className="text-sm text-slate-500">Deck integrity, storage, and repair tools</div>
+              </div>
+            </button>
+
             <button
               onClick={handleCopyLogs}
               className="w-full p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"

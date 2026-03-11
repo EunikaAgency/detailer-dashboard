@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { StickyHeader } from "../components/ui/sticky-header";
 import { Card } from "../components/ui/card";
 import { FilterChip } from "../components/ui/filter-chip";
 import { Pill } from "../components/ui/pill";
 import { ActionButton } from "../components/ui/action-button";
-import { Grid, RefreshCw, LogOut, Search, AlertCircle, Download } from "lucide-react";
+import { Menu, Home, RefreshCw, LogOut, Search, AlertCircle, Download } from "lucide-react";
 import { logout } from "../lib/auth";
 import { trackEvent, syncPendingEvents } from "../lib/sessions";
 import { getProducts, getCategories, type Product } from "../lib/products";
 import { getUIText, initializeConfig } from "../lib/config";
 import { useAppSettings, type GalleryColumns } from "../lib/settings";
-import { cacheProductsForOffline, getOfflinePresentationSummary, warmProductMediaCache } from "../lib/media-cache";
+import {
+  cacheProductsForOffline,
+  estimateOfflineDownloadNeed,
+  getOfflinePresentationSummary,
+  warmProductMediaCache,
+} from "../lib/media-cache";
 import { buildDomId } from "../lib/dom-ids";
 
 const gridClassMap: Record<GalleryColumns, string> = {
@@ -36,6 +40,7 @@ export default function Presentations() {
   const [offlineSummary, setOfflineSummary] = useState(() => getOfflinePresentationSummary());
   const settings = useAppSettings();
   const manualOfflineMode = settings.offlineAccessMode === "manual";
+  const iconOnlyActions = settings.actionLabels === "icons";
 
   // Get UI text labels
   const uiText = {
@@ -72,8 +77,14 @@ export default function Presentations() {
         setCategories(getCategories(result.products));
         void warmProductMediaCache(result.products);
         if (settings.offlineAccessMode === "automatic" && navigator.onLine) {
-          void cacheProductsForOffline(result.products).then(() => {
-            setOfflineSummary(getOfflinePresentationSummary());
+          void Promise.all(result.products.map((product) => estimateOfflineDownloadNeed(product))).then((estimates) => {
+            const downloadCandidates = result.products.filter((_, index) => !estimates[index]?.lowHeadroom);
+            if (downloadCandidates.length === 0) {
+              return;
+            }
+            return cacheProductsForOffline(downloadCandidates).then(() => {
+              setOfflineSummary(getOfflinePresentationSummary());
+            });
           });
         }
         refreshOfflineSummary();
@@ -108,8 +119,14 @@ export default function Presentations() {
       setCategories(getCategories(result.products));
       void warmProductMediaCache(result.products);
       if (settings.offlineAccessMode === "automatic" && navigator.onLine) {
-        void cacheProductsForOffline(result.products).then(() => {
-          setOfflineSummary(getOfflinePresentationSummary());
+        void Promise.all(result.products.map((product) => estimateOfflineDownloadNeed(product))).then((estimates) => {
+          const downloadCandidates = result.products.filter((_, index) => !estimates[index]?.lowHeadroom);
+          if (downloadCandidates.length === 0) {
+            return;
+          }
+          return cacheProductsForOffline(downloadCandidates).then(() => {
+            setOfflineSummary(getOfflinePresentationSummary());
+          });
         });
       }
       setOfflineSummary(getOfflinePresentationSummary());
@@ -123,6 +140,15 @@ export default function Presentations() {
 
   const handleDownloadOffline = async () => {
     if (products.length === 0) {
+      return;
+    }
+
+    const estimates = await Promise.all(products.map((product) => estimateOfflineDownloadNeed(product)));
+    const lowHeadroomProducts = estimates.filter((estimate) => estimate.lowHeadroom);
+    if (
+      lowHeadroomProducts.length > 0 &&
+      !window.confirm("Storage is running low. Continue downloading offline presentations anyway?")
+    ) {
       return;
     }
 
@@ -148,6 +174,8 @@ export default function Presentations() {
     navigate("/");
   };
 
+  const goHome = () => navigate("/presentations#presentations-screen-content");
+
   const offlineProductIds = new Set(offlineSummary.records.map((record) => record.productId));
 
   if (isLoading) {
@@ -166,41 +194,71 @@ export default function Presentations() {
 
   return (
     <div id={`${screenId}-root`} className="min-h-screen pb-6">
-      <StickyHeader
-        idPrefix={screenId}
-        title={uiText.title}
-        showMenu
-        icon={<Grid className="w-5 h-5 text-blue-500" />}
-        rightActions={
-          <>
-            {manualOfflineMode && (
+      <header
+        id={`${screenId}-header`}
+        className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 px-4 py-3"
+      >
+        <div id={`${screenId}-header-content`} className="max-w-screen-xl mx-auto">
+          <div
+            id={`${screenId}-header-top-row`}
+            className={`flex items-center gap-2 ${iconOnlyActions ? "justify-between" : "flex-wrap"}`}
+          >
+            <div
+              id={`${screenId}-header-primary`}
+              className={`flex items-center gap-2 ${iconOnlyActions ? "shrink-0" : "w-full sm:w-auto"}`}
+            >
               <ActionButton
-                id={`${screenId}-offline-button`}
-                onClick={handleDownloadOffline}
-                disabled={isDownloadingOffline || products.length === 0}
-                aria-label="Save presentations for offline use"
-                label="Offline"
-                icon={<Download className={`w-5 h-5 ${isDownloadingOffline ? "animate-bounce" : ""}`} />}
+                id={`${screenId}-menu-button`}
+                onClick={() => navigate("/menu")}
+                aria-label="Open menu"
+                label="Menu"
+                icon={<Menu className="w-5 h-5" />}
               />
-            )}
-            <ActionButton
-              id={`${screenId}-sync-button`}
-              onClick={handleSync}
-              disabled={isSyncing}
-              aria-label={uiText.syncButton}
-              label="Sync"
-              icon={<RefreshCw className={`w-5 h-5 ${isSyncing ? "animate-spin" : ""}`} />}
-            />
-            <ActionButton
-              id={`${screenId}-logout-button`}
-              onClick={handleLogout}
-              aria-label={uiText.logoutButton}
-              label="Logout"
-              icon={<LogOut className="w-5 h-5" />}
-            />
-          </>
-        }
-      />
+              <ActionButton
+                id={`${screenId}-home-button`}
+                onClick={goHome}
+                aria-label="Go to presentations"
+                label="Home"
+                icon={<Home className="w-5 h-5" />}
+              />
+            </div>
+
+            <div
+              id={`${screenId}-header-actions`}
+              className={`flex items-center justify-end gap-2 ${
+                iconOnlyActions ? "shrink-0" : "w-full sm:ml-auto sm:w-auto"
+              }`}
+            >
+              {manualOfflineMode && (
+                <ActionButton
+                  id={`${screenId}-offline-button`}
+                  onClick={handleDownloadOffline}
+                  disabled={isDownloadingOffline || products.length === 0}
+                  aria-label="Save presentations for offline use"
+                  label="Offline"
+                  icon={<Download className={`w-5 h-5 ${isDownloadingOffline ? "animate-bounce" : ""}`} />}
+                />
+              )}
+              <ActionButton
+                id={`${screenId}-sync-button`}
+                onClick={handleSync}
+                disabled={isSyncing}
+                aria-label={uiText.syncButton}
+                label="Sync"
+                icon={<RefreshCw className={`w-5 h-5 ${isSyncing ? "animate-spin" : ""}`} />}
+              />
+              <ActionButton
+                id={`${screenId}-logout-button`}
+                onClick={handleLogout}
+                aria-label={uiText.logoutButton}
+                label="Logout"
+                icon={<LogOut className="w-5 h-5" />}
+              />
+            </div>
+          </div>
+
+        </div>
+      </header>
 
       <div id={`${screenId}-content`} className="max-w-screen-xl mx-auto px-4 mt-4 space-y-4">
         {/* Data Source Banner */}
@@ -238,7 +296,7 @@ export default function Presentations() {
             <p id={`${screenId}-offline-label`} className="text-sm text-emerald-700">
               {isDownloadingOffline
                 ? "Saving presentations for offline use..."
-                : `Offline library ready: ${offlineSummary.downloadedProducts} presentations, ${offlineSummary.downloadedDecks} cases, ${offlineSummary.cachedAssets} cached assets.`}
+                : `Offline library ready: ${offlineSummary.downloadedProducts} presentations, ${offlineSummary.downloadedDecks} validated cases, ${offlineSummary.cachedAssets} cached assets.`}
             </p>
           </div>
         )}

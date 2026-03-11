@@ -18,6 +18,7 @@ import Boot from "./screens/boot";
 import BootFailure from "./screens/boot-failure";
 import Install from "./screens/install";
 import Diagnostics from "./screens/diagnostics";
+import OfflineSupport from "./screens/offline";
 import NotFound from "./screens/not-found";
 
 const routerBase = (() => {
@@ -97,6 +98,10 @@ export const router = createBrowserRouter([
       {
         path: "install",
         Component: Install,
+      },
+      {
+        path: "offline",
+        Component: OfflineSupport,
       },
       {
         path: "diagnostics",

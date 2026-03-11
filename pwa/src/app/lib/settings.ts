@@ -31,9 +31,8 @@ export interface AppSettings {
 const SETTINGS_KEY = "appSettings";
 const SETTINGS_EVENT = "app-settings-change";
 
-const DEFAULT_SETTINGS: AppSettings = {
+const DEFAULT_SETTINGS_BASE: Omit<AppSettings, "actionLabels"> = {
   showGalleryLabels: true,
-  actionLabels: "labels",
   galleryColumns: 3,
   uiScale: "comfortable",
   dynamicSlideBackdrop: true,
@@ -44,15 +43,32 @@ const DEFAULT_SETTINGS: AppSettings = {
   debugMode: false,
 };
 
-let cachedSettings = DEFAULT_SETTINGS;
-
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
 
+function getDefaultActionLabels(): ActionLabels {
+  if (!isBrowser()) {
+    return "labels";
+  }
+
+  return window.innerWidth < 768 ? "icons" : "labels";
+}
+
+function getDefaultSettings(): AppSettings {
+  return {
+    ...DEFAULT_SETTINGS_BASE,
+    actionLabels: getDefaultActionLabels(),
+  };
+}
+
+let cachedSettings = getDefaultSettings();
+let hasLoadedStoredSettings = false;
+
 function normalizeSettings(value: unknown): AppSettings {
+  const defaultSettings = getDefaultSettings();
   const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-  const merged = { ...DEFAULT_SETTINGS, ...raw };
+  const merged = { ...defaultSettings, ...raw };
 
   const galleryColumns = Number(merged.galleryColumns);
   const sessionsVisibilityExpiresAt =
@@ -69,60 +85,61 @@ function normalizeSettings(value: unknown): AppSettings {
     showGalleryLabels:
       typeof merged.showGalleryLabels === "boolean"
         ? merged.showGalleryLabels
-        : DEFAULT_SETTINGS.showGalleryLabels,
+        : defaultSettings.showGalleryLabels,
     actionLabels:
       merged.actionLabels === "icons" || merged.actionLabels === "labels"
         ? merged.actionLabels
-        : DEFAULT_SETTINGS.actionLabels,
+        : defaultSettings.actionLabels,
     galleryColumns:
       galleryColumns === 1 || galleryColumns === 2 || galleryColumns === 3 || galleryColumns === 4
         ? (galleryColumns as GalleryColumns)
-        : DEFAULT_SETTINGS.galleryColumns,
+        : defaultSettings.galleryColumns,
     uiScale:
       merged.uiScale === "compact" || merged.uiScale === "standard" || merged.uiScale === "comfortable"
         ? merged.uiScale
-        : DEFAULT_SETTINGS.uiScale,
+        : defaultSettings.uiScale,
     dynamicSlideBackdrop:
       typeof merged.dynamicSlideBackdrop === "boolean"
         ? merged.dynamicSlideBackdrop
-        : DEFAULT_SETTINGS.dynamicSlideBackdrop,
+        : defaultSettings.dynamicSlideBackdrop,
     offlineAccessMode:
       merged.offlineAccessMode === "manual" || merged.offlineAccessMode === "automatic"
         ? merged.offlineAccessMode
-        : DEFAULT_SETTINGS.offlineAccessMode,
+        : defaultSettings.offlineAccessMode,
     showSessions: sessionsVisibilityActive,
     sessionsVisibilityExpiresAt: sessionsVisibilityActive ? sessionsVisibilityExpiresAt : null,
     showHotspotAreas:
       typeof merged.showHotspotAreas === "boolean"
         ? merged.showHotspotAreas
-        : DEFAULT_SETTINGS.showHotspotAreas,
+        : defaultSettings.showHotspotAreas,
     debugMode:
       typeof merged.debugMode === "boolean"
         ? merged.debugMode
-        : DEFAULT_SETTINGS.debugMode,
+        : defaultSettings.debugMode,
   };
 }
 
 function readStoredSettings(): AppSettings {
   if (!isBrowser()) {
-    return DEFAULT_SETTINGS;
+    return getDefaultSettings();
   }
 
   const stored = localStorage.getItem(SETTINGS_KEY);
 
   if (!stored) {
-    return DEFAULT_SETTINGS;
+    return getDefaultSettings();
   }
 
   try {
     return normalizeSettings(JSON.parse(stored));
   } catch {
-    return DEFAULT_SETTINGS;
+    return getDefaultSettings();
   }
 }
 
 function refreshCachedSettings() {
   cachedSettings = readStoredSettings();
+  hasLoadedStoredSettings = true;
   return cachedSettings;
 }
 
@@ -146,7 +163,15 @@ export function getSettings(): AppSettings {
     return cachedSettings;
   }
 
-  if (cachedSettings === DEFAULT_SETTINGS && localStorage.getItem(SETTINGS_KEY) !== null) {
+  if (localStorage.getItem(SETTINGS_KEY) === null) {
+    if (!hasLoadedStoredSettings) {
+      cachedSettings = getDefaultSettings();
+      hasLoadedStoredSettings = true;
+    }
+    return cachedSettings;
+  }
+
+  if (!hasLoadedStoredSettings) {
     return refreshCachedSettings();
   }
 
@@ -186,7 +211,7 @@ export function subscribeSettings(listener: () => void) {
  * Hook for reactive settings reads.
  */
 export function useAppSettings() {
-  return useSyncExternalStore(subscribeSettings, getSettings, () => DEFAULT_SETTINGS);
+  return useSyncExternalStore(subscribeSettings, getSettings, getDefaultSettings);
 }
 
 /**
@@ -202,7 +227,7 @@ export function updateSettings(updates: Partial<AppSettings>) {
  * Reset settings to defaults
  */
 export function resetSettings() {
-  return persistSettings(DEFAULT_SETTINGS);
+  return persistSettings(getDefaultSettings());
 }
 
 /**

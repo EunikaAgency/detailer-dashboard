@@ -16,14 +16,19 @@ import {
   getMediaCacheEntryCount,
   getOfflinePresentationSummary,
   getPresentationCacheEntryCount,
+  getStorageEstimateSnapshot,
 } from '../lib/media-cache';
 import { getCachedProducts } from '../lib/products';
+import { getSessionSyncDiagnostics } from '../lib/sessions';
+import { getAppUpdateState } from '../lib/pwa';
 
 export default function Diagnostics() {
   const navigate = useNavigate();
   const [testing, setTesting] = useState(false);
   const [mediaCacheEntries, setMediaCacheEntries] = useState(0);
   const [presentationCacheEntries, setPresentationCacheEntries] = useState(0);
+  const [storageEstimate, setStorageEstimate] = useState<Awaited<ReturnType<typeof getStorageEstimateSnapshot>>>(null);
+  const [syncDiagnostics, setSyncDiagnostics] = useState<Awaited<ReturnType<typeof getSessionSyncDiagnostics>> | null>(null);
   const [apiTest, setApiTest] = useState<{
     status: 'idle' | 'testing' | 'success' | 'error';
     message: string;
@@ -37,10 +42,13 @@ export default function Diagnostics() {
   const productsCacheRaw = localStorage.getItem('productsConfig');
   const apiKey = getApiKey();
   const offlineSummary = getOfflinePresentationSummary();
+  const updateState = getAppUpdateState();
 
   useEffect(() => {
     void getMediaCacheEntryCount().then(setMediaCacheEntries);
     void getPresentationCacheEntryCount().then(setPresentationCacheEntries);
+    void getStorageEstimateSnapshot().then(setStorageEstimate);
+    void getSessionSyncDiagnostics().then(setSyncDiagnostics);
   }, []);
 
   const testApi = async () => {
@@ -228,6 +236,34 @@ export default function Diagnostics() {
                   ? `${offlineSummary.downloadedProducts} presentations, ${offlineSummary.downloadedDecks} cases`
                   : 'Empty'}
               </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-400" />
+              <span className="font-medium">Deck Integrity:</span>
+              <span className="text-slate-500">
+                {offlineSummary.incompleteDecks} incomplete, {offlineSummary.corruptedDecks} corrupted, {offlineSummary.needsUpdateDecks} needs update
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-400" />
+              <span className="font-medium">Storage Headroom:</span>
+              <span className="text-slate-500">
+                {storageEstimate?.available ? `${Math.round(storageEstimate.available / 1024 / 1024)} MB free` : 'Unavailable'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-400" />
+              <span className="font-medium">Sync Queue:</span>
+              <span className="text-slate-500">{syncDiagnostics?.queueSize ?? 0} pending events</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-400" />
+              <span className="font-medium">App Update:</span>
+              <span className="text-slate-500">{updateState.updateAvailable ? 'Update available' : 'Current version active'}</span>
             </div>
 
             {productsCacheRaw && (

@@ -28,6 +28,7 @@ export default function Viewer() {
   const [deckTitle, setDeckTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showNavButtons, setShowNavButtons] = useState(true);
+  const [isCompactLandscape, setIsCompactLandscape] = useState(false);
   const settings = useAppSettings();
   const hideNavButtonsTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -78,6 +79,24 @@ export default function Viewer() {
     setSlides(renderableSlides);
     setIsLoading(false);
   }, [presentationId, caseId, navigate]);
+
+  useEffect(() => {
+    const updateCompactLandscape = () => {
+      if (typeof window === "undefined") {
+        setIsCompactLandscape(false);
+        return;
+      }
+
+      setIsCompactLandscape(window.innerWidth > window.innerHeight && window.innerHeight <= 500);
+    };
+
+    updateCompactLandscape();
+    window.addEventListener("resize", updateCompactLandscape);
+
+    return () => {
+      window.removeEventListener("resize", updateCompactLandscape);
+    };
+  }, []);
 
   useEffect(() => {
     const scheduleFade = () => {
@@ -336,48 +355,65 @@ export default function Viewer() {
   return (
     <div id={`${viewerId}-root`} className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       {/* Top Bar */}
-      <div id={`${viewerId}-topbar`} className="bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 px-4 py-3 flex items-center justify-between">
-        <div id={`${viewerId}-primary-actions`} className="flex items-center gap-2">
+      <div
+        id={`${viewerId}-topbar`}
+        className={`bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 px-4 ${
+          isCompactLandscape ? "py-2" : "py-3"
+        }`}
+      >
+        <div id={`${viewerId}-topbar-row`} className="flex items-center justify-between gap-3">
+          <div id={`${viewerId}-primary-actions`} className="flex items-center gap-2">
+            <ActionButton
+              id={`${viewerId}-menu-button`}
+              onClick={() => navigate("/menu")}
+              className="backdrop-blur-sm"
+              aria-label="Open menu"
+              label="Menu"
+              tone="dark"
+              icon={<Menu className="w-5 h-5" />}
+            />
+            <ActionButton
+              id={`${viewerId}-home-button`}
+              onClick={goHome}
+              className="backdrop-blur-sm"
+              aria-label="Go to presentations"
+              label="Home"
+              tone="dark"
+              icon={<Home className="w-5 h-5" />}
+            />
+          </div>
+
           <ActionButton
-            id={`${viewerId}-menu-button`}
-            onClick={() => navigate("/menu")}
+            id={`${viewerId}-back-button`}
+            onClick={() => navigate(`/case-selection/${presentationId}`)}
             className="backdrop-blur-sm"
-            aria-label="Open menu"
-            label="Menu"
+            aria-label="Go back"
+            label="Back"
             tone="dark"
-            icon={<Menu className="w-5 h-5" />}
-          />
-          <ActionButton
-            id={`${viewerId}-home-button`}
-            onClick={goHome}
-            className="backdrop-blur-sm"
-            aria-label="Go to presentations"
-            label="Home"
-            tone="dark"
-            icon={<Home className="w-5 h-5" />}
+            icon={<ArrowLeft className="w-5 h-5" />}
           />
         </div>
-        
-        <div id={`${viewerId}-title-group`} className="text-center flex-1 px-4">
+
+        <div
+          id={`${viewerId}-title-group`}
+          className={`${isCompactLandscape ? "mt-1" : "mt-2"} text-center`}
+        >
           <div id={`${viewerId}-title`} className="font-semibold text-white">{deckTitle}</div>
           <div id={`${viewerId}-slide-counter`} className="text-sm text-slate-400">Slide {currentSlide + 1} of {totalSlides}</div>
         </div>
-        
-        <button
-          id={`${viewerId}-back-button`}
-          onClick={() => navigate(`/case-selection/${presentationId}`)}
-          className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-white" />
-        </button>
       </div>
 
       {/* Main Content Area */}
-      <div id={`${viewerId}-content`} className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+      <div
+        id={`${viewerId}-content`}
+        className={`flex-1 min-h-0 flex overflow-hidden ${isCompactLandscape ? "flex-row" : "flex-col lg:flex-row"}`}
+      >
         {/* Slide Stage */}
         <div 
           id={`${viewerId}-stage`}
-          className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden px-4 py-4 lg:p-8"
+          className={`flex-1 min-h-0 relative flex items-center justify-center overflow-hidden ${
+            isCompactLandscape ? "px-3 py-3" : "px-4 py-4 lg:p-8"
+          }`}
           onPointerMove={revealNavigationButtons}
           onClick={revealNavigationButtons}
           style={dynamicBackdrop && currentSlideData.type === 'image' ? {
@@ -467,7 +503,12 @@ export default function Viewer() {
           </div>
 
           {/* Controls */}
-          <div id={`${viewerId}-controls`} className="absolute top-6 right-6 flex flex-wrap justify-end gap-2 z-10 max-w-[calc(100%-2rem)]">
+          <div
+            id={`${viewerId}-controls`}
+            className={`absolute flex flex-wrap justify-end gap-2 z-10 ${
+              isCompactLandscape ? "top-3 right-3 max-w-[calc(100%-1.5rem)]" : "top-6 right-6 max-w-[calc(100%-2rem)]"
+            }`}
+          >
             {/* Orientation Controls */}
             <div id={`${viewerId}-orientation-controls`} className="flex flex-wrap justify-end gap-2 rounded-lg">
               <ActionButton
@@ -535,9 +576,16 @@ export default function Viewer() {
           <div
             id={`${viewerId}-thumbnail-rail`}
             ref={thumbnailRailRef}
-            className="shrink-0 h-36 sm:h-40 lg:h-auto lg:w-64 min-h-0 border-t lg:border-t-0 lg:border-l border-slate-700 bg-slate-800 px-2 py-3 sm:px-3 sm:py-4 overflow-x-auto overflow-y-hidden lg:overflow-x-hidden lg:overflow-y-auto"
+            className={`shrink-0 min-h-0 border-slate-700 bg-slate-800 ${
+              isCompactLandscape
+                ? "w-32 border-l px-2 py-2 overflow-y-auto overflow-x-hidden"
+                : "h-36 sm:h-40 lg:h-auto lg:w-64 border-t lg:border-t-0 lg:border-l px-2 py-3 sm:px-3 sm:py-4 overflow-x-auto overflow-y-hidden lg:overflow-x-hidden lg:overflow-y-auto"
+            }`}
           >
-            <div id={`${viewerId}-thumbnail-track`} className="flex min-w-max lg:min-w-0 lg:flex-col gap-2">
+            <div
+              id={`${viewerId}-thumbnail-track`}
+              className={`flex gap-2 ${isCompactLandscape ? "flex-col min-w-0" : "min-w-max lg:min-w-0 lg:flex-col"}`}
+            >
               {slides.map((slide, index) => (
                 <Thumbnail
                   key={slide.id}
@@ -546,6 +594,7 @@ export default function Viewer() {
                   index={index}
                   currentSlide={currentSlide}
                   goToSlide={goToSlide}
+                  compact={isCompactLandscape}
                 />
               ))}
             </div>

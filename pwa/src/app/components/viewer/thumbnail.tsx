@@ -12,9 +12,10 @@ interface ThumbnailProps {
   currentSlide: number;
   goToSlide: (index: number) => void;
   idPrefix?: string;
+  compact?: boolean;
 }
 
-export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix }: ThumbnailProps) {
+export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, compact = false }: ThumbnailProps) {
   const [loading, setLoading] = useState(!!slide.thumbnailUrl);
   const [error, setError] = useState(false);
   const isActive = currentSlide === index;
@@ -48,7 +49,7 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix }: T
       id={idPrefix ? `${idPrefix}-button` : undefined}
       data-active={isActive ? "true" : "false"}
       onClick={() => goToSlide(index)}
-      className={`group flex-shrink-0 w-40 sm:w-44 lg:w-full aspect-[16/9] rounded-lg overflow-hidden border-2 transition-all ${
+      className={`group flex-shrink-0 ${compact ? "w-full" : "w-40 sm:w-44 lg:w-full"} aspect-[16/9] rounded-lg overflow-hidden border-2 transition-all ${
         isActive
           ? "border-blue-500 ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20"
           : "border-slate-700/70 hover:border-slate-500"

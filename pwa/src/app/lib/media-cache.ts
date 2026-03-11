@@ -4,6 +4,35 @@ export const MEDIA_CACHE_NAME = "one-detailer-media-v1";
 export const PRESENTATION_CACHE_NAME = "one-detailer-presentation-assets-v1";
 
 const OFFLINE_PRESENTATIONS_KEY = "offlinePresentationDownloads";
+const STORAGE_HEADROOM_MIN_BYTES = 50 * 1024 * 1024;
+
+export type OfflineDeckDownloadState =
+  | "not_downloaded"
+  | "downloading"
+  | "downloaded"
+  | "incomplete"
+  | "corrupted"
+  | "needs_update";
+
+export interface OfflineStorageEstimate {
+  quota: number | null;
+  usage: number | null;
+  available: number | null;
+  headroomRatio: number | null;
+  persisted: boolean | null;
+}
+
+export interface OfflineDeckManifest {
+  deckId: string;
+  title: string;
+  revision: string;
+  requiredUrls: string[];
+  optionalUrls: string[];
+  requiredAssetCount: number;
+  missingRequiredUrls: string[];
+  status: OfflineDeckDownloadState;
+  lastVerifiedAt: string | null;
+}
 
 export interface OfflinePresentationRecord {
   productId: string;
@@ -11,12 +40,22 @@ export interface OfflinePresentationRecord {
   deckIds: string[];
   assetCount: number;
   updatedAt: string;
+  status: OfflineDeckDownloadState;
+  revision: string;
+  requiredAssetCount: number;
+  missingRequiredCount: number;
+  lastVerifiedAt: string | null;
+  decks: OfflineDeckManifest[];
+  storageEstimate?: OfflineStorageEstimate | null;
 }
 
 export interface OfflinePresentationSummary {
   downloadedProducts: number;
   downloadedDecks: number;
   cachedAssets: number;
+  incompleteDecks: number;
+  corruptedDecks: number;
+  needsUpdateDecks: number;
   records: OfflinePresentationRecord[];
 }
 
@@ -31,6 +70,22 @@ interface ProductAssetPlan {
   mediaUrls: string[];
   presentationUrls: string[];
   htmlUrls: string[];
+  decks: DeckAssetPlan[];
+  requiredUrls: string[];
+  revision: string;
+  knownBytes: number;
+}
+
+interface DeckAssetPlan {
+  deckId: string;
+  title: string;
+  mediaUrls: string[];
+  presentationUrls: string[];
+  htmlUrls: string[];
+  requiredUrls: string[];
+  optionalUrls: string[];
+  knownBytes: number;
+  revision: string;
 }
 
 function isBrowser() {
@@ -60,6 +115,56 @@ function uniqueUrls(urls: string[]) {
         .filter((url) => isHttpUrl(url))
     )
   );
+}
+
+function sumKnownBytes(values: unknown[]) {
+  return values.reduce((total, value) => {
+    const next = Number(value);
+    return Number.isFinite(next) && next > 0 ? total + next : total;
+  }, 0);
+}
+
+function hashString(input: string) {
+  let hash = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    hash = (hash * 31 + input.charCodeAt(index)) >>> 0;
+  }
+  return `rev-${hash.toString(16)}`;
+}
+
+function normalizeOfflinePresentationRecord(
+  record: OfflinePresentationRecord | null | undefined
+): OfflinePresentationRecord | null {
+  if (!record) {
+    return null;
+  }
+
+  return {
+    productId: record.productId,
+    productName: record.productName,
+    deckIds: Array.isArray(record.deckIds) ? record.deckIds : [],
+    assetCount: Number(record.assetCount) || 0,
+    updatedAt: String(record.updatedAt || new Date(0).toISOString()),
+    status: record.status || "downloaded",
+    revision: String(record.revision || ""),
+    requiredAssetCount: Number(record.requiredAssetCount) || 0,
+    missingRequiredCount: Number(record.missingRequiredCount) || 0,
+    lastVerifiedAt: record.lastVerifiedAt || null,
+    storageEstimate: record.storageEstimate || null,
+    decks: Array.isArray(record.decks)
+      ? record.decks.map((deck) => ({
+          deckId: deck.deckId,
+          title: deck.title,
+          revision: deck.revision || "",
+          requiredUrls: Array.isArray(deck.requiredUrls) ? deck.requiredUrls : [],
+          optionalUrls: Array.isArray(deck.optionalUrls) ? deck.optionalUrls : [],
+          requiredAssetCount: Number(deck.requiredAssetCount) || 0,
+          missingRequiredUrls: Array.isArray(deck.missingRequiredUrls) ? deck.missingRequiredUrls : [],
+          status: deck.status || "downloaded",
+          lastVerifiedAt: deck.lastVerifiedAt || null,
+        }))
+      : [],
+  };
 }
 
 function isUploadsUrl(url: string) {
@@ -92,7 +197,16 @@ function readOfflinePresentationMap(): Record<string, OfflinePresentationRecord>
     if (!stored) return {};
 
     const parsed = JSON.parse(stored);
-    return parsed && typeof parsed === "object" ? parsed : {};
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([productId, value]) => {
+        const normalized = normalizeOfflinePresentationRecord(value as OfflinePresentationRecord);
+        return normalized ? [[productId, normalized]] : [];
+      })
+    );
   } catch {
     return {};
   }
@@ -155,6 +269,8 @@ function buildProductAssetPlan(product: Product): ProductAssetPlan {
   const presentationUrls: string[] = [];
   const htmlUrls: string[] = [];
   const deckIds = new Set<string>();
+  const decks: DeckAssetPlan[] = [];
+  const knownByteValues: number[] = [];
 
   if (product.thumbnail) {
     mediaUrls.push(product.thumbnail);
@@ -162,15 +278,20 @@ function buildProductAssetPlan(product: Product): ProductAssetPlan {
 
   const groups = Array.isArray(product.media) ? product.media : [];
   for (const group of groups) {
-    if (group?.groupId) {
-      deckIds.add(group.groupId);
-    }
+    const deckId = String(group?.groupId || `deck-${decks.length + 1}`);
+    deckIds.add(deckId);
+    const deckMediaUrls: string[] = [];
+    const deckPresentationUrls: string[] = [];
+    const deckHtmlUrls: string[] = [];
+    const optionalUrls: string[] = [];
+    const deckByteValues: number[] = [];
 
     const items = Array.isArray(group.items) ? group.items : [];
     for (const item of items) {
       if (item.thumbnailUrl) {
         const cacheName = classifyCacheName(item.thumbnailUrl);
         (cacheName === MEDIA_CACHE_NAME ? mediaUrls : presentationUrls).push(item.thumbnailUrl);
+        optionalUrls.push(item.thumbnailUrl);
       }
 
       if (!item.url) {
@@ -179,6 +300,8 @@ function buildProductAssetPlan(product: Product): ProductAssetPlan {
 
       if (item.type === "html") {
         htmlUrls.push(item.url);
+        deckHtmlUrls.push(item.url);
+        deckByteValues.push(sumKnownBytes([item.size, item.fileSize, item.bytes]));
         continue;
       }
 
@@ -188,8 +311,33 @@ function buildProductAssetPlan(product: Product): ProductAssetPlan {
           : classifyCacheName(item.url);
 
       (cacheName === MEDIA_CACHE_NAME ? mediaUrls : presentationUrls).push(item.url);
+      (cacheName === MEDIA_CACHE_NAME ? deckMediaUrls : deckPresentationUrls).push(item.url);
+      deckByteValues.push(sumKnownBytes([item.size, item.fileSize, item.bytes]));
     }
+
+    const deckRequiredUrls = uniqueUrls([...deckMediaUrls, ...deckPresentationUrls, ...deckHtmlUrls]);
+    const deckRevision = hashString(JSON.stringify([deckId, deckRequiredUrls, optionalUrls]));
+    const knownBytes = deckByteValues.reduce((total, value) => total + value, 0);
+    knownByteValues.push(knownBytes);
+    decks.push({
+      deckId,
+      title: String(group?.title || deckId),
+      mediaUrls: uniqueUrls(deckMediaUrls),
+      presentationUrls: uniqueUrls(deckPresentationUrls),
+      htmlUrls: uniqueUrls(deckHtmlUrls),
+      requiredUrls: deckRequiredUrls,
+      optionalUrls: uniqueUrls(optionalUrls),
+      knownBytes,
+      revision: deckRevision,
+    });
   }
+
+  const requiredUrls = uniqueUrls([
+    ...mediaUrls,
+    ...presentationUrls,
+    ...htmlUrls,
+  ]);
+  const revision = hashString(JSON.stringify([product._id || product.id || product.name, requiredUrls, decks.map((deck) => deck.revision)]));
 
   return {
     deckIds: Array.from(deckIds),
@@ -197,6 +345,121 @@ function buildProductAssetPlan(product: Product): ProductAssetPlan {
     mediaUrls: uniqueUrls(mediaUrls),
     presentationUrls: uniqueUrls(presentationUrls),
     htmlUrls: uniqueUrls(htmlUrls),
+    decks,
+    requiredUrls,
+    revision,
+    knownBytes: knownByteValues.reduce((total, value) => total + value, 0),
+  };
+}
+
+async function getCachedUrlSet() {
+  if (!isBrowser() || !("caches" in window)) {
+    return new Set<string>();
+  }
+
+  const cacheNames = [MEDIA_CACHE_NAME, PRESENTATION_CACHE_NAME];
+  const entries = await Promise.all(
+    cacheNames.map(async (cacheName) => {
+      const cache = await caches.open(cacheName);
+      const keys = await cache.keys();
+      return keys.map((request) => request.url);
+    })
+  );
+
+  return new Set(entries.flat());
+}
+
+function deriveRecordStatus(deckStatuses: OfflineDeckDownloadState[]) {
+  if (deckStatuses.some((status) => status === "corrupted")) {
+    return "corrupted" as const;
+  }
+  if (deckStatuses.some((status) => status === "needs_update")) {
+    return "needs_update" as const;
+  }
+  if (deckStatuses.some((status) => status === "incomplete" || status === "downloading")) {
+    return "incomplete" as const;
+  }
+  if (deckStatuses.every((status) => status === "downloaded")) {
+    return "downloaded" as const;
+  }
+  return "not_downloaded" as const;
+}
+
+function buildDeckManifestFromPlan(
+  plan: DeckAssetPlan,
+  dependencies: string[],
+  cachedUrlSet: Set<string>,
+  existingDeck?: OfflineDeckManifest | null
+): OfflineDeckManifest {
+  const requiredUrls = uniqueUrls([...plan.requiredUrls, ...dependencies]);
+  const missingRequiredUrls = requiredUrls.filter((url) => !cachedUrlSet.has(url));
+  const revisionChanged = !!existingDeck && existingDeck.revision && existingDeck.revision !== plan.revision;
+  const status: OfflineDeckDownloadState = revisionChanged
+    ? "needs_update"
+    : missingRequiredUrls.length === 0
+    ? "downloaded"
+    : existingDeck?.status === "downloaded"
+    ? "corrupted"
+    : "incomplete";
+
+  return {
+    deckId: plan.deckId,
+    title: plan.title,
+    revision: plan.revision,
+    requiredUrls,
+    optionalUrls: uniqueUrls(plan.optionalUrls),
+    requiredAssetCount: requiredUrls.length,
+    missingRequiredUrls,
+    status,
+    lastVerifiedAt: new Date().toISOString(),
+  };
+}
+
+export async function getStorageEstimateSnapshot(): Promise<OfflineStorageEstimate | null> {
+  if (!isBrowser() || !navigator.storage?.estimate) {
+    return null;
+  }
+
+  try {
+    const [{ quota, usage }, persisted] = await Promise.all([
+      navigator.storage.estimate(),
+      navigator.storage.persisted ? navigator.storage.persisted().catch(() => false) : Promise.resolve(null),
+    ]);
+    const safeQuota = typeof quota === "number" ? quota : null;
+    const safeUsage = typeof usage === "number" ? usage : null;
+    const available =
+      safeQuota !== null && safeUsage !== null
+        ? Math.max(safeQuota - safeUsage, 0)
+        : null;
+
+    return {
+      quota: safeQuota,
+      usage: safeUsage,
+      available,
+      headroomRatio: available !== null && safeQuota ? available / safeQuota : null,
+      persisted: typeof persisted === "boolean" ? persisted : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function estimateOfflineDownloadNeed(product: Product) {
+  const plan = buildProductAssetPlan(product);
+  const storage = await getStorageEstimateSnapshot();
+  const suggestedRequiredBytes = Math.max(plan.knownBytes, STORAGE_HEADROOM_MIN_BYTES);
+  const available = storage?.available ?? null;
+  const lowHeadroom =
+    available !== null &&
+    (available < suggestedRequiredBytes || (storage?.headroomRatio ?? 1) < 0.1);
+
+  return {
+    productId: product._id || product.id || product.name,
+    requiredAssetCount: plan.requiredUrls.length,
+    knownBytes: plan.knownBytes,
+    suggestedRequiredBytes,
+    lowHeadroom,
+    storage,
   };
 }
 
@@ -371,6 +634,45 @@ async function cacheHtmlDocumentAndDependencies(url: string) {
   }
 }
 
+async function verifyCachedProductPlan(
+  product: Product,
+  htmlDependenciesByDeck: Record<string, string[]> = {}
+) {
+  const plan = buildProductAssetPlan(product);
+  const cachedUrlSet = await getCachedUrlSet();
+  const existingRecord = getOfflinePresentationRecord(product._id || product.id || product.name);
+  const decks = plan.decks.map((deckPlan) =>
+    buildDeckManifestFromPlan(
+      deckPlan,
+      htmlDependenciesByDeck[deckPlan.deckId] || [],
+      cachedUrlSet,
+      existingRecord?.decks.find((deck) => deck.deckId === deckPlan.deckId) || null
+    )
+  );
+  const status = deriveRecordStatus(decks.map((deck) => deck.status));
+  const missingRequiredCount = decks.reduce((total, deck) => total + deck.missingRequiredUrls.length, 0);
+  const cachedAssets = plan.requiredUrls.filter((url) => cachedUrlSet.has(url)).length;
+  const storageEstimate = await getStorageEstimateSnapshot();
+
+  const record: OfflinePresentationRecord = {
+    productId: product._id || product.id || product.name,
+    productName: plan.productName,
+    deckIds: plan.deckIds,
+    assetCount: cachedAssets,
+    updatedAt: new Date().toISOString(),
+    status,
+    revision: plan.revision,
+    requiredAssetCount: decks.reduce((total, deck) => total + deck.requiredAssetCount, 0),
+    missingRequiredCount,
+    lastVerifiedAt: new Date().toISOString(),
+    decks,
+    storageEstimate,
+  };
+
+  saveOfflinePresentationRecord(record);
+  return record;
+}
+
 export async function warmProductMediaCache(products: Product[]) {
   if (!isBrowser() || !navigator.onLine) {
     return { attempted: 0, cached: 0 };
@@ -395,14 +697,47 @@ export async function cacheProductForOffline(product: Product) {
 
   const plan = buildProductAssetPlan(product);
   const htmlDependencies: string[] = [];
+  const htmlDependenciesByDeck: Record<string, string[]> = {};
   let cached = 0;
   let failed = 0;
+
+  saveOfflinePresentationRecord({
+    productId: product._id || product.id || product.name,
+    productName: plan.productName,
+    deckIds: plan.deckIds,
+    assetCount: 0,
+    updatedAt: new Date().toISOString(),
+    status: "downloading",
+    revision: plan.revision,
+    requiredAssetCount: plan.requiredUrls.length,
+    missingRequiredCount: plan.requiredUrls.length,
+    lastVerifiedAt: null,
+    decks: plan.decks.map((deck) => ({
+      deckId: deck.deckId,
+      title: deck.title,
+      revision: deck.revision,
+      requiredUrls: deck.requiredUrls,
+      optionalUrls: deck.optionalUrls,
+      requiredAssetCount: deck.requiredUrls.length,
+      missingRequiredUrls: deck.requiredUrls,
+      status: "downloading",
+      lastVerifiedAt: null,
+    })),
+    storageEstimate: await getStorageEstimateSnapshot(),
+  });
 
   for (const htmlUrl of plan.htmlUrls) {
     const result = await cacheHtmlDocumentAndDependencies(htmlUrl);
     cached += result.cached;
     failed += result.failed;
     htmlDependencies.push(...result.dependencies);
+    const deck = plan.decks.find((candidate) => candidate.htmlUrls.includes(htmlUrl));
+    if (deck) {
+      htmlDependenciesByDeck[deck.deckId] = uniqueUrls([
+        ...(htmlDependenciesByDeck[deck.deckId] || []),
+        ...result.dependencies,
+      ]);
+    }
   }
 
   const dependencyBuckets = htmlDependencies.reduce<Record<string, string[]>>(
@@ -438,13 +773,7 @@ export async function cacheProductForOffline(product: Product) {
     dependencyMediaResult.failed +
     dependencyPresentationResult.failed;
 
-  saveOfflinePresentationRecord({
-    productId: product._id || product.id || product.name,
-    productName: plan.productName,
-    deckIds: plan.deckIds,
-    assetCount: cached,
-    updatedAt: new Date().toISOString(),
-  });
+  const verifiedRecord = await verifyCachedProductPlan(product, htmlDependenciesByDeck);
 
   return {
     attempted:
@@ -452,8 +781,10 @@ export async function cacheProductForOffline(product: Product) {
       plan.presentationUrls.length +
       plan.htmlUrls.length +
       uniqueUrls(htmlDependencies).length,
-    cached,
+    cached: verifiedRecord.assetCount,
     failed,
+    status: verifiedRecord.status,
+    storageEstimate: verifiedRecord.storageEstimate || null,
   };
 }
 
@@ -471,7 +802,11 @@ export async function cacheProductsForOffline(products: Product[]) {
 
 export function getOfflinePresentationRecord(productId: string) {
   const records = readOfflinePresentationMap();
-  return records[productId] || null;
+  return normalizeOfflinePresentationRecord(records[productId] || null);
+}
+
+export async function verifyOfflinePresentation(product: Product) {
+  return verifyCachedProductPlan(product);
 }
 
 export function getOfflinePresentationSummary(): OfflinePresentationSummary {
@@ -480,9 +815,24 @@ export function getOfflinePresentationSummary(): OfflinePresentationSummary {
   );
 
   return {
-    downloadedProducts: records.length,
-    downloadedDecks: records.reduce((total, record) => total + record.deckIds.length, 0),
+    downloadedProducts: records.filter((record) => record.status === "downloaded").length,
+    downloadedDecks: records.reduce(
+      (total, record) => total + record.decks.filter((deck) => deck.status === "downloaded").length,
+      0
+    ),
     cachedAssets: records.reduce((total, record) => total + record.assetCount, 0),
+    incompleteDecks: records.reduce(
+      (total, record) => total + record.decks.filter((deck) => deck.status === "incomplete").length,
+      0
+    ),
+    corruptedDecks: records.reduce(
+      (total, record) => total + record.decks.filter((deck) => deck.status === "corrupted").length,
+      0
+    ),
+    needsUpdateDecks: records.reduce(
+      (total, record) => total + record.decks.filter((deck) => deck.status === "needs_update").length,
+      0
+    ),
     records,
   };
 }
@@ -533,4 +883,8 @@ export async function clearPresentationCache() {
   } catch {
     return false;
   }
+}
+
+export async function repairOfflinePresentation(product: Product) {
+  return cacheProductForOffline(product);
 }

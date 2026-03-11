@@ -4,6 +4,15 @@
 
 import { apiClient, LoginEventsRequest } from './api';
 import { getAccountProfile, refreshToken } from './auth';
+import {
+  deleteSyncQueueItems,
+  getAppMeta,
+  getSyncQueueItems,
+  getSyncQueueSize,
+  setAppMeta,
+  type SyncQueueItem,
+  upsertSyncQueueItem,
+} from './indexed-db';
 
 export interface Session {
   id: string;
@@ -38,6 +47,8 @@ const SESSION_TITLES_KEY = 'sessionTitles'; // Persist titles
 const CURRENT_SESSION_KEY = 'currentActivitySessionId';
 const SESSION_STATE_EVENT = 'one-detailer:session-state-changed';
 let syncInitialized = false;
+const SESSION_SYNC_QUEUE_PREFIX = 'session-sync:';
+const LAST_SYNC_META_KEY = 'sessionSync:lastResult';
 
 // Explicit session-start events
 const SESSION_START_EVENTS = new Set([
@@ -209,6 +220,53 @@ function markEventsSynced(eventIds: string[]) {
   notifySessionStateChanged();
 }
 
+function buildQueueId(eventId: string) {
+  return `${SESSION_SYNC_QUEUE_PREFIX}${eventId}`;
+}
+
+function buildSyncQueueItem(event: SessionEvent): SyncQueueItem<SessionEvent> {
+  return {
+    id: buildQueueId(event.id),
+    eventId: event.id,
+    eventType: event.eventType,
+    payload: event,
+    createdAt: event.timestampMs,
+    retryCount: 0,
+    lastError: null,
+    syncState: 'pending',
+  };
+}
+
+async function enqueueEventForSync(event: SessionEvent) {
+  try {
+    await upsertSyncQueueItem(buildSyncQueueItem(event));
+  } catch (error) {
+    console.error('Failed to queue session event for sync:', error);
+  }
+}
+
+async function ensureQueuedPendingEvents() {
+  const events = getStoredEvents();
+  const syncedIds = getSyncedEventIds();
+  const pendingEvents = events.filter((event) => !syncedIds.has(event.id));
+
+  await Promise.all(pendingEvents.map((event) => enqueueEventForSync(event)));
+}
+
+async function updateQueuedEvents(
+  items: SyncQueueItem<SessionEvent>[],
+  updates: Partial<Pick<SyncQueueItem<SessionEvent>, 'retryCount' | 'lastError' | 'syncState'>>
+) {
+  await Promise.all(
+    items.map((item) =>
+      upsertSyncQueueItem({
+        ...item,
+        ...updates,
+      })
+    )
+  );
+}
+
 function notifySessionStateChanged() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(SESSION_STATE_EVENT));
@@ -275,6 +333,7 @@ export function trackEvent(
 
   events.push(event);
   storeEvents(events);
+  void enqueueEventForSync(event);
 
   return event;
 }
@@ -502,12 +561,20 @@ export async function syncPendingEvents(): Promise<boolean> {
   const profile = getAccountProfile();
   if (!profile) return false;
 
-  const events = getStoredEvents();
-  const syncedIds = getSyncedEventIds();
-  
-  // Get pending events
-  const pendingEvents = events.filter(e => !syncedIds.has(e.id));
-  if (pendingEvents.length === 0) return true;
+  await ensureQueuedPendingEvents();
+
+  const queuedItems = await getSyncQueueItems<SessionEvent>();
+  const pendingItems = queuedItems.filter((item) => item.syncState !== 'syncing');
+  const pendingEvents = pendingItems.map((item) => item.payload);
+  if (pendingEvents.length === 0) {
+    await setAppMeta(LAST_SYNC_META_KEY, {
+      success: true,
+      syncedAt: Date.now(),
+      syncedCount: 0,
+      error: null,
+    });
+    return true;
+  }
 
   const buildSyncRequest = (): LoginEventsRequest => {
     const login = profile.issuedLoginUsername || profile.username;
@@ -548,11 +615,19 @@ export async function syncPendingEvents(): Promise<boolean> {
   };
 
   try {
+    await updateQueuedEvents(pendingItems, { syncState: 'syncing', lastError: null });
     await ensureSyncAuth();
     await apiClient.syncLoginEvents(buildSyncRequest());
     
     // Mark events as synced
     markEventsSynced(pendingEvents.map(e => e.id));
+    await deleteSyncQueueItems(pendingItems.map((item) => item.id));
+    await setAppMeta(LAST_SYNC_META_KEY, {
+      success: true,
+      syncedAt: Date.now(),
+      syncedCount: pendingEvents.length,
+      error: null,
+    });
     
     return true;
   } catch (error) {
@@ -560,8 +635,31 @@ export async function syncPendingEvents(): Promise<boolean> {
       await refreshToken();
       await apiClient.syncLoginEvents(buildSyncRequest());
       markEventsSynced(pendingEvents.map(e => e.id));
+      await deleteSyncQueueItems(pendingItems.map((item) => item.id));
+      await setAppMeta(LAST_SYNC_META_KEY, {
+        success: true,
+        syncedAt: Date.now(),
+        syncedCount: pendingEvents.length,
+        error: null,
+      });
       return true;
     } catch (retryError) {
+      await Promise.all(
+        pendingItems.map((item) =>
+          upsertSyncQueueItem({
+            ...item,
+            retryCount: item.retryCount + 1,
+            lastError: String((retryError as Error)?.message || (error as Error)?.message || 'Sync failed'),
+            syncState: 'failed',
+          })
+        )
+      );
+      await setAppMeta(LAST_SYNC_META_KEY, {
+        success: false,
+        syncedAt: Date.now(),
+        syncedCount: 0,
+        error: String((retryError as Error)?.message || (error as Error)?.message || 'Sync failed'),
+      });
       console.error('Failed to sync events:', retryError ?? error);
       return false;
     }
@@ -613,4 +711,21 @@ export function initSessionSync() {
   if (navigator.onLine) {
     triggerSync();
   }
+}
+
+export async function getSessionSyncDiagnostics() {
+  const [queueSize, lastSyncResult] = await Promise.all([
+    getSyncQueueSize().catch(() => 0),
+    getAppMeta<{
+      success: boolean;
+      syncedAt: number;
+      syncedCount: number;
+      error: string | null;
+    }>(LAST_SYNC_META_KEY).catch(() => null),
+  ]);
+
+  return {
+    queueSize,
+    lastSyncResult: lastSyncResult?.value || null,
+  };
 }
