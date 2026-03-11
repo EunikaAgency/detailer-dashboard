@@ -27,6 +27,26 @@ const Toast = ({ toast, onClose }) => {
   );
 };
 
+const EyeIcon = ({ closed = false }) => {
+  if (closed) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+        <path d="M3 3l18 18" />
+        <path d="M10.58 10.58A2 2 0 0013.42 13.42" />
+        <path d="M9.88 5.09A10.94 10.94 0 0112 5c5 0 9.27 3.11 11 7-1 2.23-2.75 4.13-4.96 5.32" />
+        <path d="M6.61 6.61C4.62 7.91 3.05 9.79 2 12c1.73 3.89 6 7 10 7 1.51 0 2.95-.35 4.24-.97" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+      <path d="M2 12s3.64-7 10-7 10 7 10 7-3.64 7-10 7-10-7-10-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+};
+
 const maskKey = (value) => {
   if (!value) return "N/A";
   return "●●●●●●";
@@ -82,13 +102,13 @@ const IssuedCredentialCard = ({ credential, onCopy }) => {
       <div>
         <h2 className="text-xl font-semibold text-gray-900">Credential Issued</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Share this exact username and password pair with the representative.
+          Keep the secret keygen with admin records. Share the manual password with the user.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-xs font-semibold uppercase text-gray-500">Username</div>
+          <div className="text-xs font-semibold uppercase text-gray-500">OPPI</div>
           <div className="mt-1 text-sm font-medium text-gray-900 break-words">{credential.username}</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -99,8 +119,15 @@ const IssuedCredentialCard = ({ credential, onCopy }) => {
         </div>
       </div>
 
+      {credential.loginPassword ? (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <div className="text-xs font-semibold uppercase text-blue-600">User Login Password</div>
+          <div className="mt-1 text-xs font-mono text-gray-900 break-all">{credential.loginPassword}</div>
+        </div>
+      ) : null}
+
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-        <div className="text-xs font-semibold uppercase text-gray-500">Password (Keygen)</div>
+        <div className="text-xs font-semibold uppercase text-gray-500">Secret Password (Admin Keygen)</div>
         <div className="mt-1 text-xs font-mono text-gray-900 break-all">{credential.password}</div>
       </div>
 
@@ -110,14 +137,23 @@ const IssuedCredentialCard = ({ credential, onCopy }) => {
           onClick={() => onCopy(credential.username)}
           className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
         >
-          Copy Username
+          Copy OPPI
         </button>
+        {credential.loginPassword ? (
+          <button
+            type="button"
+            onClick={() => onCopy(credential.loginPassword)}
+            className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+          >
+            Copy Login Password
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => onCopy(credential.password)}
           className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
         >
-          Copy Password
+          Copy Secret Keygen
         </button>
       </div>
     </div>
@@ -133,12 +169,14 @@ export default function UsersPage() {
   const [query, setQuery] = useState("");
   const [visibleKeygens, setVisibleKeygens] = useState(new Set());
   const [issuedCredential, setIssuedCredential] = useState(null);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
 
   const [formValues, setFormValues] = useState({
     name: "",
     username: "",
     repId: "",
     role: "",
+    password: "",
   });
 
   const [editingUser, setEditingUser] = useState(null);
@@ -147,6 +185,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
+    accessType: "representative",
     password: "",
     reissueKeygen: false,
   });
@@ -228,6 +267,7 @@ export default function UsersPage() {
       username: getDisplayUsername(user),
       repId: getDisplayRepId(user),
       role: getDisplayRole(user),
+      accessType: getAccessType(user),
       password: "",
       reissueKeygen: false,
     });
@@ -240,6 +280,7 @@ export default function UsersPage() {
       username: "",
       repId: "",
       role: "",
+      accessType: "representative",
       password: "",
       reissueKeygen: false,
     });
@@ -266,10 +307,16 @@ export default function UsersPage() {
       username: normalizeText(formValues.username),
       repId: normalizeText(formValues.username),
       role: normalizeText(formValues.role),
+      password: String(formValues.password || ""),
     };
 
-    if (!payload.name || !payload.username || !payload.role) {
-      showToast("error", "Representative name, OPPI, and team are required.");
+    if (!payload.name || !payload.username || !payload.role || !payload.password) {
+      showToast("error", "Representative name, OPPI, team, and password are required.");
+      return;
+    }
+
+    if (payload.password.length < 8) {
+      showToast("error", "Password must be at least 8 characters.");
       return;
     }
 
@@ -291,7 +338,10 @@ export default function UsersPage() {
       }
 
       if (body?.issuedCredential) {
-        setIssuedCredential(body.issuedCredential);
+        setIssuedCredential({
+          ...body.issuedCredential,
+          loginPassword: payload.password,
+        });
       }
 
       setFormValues({
@@ -299,12 +349,9 @@ export default function UsersPage() {
         username: "",
         repId: "",
         role: "",
+        password: "",
       });
-      if (body?.keygenOnly) {
-        showToast("success", "Offline keygen issued. User will be created after first online sync.");
-      } else {
-        showToast("success", "Offline credential issued successfully.");
-      }
+      showToast("success", "User created and secret key issued.");
     } catch (error) {
       showToast("error", error.message || "Failed to issue credential.");
     } finally {
@@ -320,6 +367,7 @@ export default function UsersPage() {
     const username = normalizeText(editValues.username);
     const repId = normalizeText(editValues.repId);
     const role = normalizeText(editValues.role);
+    const accessType = getAccessType(editValues);
     const password = String(editValues.password || "");
 
     if (!name || !username || !repId || !role) {
@@ -337,6 +385,7 @@ export default function UsersPage() {
       username,
       repId,
       role,
+      accessType,
       reissueKeygen: Boolean(editValues.reissueKeygen),
     };
     if (password) {
@@ -436,9 +485,9 @@ export default function UsersPage() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Edit Representative</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Edit User</h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Update representative details or re-issue a credential.
+                  Update account details, access, or re-issue a credential.
                 </p>
               </div>
               <button
@@ -529,8 +578,19 @@ export default function UsersPage() {
               </div>
 
               <div>
-                <div className="block text-sm font-medium text-gray-700 mb-1">Access</div>
-                <AccessBadge user={editingUser} />
+                <label htmlFor="edit-accessType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Access
+                </label>
+                <select
+                  id="edit-accessType"
+                  name="accessType"
+                  value={editValues.accessType}
+                  onChange={handleEditChange}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="representative">Representative</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
 
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
@@ -572,11 +632,11 @@ export default function UsersPage() {
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Issue Offline Credential</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Admin enters representative details. The password key is generated automatically.
+            Admin creates the user login password. The secret keygen is generated automatically for admin use.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Representative Name
@@ -619,6 +679,34 @@ export default function UsersPage() {
               required
             />
           </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showCreatePassword ? "text" : "password"}
+                value={formValues.password}
+                onChange={handleChange}
+                placeholder="Create login password"
+                autoComplete="new-password"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCreatePassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                aria-label={showCreatePassword ? "Hide password" : "Show password"}
+                aria-pressed={showCreatePassword}
+              >
+                <EyeIcon closed={showCreatePassword} />
+              </button>
+            </div>
+          </div>
         </div>
 
         <button
@@ -626,7 +714,7 @@ export default function UsersPage() {
           disabled={isSubmitting}
           className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "Issuing..." : "Generate Username + Password"}
+          {isSubmitting ? "Creating..." : "Create User + Secret Key"}
         </button>
       </form>
 

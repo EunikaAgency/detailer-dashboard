@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import PendingCredential from "@/models/PendingCredential";
 import { requireAdmin } from "@/lib/auth";
-import { getUserAccessType } from "@/lib/userAccess";
+import { getUserAccessType, normalizeAccessType } from "@/lib/userAccess";
 import {
   getOfflineCredentialSecret,
   issueOfflineCredential,
@@ -33,9 +32,6 @@ const buildOfflineEmail = ({ email, repId, username }) => {
   const seed = toLocalPart(repId || username || "offline-user");
   return `${seed || "offline.user"}@offline.otsuka.local`;
 };
-
-const hashCredential = (value) =>
-  crypto.createHash("sha256").update(String(value || "")).digest("hex");
 
 const duplicateErrorMessage = (error) => {
   if (!error || error.code !== 11000) return null;
@@ -168,8 +164,36 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+      if (!rawPassword) {
+        return NextResponse.json(
+          { error: "Manual password is required for issued users." },
+          { status: 400 }
+        );
+      }
+      if (rawPassword.length < 8) {
+        return NextResponse.json(
+          { error: "Manual password must be at least 8 characters." },
+          { status: 400 }
+        );
+      }
 
       const resolvedEmail = buildOfflineEmail({ email, repId, username });
+      await connectDB();
+
+      const existingUsername = await findCaseInsensitive("username", username);
+      if (existingUsername) {
+        return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+      }
+
+      const existingRepId = await findCaseInsensitive("repId", repId);
+      if (existingRepId) {
+        return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+      }
+
+      const existingEmail = await findCaseInsensitive("email", resolvedEmail);
+      if (existingEmail) {
+        return NextResponse.json({ error: "Identifier email is already in use." }, { status: 409 });
+      }
 
       const issuedAt = new Date();
       const credential = issueOfflineCredential(
@@ -190,37 +214,32 @@ export async function POST(request) {
         );
       }
 
-      await connectDB();
-      const normalizedUsername = normalizeIdentifier(username);
-      await PendingCredential.findOneAndUpdate(
-        { username: normalizedUsername },
-        {
-          $set: {
-            username: normalizedUsername,
-            name: name || username,
-            repId,
-            role: role || "Representative",
-            email: resolvedEmail,
-            credentialHash: hashCredential(credential),
-            credentialIssuedAt: issuedAt,
-            consumedAt: null,
-          },
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
+      const passwordHash = await bcrypt.hash(rawPassword, 10);
+      const created = await User.create({
+        name: name || username,
+        username,
+        repId,
+        role: role || "Representative",
+        accessType: "representative",
+        email: resolvedEmail,
+        password: passwordHash,
+        keygen: credential,
+        keygenIssuedAt: issuedAt,
+      });
+      await PendingCredential.deleteOne({ username: normalizeIdentifier(username) });
 
       return NextResponse.json(
         {
-          user: null,
+          user: mapUser(created),
           issuedCredential: {
             username,
             password: credential,
+            loginPassword: rawPassword,
             createdAt: issuedAt,
             dateCreated: issuedAt,
             repId,
             role: role || "Representative",
           },
-          keygenOnly: true,
         },
         { status: 201 }
       );
@@ -248,6 +267,7 @@ export async function POST(request) {
       name: trimmedName,
       username: usernameInput || trimmedEmail,
       email: trimmedEmail,
+      accessType: normalizeAccessType(body?.accessType) || "admin",
       password: hashedPassword,
     });
 

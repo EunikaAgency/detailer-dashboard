@@ -79,6 +79,7 @@ const createUserFromCredential = async (
       username,
       repId: identity.repId,
       role: identity.role || "Representative",
+      accessType: "representative",
       email: resolvedEmail,
       password: passwordHash,
       keygen: credentialValue,

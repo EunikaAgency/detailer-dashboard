@@ -4,9 +4,71 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const normalizeText = (value) => String(value || "").trim();
+
+const getDisplayIdentity = (user) => {
+  if (!user) return "Unknown user";
+  return normalizeText(user.name || user.email || user.username || user.repId) || "Unknown user";
+};
+
+const getDisplayMeta = (user) => {
+  if (!user) return "";
+  return (
+    normalizeText(user.email || user.username || user.repId) ||
+    normalizeText(user.role) ||
+    ""
+  );
+};
+
+const getDisplayAccess = (user) =>
+  normalizeText(user?.accessType).toLowerCase() === "admin" ? "Admin" : "Representative";
+
+const AuthIndicator = ({ user, loading, onLogout, compact = false }) => {
+  const baseClass = compact
+    ? "rounded-xl border border-gray-200 bg-gray-50 px-3 py-3"
+    : "flex max-w-[17rem] items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-2 shadow-sm";
+
+  return (
+    <div className={baseClass}>
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+          <path d="M20 21a8 8 0 10-16 0" />
+          <circle cx="12" cy="8" r="4" />
+        </svg>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-green-600">
+          {loading ? "Checking session" : "Logged in"}
+        </div>
+        <div className="truncate text-sm font-semibold text-gray-900">
+          {loading ? "Loading account..." : getDisplayIdentity(user)}
+        </div>
+        <div className="truncate text-xs text-gray-500">
+          {loading ? "" : [getDisplayMeta(user), getDisplayAccess(user)].filter(Boolean).join(" • ")}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+        aria-label="Logout"
+        title="Logout"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+          <path d="M16 17l5-5-5-5" />
+          <path d="M21 12H9" />
+        </svg>
+      </button>
+    </div>
+  );
+};
+
 export default function DashboardShell({ children }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
   const pathname = usePathname();
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
@@ -36,6 +98,37 @@ export default function DashboardShell({ children }) {
       // Ignore storage failures (private mode, browser policies, etc.)
     }
   }, [pathname]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadCurrentUser = async () => {
+      setIsCheckingUser(true);
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = await response.json().catch(() => ({}));
+        if (!active) return;
+
+        if (!response.ok) {
+          setCurrentUser(null);
+          return;
+        }
+
+        setCurrentUser(data?.user || null);
+      } catch {
+        if (!active) return;
+        setCurrentUser(null);
+      } finally {
+        if (active) setIsCheckingUser(false);
+      }
+    };
+
+    loadCurrentUser();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -88,6 +181,9 @@ export default function DashboardShell({ children }) {
                 </li>
               ))}
             </ul>
+            <div className="mt-auto">
+              <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} compact />
+            </div>
           </nav>
         </div>
       )}
@@ -105,12 +201,7 @@ export default function DashboardShell({ children }) {
           </button>
           <h1 className="text-xl font-semibold text-gray-900">Otsuka Admin Dashboard</h1>
         </div>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
-        >
-          Logout
-        </button>
+        <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} />
       </header>
 
       <main className="mx-auto w-full max-w-[1500px] px-6 py-8">

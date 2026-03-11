@@ -12,10 +12,12 @@ export async function GET(request) {
     return NextResponse.json({
       user: {
         id: user._id?.toString?.() || user.id,
+        name: user.name || "",
         email: user.email,
         username: user.username || "",
         repId: user.repId || "",
         role: user.role || "",
+        accessType: user.accessType || "",
       }
     });
   } catch (error) {

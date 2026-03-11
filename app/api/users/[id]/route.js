@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { requireAdmin } from "@/lib/auth";
-import { getUserAccessType } from "@/lib/userAccess";
+import { getUserAccessType, normalizeAccessType } from "@/lib/userAccess";
 import { getOfflineCredentialSecret, issueOfflineCredential, normalizeIdentity } from "@/lib/offlineCredential";
 
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
+  storedAccessType: normalizeAccessType(user?.accessType),
   accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
   keygenIssuedAt: user?.keygenIssuedAt || null,
@@ -92,11 +93,20 @@ export async function PUT(request, { params }) {
     const hasUsername = typeof body?.username === "string";
     const hasRepId = typeof body?.repId === "string";
     const hasRole = typeof body?.role === "string";
+    const hasAccessType = typeof body?.accessType === "string";
     const hasPassword = typeof body?.password === "string";
     const rawPassword = hasPassword ? String(body.password || "") : "";
     const hasManualPassword = hasPassword && rawPassword.length > 0;
 
-    if (!hasName && !hasUsername && !hasRepId && !hasRole && !hasPassword && !body?.reissueKeygen) {
+    if (
+      !hasName &&
+      !hasUsername &&
+      !hasRepId &&
+      !hasRole &&
+      !hasAccessType &&
+      !hasPassword &&
+      !body?.reissueKeygen
+    ) {
       return NextResponse.json({ error: "No update fields provided." }, { status: 400 });
     }
 
@@ -108,36 +118,55 @@ export async function PUT(request, { params }) {
       user.name = name;
     }
 
+    const nextUsername = hasUsername ? normalizeText(body.username) : normalizeText(user.username);
+    const nextRepId = hasRepId ? normalizeText(body.repId) : normalizeText(user.repId);
+    const nextRole = hasRole ? normalizeText(body.role) : normalizeText(user.role);
+    const didUsernameChange = nextUsername !== normalizeText(user.username);
+    const didRepIdChange = nextRepId !== normalizeText(user.repId);
+    const didRoleChange = nextRole !== normalizeText(user.role);
+
     if (hasUsername) {
-      const username = normalizeText(body.username);
-      if (!username) {
+      if (!nextUsername) {
         return NextResponse.json({ error: "Username cannot be empty." }, { status: 400 });
       }
-      const duplicate = await findDuplicate("username", username, user._id);
-      if (duplicate) {
-        return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+      if (didUsernameChange) {
+        const duplicate = await findDuplicate("username", nextUsername, user._id);
+        if (duplicate) {
+          return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+        }
       }
-      user.username = username;
+      user.username = nextUsername;
     }
 
     if (hasRepId) {
-      const repId = normalizeText(body.repId);
-      if (!repId) {
+      if (!nextRepId) {
         return NextResponse.json({ error: "Rep ID cannot be empty." }, { status: 400 });
       }
-      const duplicate = await findDuplicate("repId", repId, user._id);
-      if (duplicate) {
-        return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+      if (didRepIdChange) {
+        const duplicate = await findDuplicate("repId", nextRepId, user._id);
+        if (duplicate) {
+          return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+        }
       }
-      user.repId = repId;
+      user.repId = nextRepId;
     }
 
     if (hasRole) {
-      const role = normalizeText(body.role);
-      if (!role) {
+      if (!nextRole) {
         return NextResponse.json({ error: "Role cannot be empty." }, { status: 400 });
       }
-      user.role = role;
+      user.role = nextRole;
+    }
+
+    if (hasAccessType) {
+      const accessType = normalizeAccessType(body.accessType);
+      if (!accessType) {
+        return NextResponse.json(
+          { error: "Access type must be admin or representative." },
+          { status: 400 }
+        );
+      }
+      user.accessType = accessType;
     }
 
     if (hasManualPassword && rawPassword.length < 8) {
@@ -148,7 +177,8 @@ export async function PUT(request, { params }) {
     }
 
     let issuedCredential = null;
-    const shouldReissue = Boolean(body?.reissueKeygen) || hasUsername || hasRepId || hasRole;
+    const shouldReissue =
+      Boolean(body?.reissueKeygen) || didUsernameChange || didRepIdChange || didRoleChange;
     const manualPasswordHash = hasManualPassword ? await bcrypt.hash(rawPassword, 10) : null;
 
     if (shouldReissue || !user.keygen) {
