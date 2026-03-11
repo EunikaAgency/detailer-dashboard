@@ -454,7 +454,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <label htmlFor="edit-repId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Rep ID
+                    OPPI
                   </label>
                   <input
                     id="edit-repId"
@@ -467,7 +467,7 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-1">
-                    Role
+                    Team
                   </label>
                   <input
                     id="edit-role"
@@ -555,7 +555,7 @@ export default function UsersPage() {
 
           <div>
             <label htmlFor="repId" className="block text-sm font-medium text-gray-700 mb-1">
-              Rep ID
+              OPPI
             </label>
             <input
               id="repId"
@@ -569,7 +569,7 @@ export default function UsersPage() {
 
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Role
+              Team
             </label>
             <input
               id="role"
@@ -624,8 +624,8 @@ export default function UsersPage() {
                 <tr>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Name</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Username</th>
-                  <th className="w-32 px-4 py-3 text-left font-semibold">Rep ID</th>
-                  <th className="w-36 px-4 py-3 text-left font-semibold">Role</th>
+                  <th className="w-32 px-4 py-3 text-left font-semibold">OPPI</th>
+                  <th className="w-36 px-4 py-3 text-left font-semibold">Team</th>
                   <th className="w-[360px] px-4 py-3 text-left font-semibold">Password Key</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Issued</th>
                   <th className="w-32 px-4 py-3 text-right font-semibold">Options</th>
