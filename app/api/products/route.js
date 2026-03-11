@@ -5,6 +5,7 @@ import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import { isPdf, isPpt } from "@/lib/fileConverter";
+import { applyProductImageLibrary } from "@/lib/productImageLibrary";
 import "@/lib/conversionWorker";
 
 export const runtime = "nodejs";
@@ -295,10 +296,11 @@ export async function GET(request) {
           ...product,
           media: buildMediaGroupsFromMedia(product.media),
         }));
+    const rewrittenProducts = await applyProductImageLibrary(enriched);
     const apiKeyAllowed = hasValidApiKey(request);
     const responseProducts = !auth.user && apiKeyAllowed
-      ? await applyCacheBustToProductPayload(enriched)
-      : enriched;
+      ? await applyCacheBustToProductPayload(rewrittenProducts)
+      : rewrittenProducts;
     const version = Math.floor(Date.now() / 3600000) * 3600000;
     return NextResponse.json({ version, products: responseProducts });
   } catch (error) {
