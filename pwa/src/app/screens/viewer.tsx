@@ -505,7 +505,9 @@ export default function Viewer() {
           {/* Controls */}
           <div
             id={`${viewerId}-controls`}
-            className={`absolute flex flex-wrap justify-end gap-2 z-10 ${
+            className={`absolute flex flex-wrap justify-end gap-2 z-10 transition-[opacity,transform] duration-500 ${
+              showNavButtons ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"
+            } ${
               isCompactLandscape ? "top-3 right-3 max-w-[calc(100%-1.5rem)]" : "top-6 right-6 max-w-[calc(100%-2rem)]"
             }`}
           >
