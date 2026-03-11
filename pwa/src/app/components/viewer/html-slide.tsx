@@ -6,16 +6,28 @@
 import { useState, useRef, useEffect } from 'react';
 import { SlideLoadingOverlay } from './slide-loading-overlay';
 import { SlideErrorOverlay } from './slide-error-overlay';
+import { HotspotOverlay, type Hotspot } from './hotspot-overlay';
 
 interface HtmlSlideProps {
   url: string;
+  thumbnailUrl?: string;
+  hotspots?: Hotspot[];
   title?: string;
   slideIndex?: number;
   totalSlides?: number;
   idPrefix?: string;
+  onHotspotClick?: (targetIndex: number, hotspot: Hotspot) => void;
 }
 
-export function HtmlSlide({ url, title, slideIndex = 0, totalSlides = 0, idPrefix }: HtmlSlideProps) {
+export function HtmlSlide({
+  url,
+  hotspots = [],
+  title,
+  slideIndex = 0,
+  totalSlides = 0,
+  idPrefix,
+  onHotspotClick,
+}: HtmlSlideProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(16/9);
@@ -77,10 +89,20 @@ export function HtmlSlide({ url, title, slideIndex = 0, totalSlides = 0, idPrefi
     >
       {loading && <SlideLoadingOverlay type="html" idPrefix={idPrefix} />}
       {error && <SlideErrorOverlay type="html" idPrefix={idPrefix} />}
+      {hotspots.length > 0 && onHotspotClick && (
+        <HotspotOverlay
+          idPrefix={idPrefix}
+          hotspots={hotspots}
+          imageElement={null}
+          frameElement={iframeRef.current}
+          coordinateMode="fill"
+          onHotspotClick={onHotspotClick}
+        />
+      )}
       <iframe
         ref={iframeRef}
         id={idPrefix ? `${idPrefix}-iframe` : "slide-html"}
-        className="w-full h-full border-0"
+        className="relative z-0 w-full h-full border-0"
         src={url}
         title={title || `Slide ${slideIndex + 1} of ${totalSlides}`}
         sandbox="allow-scripts allow-same-origin allow-forms"

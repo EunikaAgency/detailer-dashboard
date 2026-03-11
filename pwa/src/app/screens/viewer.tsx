@@ -5,6 +5,7 @@ import { getLocallyAvailableProducts, getProductById, normalizeSlides, type Norm
 import { trackEvent } from "../lib/sessions";
 import { useAppSettings } from "../lib/settings";
 import { buildDomId } from "../lib/dom-ids";
+import { isIOS } from "../lib/pwa";
 import { ImageSlide } from "../components/viewer/image-slide";
 import { VideoSlide } from "../components/viewer/video-slide";
 import { HtmlSlide } from "../components/viewer/html-slide";
@@ -170,6 +171,7 @@ export default function Viewer() {
 
   const totalSlides = slides.length;
   const viewerId = "viewer";
+  const showOrientationControls = typeof window !== "undefined" ? !isIOS() : true;
 
   const revealNavigationButtons = () => {
     if (hideNavButtonsTimeoutRef.current !== null) {
@@ -473,6 +475,9 @@ export default function Viewer() {
                 <HtmlSlide
                   idPrefix={slideId}
                   url={currentSlideData.url}
+                  thumbnailUrl={currentSlideData.thumbnailUrl}
+                  hotspots={currentSlideData.hotspots}
+                  onHotspotClick={handleHotspotClick}
                   title={currentSlideData.title || `Slide ${currentSlide + 1}`}
                 />
               )}
@@ -511,39 +516,40 @@ export default function Viewer() {
               isCompactLandscape ? "top-3 right-3 max-w-[calc(100%-1.5rem)]" : "top-6 right-6 max-w-[calc(100%-2rem)]"
             }`}
           >
-            {/* Orientation Controls */}
-            <div id={`${viewerId}-orientation-controls`} className="flex flex-wrap justify-end gap-2 rounded-lg">
-              <ActionButton
-                id={`${viewerId}-orientation-auto-button`}
-                onClick={() => handleOrientationChange('auto')}
-                className="backdrop-blur-sm"
-                aria-label="Auto orientation"
-                label="Auto"
-                tone="dark"
-                active={orientationMode === 'auto'}
-                icon={<Maximize className="w-4 h-4" />}
-              />
-              <ActionButton
-                id={`${viewerId}-orientation-portrait-button`}
-                onClick={() => handleOrientationChange('portrait')}
-                className="backdrop-blur-sm"
-                aria-label="Portrait orientation"
-                label="Portrait"
-                tone="dark"
-                active={orientationMode === 'portrait'}
-                icon={<Smartphone className="w-4 h-4" />}
-              />
-              <ActionButton
-                id={`${viewerId}-orientation-landscape-button`}
-                onClick={() => handleOrientationChange('landscape')}
-                className="backdrop-blur-sm"
-                aria-label="Landscape orientation"
-                label="Landscape"
-                tone="dark"
-                active={orientationMode === 'landscape'}
-                icon={<Monitor className="w-4 h-4" />}
-              />
-            </div>
+            {showOrientationControls && (
+              <div id={`${viewerId}-orientation-controls`} className="flex flex-wrap justify-end gap-2 rounded-lg">
+                <ActionButton
+                  id={`${viewerId}-orientation-auto-button`}
+                  onClick={() => handleOrientationChange('auto')}
+                  className="backdrop-blur-sm"
+                  aria-label="Auto orientation"
+                  label="Auto"
+                  tone="dark"
+                  active={orientationMode === 'auto'}
+                  icon={<Maximize className="w-4 h-4" />}
+                />
+                <ActionButton
+                  id={`${viewerId}-orientation-portrait-button`}
+                  onClick={() => handleOrientationChange('portrait')}
+                  className="backdrop-blur-sm"
+                  aria-label="Portrait orientation"
+                  label="Portrait"
+                  tone="dark"
+                  active={orientationMode === 'portrait'}
+                  icon={<Smartphone className="w-4 h-4" />}
+                />
+                <ActionButton
+                  id={`${viewerId}-orientation-landscape-button`}
+                  onClick={() => handleOrientationChange('landscape')}
+                  className="backdrop-blur-sm"
+                  aria-label="Landscape orientation"
+                  label="Landscape"
+                  tone="dark"
+                  active={orientationMode === 'landscape'}
+                  icon={<Monitor className="w-4 h-4" />}
+                />
+              </div>
+            )}
             
             <ActionButton
               id={`${viewerId}-toggle-thumbnails-button`}

@@ -20,17 +20,26 @@ interface HotspotOverlayProps {
   idPrefix?: string;
   hotspots: Hotspot[];
   imageElement: HTMLImageElement | null;
+  frameElement?: HTMLElement | null;
+  coordinateMode?: "contain" | "fill";
   onHotspotClick: (targetIndex: number, hotspot: Hotspot) => void;
 }
 
-export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClick }: HotspotOverlayProps) {
+export function HotspotOverlay({
+  idPrefix,
+  hotspots,
+  imageElement,
+  frameElement = null,
+  coordinateMode = "contain",
+  onHotspotClick,
+}: HotspotOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageBounds, setImageBounds] = useState<DOMRect | null>(null);
   const [showAreas, setShowAreas] = useState(getSetting('showHotspotAreas'));
 
   // Calculate actual image bounds considering object-fit: contain
   useEffect(() => {
-    if (!imageElement || !containerRef.current) {
+    if (!containerRef.current) {
       setImageBounds(null);
       return;
     }
@@ -38,6 +47,33 @@ export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClic
     const updateBounds = () => {
       const container = containerRef.current;
       if (!container) return;
+
+      if (coordinateMode === "fill") {
+        const containerRect = container.getBoundingClientRect();
+        const referenceRect = frameElement?.getBoundingClientRect();
+        const left = referenceRect ? referenceRect.left - containerRect.left : 0;
+        const top = referenceRect ? referenceRect.top - containerRect.top : 0;
+        const width = referenceRect?.width || containerRect.width;
+        const height = referenceRect?.height || containerRect.height;
+
+        setImageBounds({
+          left,
+          top,
+          width,
+          height,
+          right: left + width,
+          bottom: top + height,
+          x: left,
+          y: top,
+          toJSON: () => ({}),
+        } as DOMRect);
+        return;
+      }
+
+      if (!imageElement) {
+        setImageBounds(null);
+        return;
+      }
 
       // Get natural image dimensions
       const naturalWidth = imageElement.naturalWidth;
@@ -91,11 +127,14 @@ export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClic
     // Update on resize
     const resizeObserver = new ResizeObserver(updateBounds);
     resizeObserver.observe(containerRef.current);
+    if (frameElement) {
+      resizeObserver.observe(frameElement);
+    }
 
     return () => {
       resizeObserver.disconnect();
     };
-  }, [imageElement]);
+  }, [coordinateMode, frameElement, imageElement]);
 
   // Listen for settings changes
   useEffect(() => {
@@ -111,7 +150,7 @@ export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClic
       <div
         id={idPrefix ? `${idPrefix}-hotspots-empty` : undefined}
         ref={containerRef}
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 z-10 pointer-events-none"
       />
     );
   }
@@ -120,7 +159,7 @@ export function HotspotOverlay({ idPrefix, hotspots, imageElement, onHotspotClic
     <div
       id={idPrefix ? `${idPrefix}-hotspots` : undefined}
       ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
+      className="absolute inset-0 z-10 pointer-events-none"
     >
       {hotspots.map((hotspot, index) => {
         // Calculate pixel positions from normalized coordinates

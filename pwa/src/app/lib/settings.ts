@@ -32,7 +32,7 @@ const SETTINGS_KEY = "appSettings";
 const SETTINGS_EVENT = "app-settings-change";
 
 const DEFAULT_SETTINGS_BASE: Omit<AppSettings, "actionLabels"> = {
-  showGalleryLabels: true,
+  showGalleryLabels: false,
   galleryColumns: 3,
   uiScale: "comfortable",
   dynamicSlideBackdrop: true,

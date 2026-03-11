@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router";
 import { StickyHeader } from "../components/ui/sticky-header";
 import { Card } from "../components/ui/card";
-import { Clock, Download, CheckCircle2 } from "lucide-react";
+import { Clock, Download, CheckCircle2, LayoutTemplate } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   getLocallyAvailableProducts,
@@ -131,8 +131,6 @@ export default function CaseSelection() {
     );
   }
 
-  const caseIcons = ['👤', '👥', '👶', '👴', '🏥', '💊'];
-
   return (
     <div id={`${screenId}-root`} className="min-h-screen pb-6 bg-gradient-to-br from-blue-50 via-white to-slate-50">
       <StickyHeader
@@ -205,8 +203,8 @@ export default function CaseSelection() {
                 className="p-4 sm:p-5"
               >
                 <div id={buildDomId(screenId, "deck-card-content", index + 1)} className="flex items-start gap-3 sm:gap-4">
-                  <div id={buildDomId(screenId, "deck-card-icon", index + 1)} className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center text-xl sm:text-2xl flex-shrink-0 mt-0.5">
-                    {caseIcons[index % caseIcons.length]}
+                  <div id={buildDomId(screenId, "deck-card-icon", index + 1)} className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5">
+                    <LayoutTemplate className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <div id={buildDomId(screenId, "deck-card-meta", index + 1)} className="flex-1 min-w-0">
                     <h3
