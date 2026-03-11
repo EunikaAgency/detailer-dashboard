@@ -14,6 +14,40 @@ const normalizeText = (value, maxLength = 160) => {
   return normalized.slice(0, maxLength);
 };
 
+const extractClientInfo = (...sources) => {
+  const merged = {};
+
+  for (const source of sources) {
+    if (!source || typeof source !== "object" || Array.isArray(source)) continue;
+
+    const userAgent = normalizeText(source.userAgent, 600);
+    const browser = normalizeText(source.browser, 120);
+    const browserName = normalizeText(source.browserName, 120);
+    const browserVersion = normalizeText(source.browserVersion, 120);
+    const platform = normalizeText(source.platform, 120);
+    const os = normalizeText(source.os, 120);
+    const device = normalizeText(source.device, 120);
+
+    if (userAgent) merged.userAgent = userAgent;
+    if (browser) merged.browser = browser;
+    if (browserName) merged.browserName = browserName;
+    if (browserVersion) merged.browserVersion = browserVersion;
+    if (platform) merged.platform = platform;
+    if (os) merged.os = os;
+    if (device) merged.device = device;
+  }
+
+  return {
+    userAgent: merged.userAgent || null,
+    browser: merged.browser || null,
+    browserName: merged.browserName || null,
+    browserVersion: merged.browserVersion || null,
+    platform: merged.platform || null,
+    os: merged.os || null,
+    device: merged.device || null,
+  };
+};
+
 const parsePositiveInt = (value, fallback, min, max) => {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -29,25 +63,33 @@ const mapUser = (user) => ({
   repId: user?.repId || "",
 });
 
-const mapEvent = (event) => ({
-  eventId: event?.eventId || "",
-  eventType: event?.eventType || "activity",
-  action: event?.action || "unknown_action",
-  deckTitle: event?.deckTitle || normalizeText(event?.details?.deckTitle || event?.details?.presentationTitle || "", 180) || null,
-  screen: event?.screen || null,
-  timestampMs: event?.timestampMs || null,
-  details: event?.details || null,
-  occurredAt: event?.occurredAt || null,
-});
+const mapEvent = (event) => {
+  const clientInfo = extractClientInfo(event, event?.details);
+
+  return {
+    eventId: event?.eventId || "",
+    eventType: event?.eventType || "activity",
+    action: event?.action || "unknown_action",
+    deckTitle:
+      event?.deckTitle || normalizeText(event?.details?.deckTitle || event?.details?.presentationTitle || "", 180) || null,
+    screen: event?.screen || null,
+    ...clientInfo,
+    timestampMs: event?.timestampMs || null,
+    details: event?.details || null,
+    occurredAt: event?.occurredAt || null,
+  };
+};
 
 const mapActivityLog = (log, user) => {
   const events = Array.isArray(log?.events) ? log.events.map(mapEvent) : [];
+  const clientInfo = extractClientInfo(log, ...events, ...(Array.isArray(log?.events) ? log.events : []));
 
   return {
     id: log?._id,
     sessionId: log?.sessionId,
     method: log?.method,
     source: log?.source,
+    ...clientInfo,
     startedAt: log?.startedAt,
     endedAt: log?.endedAt,
     lastOccurredAt: log?.lastOccurredAt,
@@ -58,6 +100,7 @@ const mapActivityLog = (log, user) => {
       sessionId: log?.sessionId,
       method: log?.method,
       source: log?.source,
+      ...clientInfo,
       startedAt: log?.startedAt,
       endedAt: log?.endedAt,
       eventCount: log?.eventCount || events.length,
@@ -95,6 +138,7 @@ const mapLegacyEventsToLogs = (events, mappedUser) => {
       sessionId,
       method: event?.method || "password",
       source: event?.source || "online",
+      ...extractClientInfo(event, event?.details),
       startedAt: event?.occurredAt,
       endedAt: event?.occurredAt,
       lastOccurredAt: event?.occurredAt,
@@ -103,16 +147,27 @@ const mapLegacyEventsToLogs = (events, mappedUser) => {
       events: [],
     };
 
+    const eventClientInfo = extractClientInfo(event, event?.details);
+
     current.events.push({
       eventId: event?.eventId || String(event?._id || ""),
       eventType: event?.eventType || "activity",
       action: event?.action || "unknown_action",
       deckTitle: normalizeText(event?.details?.deckTitle || event?.details?.presentationTitle || "", 180) || null,
       screen: event?.screen || null,
+      ...eventClientInfo,
       timestampMs: event?.timestampMs || null,
       details: event?.details || null,
       occurredAt: event?.occurredAt || null,
     });
+
+    if (!current.userAgent && eventClientInfo.userAgent) current.userAgent = eventClientInfo.userAgent;
+    if (!current.browser && eventClientInfo.browser) current.browser = eventClientInfo.browser;
+    if (!current.browserName && eventClientInfo.browserName) current.browserName = eventClientInfo.browserName;
+    if (!current.browserVersion && eventClientInfo.browserVersion) current.browserVersion = eventClientInfo.browserVersion;
+    if (!current.platform && eventClientInfo.platform) current.platform = eventClientInfo.platform;
+    if (!current.os && eventClientInfo.os) current.os = eventClientInfo.os;
+    if (!current.device && eventClientInfo.device) current.device = eventClientInfo.device;
 
     if (!current.startedAt || new Date(event?.occurredAt || 0).getTime() < new Date(current.startedAt || 0).getTime()) {
       current.startedAt = event?.occurredAt || current.startedAt;
@@ -140,6 +195,13 @@ const mapLegacyEventsToLogs = (events, mappedUser) => {
           sessionId: log.sessionId,
           method: log.method,
           source: log.source,
+          userAgent: log.userAgent || null,
+          browser: log.browser || null,
+          browserName: log.browserName || null,
+          browserVersion: log.browserVersion || null,
+          platform: log.platform || null,
+          os: log.os || null,
+          device: log.device || null,
           startedAt: log.startedAt,
           endedAt: log.endedAt,
           eventCount: sortedEvents.length,
@@ -227,6 +289,13 @@ export async function GET(request, { params }) {
         action: event.action,
         deckTitle: event.deckTitle || null,
         screen: event.screen,
+        userAgent: event.userAgent || null,
+        browser: event.browser || null,
+        browserName: event.browserName || null,
+        browserVersion: event.browserVersion || null,
+        platform: event.platform || null,
+        os: event.os || null,
+        device: event.device || null,
         sessionId: log.sessionId,
         timestampMs: event.timestampMs,
         details: event.details,

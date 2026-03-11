@@ -25,6 +25,12 @@ export interface Session {
   endTime: number;
   events: SessionEvent[];
   userAgent?: string;
+  browser?: string;
+  browserName?: string;
+  browserVersion?: string;
+  platform?: string;
+  os?: string;
+  device?: string;
   persistedTitle?: string; // Persisted deterministic title
 }
 
@@ -282,6 +288,123 @@ function getRuntimeUserAgent() {
   return userAgent || undefined;
 }
 
+function parseClientInfoFromUserAgent(userAgent: string) {
+  const normalizedUserAgent = String(userAgent || '').trim();
+  if (!normalizedUserAgent) {
+    return {};
+  }
+
+  const browserMatchers = [
+    { name: 'Edge', pattern: /(Edg|Edge)\/([\d.]+)/i },
+    { name: 'Chrome', pattern: /(Chrome|CriOS)\/([\d.]+)/i },
+    { name: 'Firefox', pattern: /(Firefox|FxiOS)\/([\d.]+)/i },
+    { name: 'Safari', pattern: /Version\/([\d.]+).*Safari/i },
+    { name: 'Samsung Internet', pattern: /SamsungBrowser\/([\d.]+)/i },
+  ] as const;
+
+  const browserMatch = browserMatchers
+    .map((entry) => {
+      const match = normalizedUserAgent.match(entry.pattern);
+      if (!match) return null;
+      const version = match[2] || match[1] || '';
+      return {
+        browserName: entry.name,
+        browserVersion: version,
+      };
+    })
+    .find(Boolean);
+
+  let os = '';
+  let platform = '';
+  if (/Android/i.test(normalizedUserAgent)) {
+    const versionMatch = normalizedUserAgent.match(/Android\s([\d.]+)/i);
+    os = versionMatch ? `Android ${versionMatch[1]}` : 'Android';
+    platform = 'Android';
+  } else if (/iPhone OS\s([\d_]+)/i.test(normalizedUserAgent) || /iPad; CPU OS\s([\d_]+)/i.test(normalizedUserAgent)) {
+    const versionMatch =
+      normalizedUserAgent.match(/iPhone OS\s([\d_]+)/i) ||
+      normalizedUserAgent.match(/iPad; CPU OS\s([\d_]+)/i);
+    os = versionMatch ? `iOS ${versionMatch[1].replace(/_/g, '.')}` : 'iOS';
+    platform = 'iOS';
+  } else if (/Mac OS X\s([\d_]+)/i.test(normalizedUserAgent)) {
+    const versionMatch = normalizedUserAgent.match(/Mac OS X\s([\d_]+)/i);
+    os = versionMatch ? `macOS ${versionMatch[1].replace(/_/g, '.')}` : 'macOS';
+    platform = 'macOS';
+  } else if (/Windows NT\s([\d.]+)/i.test(normalizedUserAgent)) {
+    const versionMatch = normalizedUserAgent.match(/Windows NT\s([\d.]+)/i);
+    os = versionMatch ? `Windows ${versionMatch[1]}` : 'Windows';
+    platform = 'Windows';
+  } else if (/Linux/i.test(normalizedUserAgent)) {
+    os = 'Linux';
+    platform = 'Linux';
+  }
+
+  let device = '';
+  const androidDeviceMatch = normalizedUserAgent.match(/Android[\d.\s;]+;\s?([^;)]+?)\sBuild\//i);
+  if (androidDeviceMatch?.[1]) {
+    device = androidDeviceMatch[1].trim();
+  } else if (/iPhone/i.test(normalizedUserAgent)) {
+    device = 'iPhone';
+  } else if (/iPad/i.test(normalizedUserAgent)) {
+    device = 'iPad';
+  } else if (/Macintosh/i.test(normalizedUserAgent)) {
+    device = 'Mac';
+  } else if (/Windows/i.test(normalizedUserAgent)) {
+    device = 'Windows PC';
+  } else if (/Linux/i.test(normalizedUserAgent)) {
+    device = 'Linux Device';
+  }
+
+  const browserName = browserMatch?.browserName || '';
+  const browserVersion = browserMatch?.browserVersion || '';
+
+  return {
+    userAgent: normalizedUserAgent,
+    browserName: browserName || undefined,
+    browserVersion: browserVersion || undefined,
+    browser: browserName ? `${browserName}${browserVersion ? ` ${browserVersion}` : ''}` : undefined,
+    platform: platform || undefined,
+    os: os || undefined,
+    device: device || undefined,
+  };
+}
+
+function getRuntimeClientInfo() {
+  const userAgent = getRuntimeUserAgent();
+  if (!userAgent) {
+    return {};
+  }
+
+  return parseClientInfoFromUserAgent(userAgent);
+}
+
+const CLIENT_INFO_KEYS = [
+  'userAgent',
+  'browser',
+  'browserName',
+  'browserVersion',
+  'platform',
+  'os',
+  'device',
+] as const;
+
+function extractClientInfo(...sources: Array<Record<string, unknown> | undefined>) {
+  const clientInfo: Record<string, string> = {};
+
+  for (const source of sources) {
+    if (!source) continue;
+
+    for (const key of CLIENT_INFO_KEYS) {
+      const value = source[key];
+      if (typeof value === 'string' && value.trim() && clientInfo[key] === undefined) {
+        clientInfo[key] = value.trim();
+      }
+    }
+  }
+
+  return clientInfo;
+}
+
 export function subscribeSessionState(listener: () => void) {
   if (typeof window === 'undefined') {
     return () => {};
@@ -327,11 +450,11 @@ export function trackEvent(
   const events = getStoredEvents();
   const timestampMs = Date.now();
   const sessionId = resolveSessionId(action, events, timestampMs);
-  const userAgent = getRuntimeUserAgent();
-  const enrichedMetadata =
-    userAgent && metadata?.userAgent === undefined
-      ? { ...metadata, userAgent }
-      : metadata;
+  const runtimeClientInfo = getRuntimeClientInfo();
+  const enrichedMetadata = {
+    ...runtimeClientInfo,
+    ...(metadata || {}),
+  };
 
   const event: SessionEvent = {
     id: `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -342,7 +465,7 @@ export function trackEvent(
     source,
     timestamp,
     timestampMs,
-    metadata: enrichedMetadata,
+    metadata: Object.keys(enrichedMetadata).length > 0 ? enrichedMetadata : undefined,
     sessionId,
   };
 
@@ -447,7 +570,7 @@ function createSession(
     persistSessionTitle(sessionId, title);
   }
 
-  const userAgent = events.find((event) => typeof event.metadata?.userAgent === 'string')?.metadata?.userAgent;
+  const sessionClientInfo = extractClientInfo(...events.map((event) => event.metadata));
 
   return {
     id: sessionId,
@@ -459,7 +582,13 @@ function createSession(
     startTime,
     endTime,
     events,
-    userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+    userAgent: sessionClientInfo.userAgent,
+    browser: sessionClientInfo.browser,
+    browserName: sessionClientInfo.browserName,
+    browserVersion: sessionClientInfo.browserVersion,
+    platform: sessionClientInfo.platform,
+    os: sessionClientInfo.os,
+    device: sessionClientInfo.device,
   };
 }
 
@@ -598,13 +727,19 @@ export async function syncPendingEvents(): Promise<boolean> {
     const login = profile.issuedLoginUsername || profile.username;
     const username = profile.username || profile.issuedLoginUsername || login;
     const userId = profile.userId || profile.repId || login;
+    const requestClientInfo = pendingEvents.reduce<Record<string, string>>(
+      (acc, event) => ({ ...extractClientInfo(event.metadata, acc), ...acc }),
+      {}
+    );
 
     return {
       userId,
       login,
       username,
       issuedLoginUsername: profile.issuedLoginUsername || username,
+      ...requestClientInfo,
       events: pendingEvents.map(e => ({
+        ...extractClientInfo(e.metadata),
         eventId: e.id,
         eventType: e.eventType === 'activity' ? 'activity' : 'login',
         action: e.action,

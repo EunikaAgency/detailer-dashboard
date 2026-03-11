@@ -25,7 +25,33 @@ const sanitizeDetails = (details) => {
   }
 };
 
-const sanitizeEvent = (event) => {
+const sanitizeClientInfo = (...sources) => {
+  const merged = {};
+
+  for (const source of sources) {
+    if (!source || typeof source !== "object" || Array.isArray(source)) continue;
+
+    const userAgent = normalizeText(source.userAgent, 600);
+    const browser = normalizeText(source.browser, 120);
+    const browserName = normalizeText(source.browserName, 120);
+    const browserVersion = normalizeText(source.browserVersion, 120);
+    const platform = normalizeText(source.platform, 120);
+    const os = normalizeText(source.os, 120);
+    const device = normalizeText(source.device, 120);
+
+    if (userAgent) merged.userAgent = userAgent;
+    if (browser) merged.browser = browser;
+    if (browserName) merged.browserName = browserName;
+    if (browserVersion) merged.browserVersion = browserVersion;
+    if (platform) merged.platform = platform;
+    if (os) merged.os = os;
+    if (device) merged.device = device;
+  }
+
+  return merged;
+};
+
+const sanitizeEvent = (event, requestClientInfo = null) => {
   if (!event || typeof event !== "object") return null;
   const eventId = normalizeText(event.eventId, 120);
   const method = String(event.method || "").trim().toLowerCase();
@@ -35,7 +61,12 @@ const sanitizeEvent = (event) => {
   const action = normalizeText(event.action, 120) || "login_success";
   const screen = normalizeText(event.screen, 80) || null;
   const sessionId = normalizeText(event.sessionId, 120) || null;
-  const details = sanitizeDetails(event.details);
+  const sanitizedDetails = sanitizeDetails(event.details);
+  const clientInfo = sanitizeClientInfo(requestClientInfo, sanitizedDetails, event);
+  const details =
+    sanitizedDetails || Object.keys(clientInfo).length
+      ? { ...(sanitizedDetails || {}), ...clientInfo }
+      : null;
   const deckTitle = normalizeText(
     event.deckTitle || details?.deckTitle || details?.presentationTitle || "",
     180
@@ -58,6 +89,7 @@ const sanitizeEvent = (event) => {
     screen,
     sessionId,
     timestampMs,
+    ...clientInfo,
     details,
     occurredAt,
   };
@@ -69,6 +101,13 @@ const toStoredEvent = (event) => ({
   action: event.action,
   deckTitle: event.deckTitle,
   screen: event.screen,
+  userAgent: event.userAgent || null,
+  browser: event.browser || null,
+  browserName: event.browserName || null,
+  browserVersion: event.browserVersion || null,
+  platform: event.platform || null,
+  os: event.os || null,
+  device: event.device || null,
   timestampMs: event.timestampMs,
   details: event.details,
   occurredAt: event.occurredAt,
@@ -84,8 +123,22 @@ const groupBySession = (events) => {
       sessionId: sessionKey,
       method: event.method,
       source: event.source,
+      userAgent: event.userAgent || null,
+      browser: event.browser || null,
+      browserName: event.browserName || null,
+      browserVersion: event.browserVersion || null,
+      platform: event.platform || null,
+      os: event.os || null,
+      device: event.device || null,
       events: [],
     };
+    if (!group.userAgent && event.userAgent) group.userAgent = event.userAgent;
+    if (!group.browser && event.browser) group.browser = event.browser;
+    if (!group.browserName && event.browserName) group.browserName = event.browserName;
+    if (!group.browserVersion && event.browserVersion) group.browserVersion = event.browserVersion;
+    if (!group.platform && event.platform) group.platform = event.platform;
+    if (!group.os && event.os) group.os = event.os;
+    if (!group.device && event.device) group.device = event.device;
     group.events.push(event);
     grouped.set(sessionKey, group);
   }
@@ -107,6 +160,13 @@ const mapLegacyEventsToLogs = (events) => {
       startedAt: event?.occurredAt,
       endedAt: event?.occurredAt,
       lastOccurredAt: event?.occurredAt,
+      userAgent: normalizeText(event?.userAgent || event?.details?.userAgent || "", 600) || null,
+      browser: normalizeText(event?.browser || event?.details?.browser || "", 120) || null,
+      browserName: normalizeText(event?.browserName || event?.details?.browserName || "", 120) || null,
+      browserVersion: normalizeText(event?.browserVersion || event?.details?.browserVersion || "", 120) || null,
+      platform: normalizeText(event?.platform || event?.details?.platform || "", 120) || null,
+      os: normalizeText(event?.os || event?.details?.os || "", 120) || null,
+      device: normalizeText(event?.device || event?.details?.device || "", 120) || null,
       eventCount: 0,
       user: event?.userId
         ? {
@@ -126,6 +186,13 @@ const mapLegacyEventsToLogs = (events) => {
       action: event?.action || "unknown_action",
       deckTitle: normalizeText(event?.deckTitle || event?.details?.deckTitle || "", 180) || null,
       screen: event?.screen || null,
+      userAgent: normalizeText(event?.userAgent || event?.details?.userAgent || "", 600) || null,
+      browser: normalizeText(event?.browser || event?.details?.browser || "", 120) || null,
+      browserName: normalizeText(event?.browserName || event?.details?.browserName || "", 120) || null,
+      browserVersion: normalizeText(event?.browserVersion || event?.details?.browserVersion || "", 120) || null,
+      platform: normalizeText(event?.platform || event?.details?.platform || "", 120) || null,
+      os: normalizeText(event?.os || event?.details?.os || "", 120) || null,
+      device: normalizeText(event?.device || event?.details?.device || "", 120) || null,
       timestampMs: event?.timestampMs || null,
       details: event?.details || null,
       occurredAt: event?.occurredAt || null,
@@ -154,6 +221,13 @@ const mapLegacyEventsToLogs = (events) => {
           sessionId: log.sessionId,
           method: log.method,
           source: log.source,
+          userAgent: log.userAgent || null,
+          browser: log.browser || null,
+          browserName: log.browserName || null,
+          browserVersion: log.browserVersion || null,
+          platform: log.platform || null,
+          os: log.os || null,
+          device: log.device || null,
           startedAt: log.startedAt,
           endedAt: log.endedAt,
           eventCount: sortedEvents.length,
@@ -183,7 +257,8 @@ export async function POST(request) {
     const resolvedUserId = new mongoose.Types.ObjectId(effectiveUserId);
 
     const events = Array.isArray(body?.events) ? body.events : [];
-    const cleaned = events.map(sanitizeEvent).filter(Boolean);
+    const requestClientInfo = sanitizeClientInfo(body);
+    const cleaned = events.map((event) => sanitizeEvent(event, requestClientInfo)).filter(Boolean);
 
     if (!cleaned.length) {
       return NextResponse.json({ error: "No valid events provided." }, { status: 400 });
@@ -211,6 +286,13 @@ export async function POST(request) {
           sessionId: group.sessionId,
           method: group.method,
           source: group.source,
+          userAgent: group.userAgent || null,
+          browser: group.browser || null,
+          browserName: group.browserName || null,
+          browserVersion: group.browserVersion || null,
+          platform: group.platform || null,
+          os: group.os || null,
+          device: group.device || null,
           startedAt,
           endedAt,
           lastOccurredAt: endedAt,
@@ -237,6 +319,13 @@ export async function POST(request) {
       existing.lastOccurredAt = existing.endedAt;
       if (!existing.method) existing.method = group.method;
       if (!existing.source) existing.source = group.source;
+      if (!existing.userAgent && group.userAgent) existing.userAgent = group.userAgent;
+      if (!existing.browser && group.browser) existing.browser = group.browser;
+      if (!existing.browserName && group.browserName) existing.browserName = group.browserName;
+      if (!existing.browserVersion && group.browserVersion) existing.browserVersion = group.browserVersion;
+      if (!existing.platform && group.platform) existing.platform = group.platform;
+      if (!existing.os && group.os) existing.os = group.os;
+      if (!existing.device && group.device) existing.device = group.device;
       await existing.save();
 
       inserted += uniqueIncoming.length;
@@ -292,17 +381,32 @@ export async function GET(request) {
             action: event.action || "unknown_action",
             deckTitle: event.deckTitle || normalizeText(event?.details?.deckTitle || "", 180) || null,
             screen: event.screen || null,
+            userAgent: event.userAgent || normalizeText(event?.details?.userAgent || "", 600) || null,
+            browser: event.browser || normalizeText(event?.details?.browser || "", 120) || null,
+            browserName: event.browserName || normalizeText(event?.details?.browserName || "", 120) || null,
+            browserVersion: event.browserVersion || normalizeText(event?.details?.browserVersion || "", 120) || null,
+            platform: event.platform || normalizeText(event?.details?.platform || "", 120) || null,
+            os: event.os || normalizeText(event?.details?.os || "", 120) || null,
+            device: event.device || normalizeText(event?.details?.device || "", 120) || null,
             timestampMs: event.timestampMs || null,
             details: event.details || null,
             occurredAt: event.occurredAt,
           }))
         : [];
+      const sessionClientInfo = sanitizeClientInfo(log, ...mappedEvents, ...(Array.isArray(log.events) ? log.events : []));
 
       return {
         id: log._id,
         sessionId: log.sessionId,
         method: log.method,
         source: log.source,
+        userAgent: sessionClientInfo.userAgent || null,
+        browser: sessionClientInfo.browser || null,
+        browserName: sessionClientInfo.browserName || null,
+        browserVersion: sessionClientInfo.browserVersion || null,
+        platform: sessionClientInfo.platform || null,
+        os: sessionClientInfo.os || null,
+        device: sessionClientInfo.device || null,
         startedAt: log.startedAt,
         endedAt: log.endedAt,
         lastOccurredAt: log.lastOccurredAt,
@@ -313,6 +417,13 @@ export async function GET(request) {
           sessionId: log.sessionId,
           method: log.method,
           source: log.source,
+          userAgent: sessionClientInfo.userAgent || null,
+          browser: sessionClientInfo.browser || null,
+          browserName: sessionClientInfo.browserName || null,
+          browserVersion: sessionClientInfo.browserVersion || null,
+          platform: sessionClientInfo.platform || null,
+          os: sessionClientInfo.os || null,
+          device: sessionClientInfo.device || null,
           startedAt: log.startedAt,
           endedAt: log.endedAt,
           eventCount: log.eventCount || mappedEvents.length,
@@ -341,6 +452,13 @@ export async function GET(request) {
         action: event.action,
         deckTitle: event.deckTitle || null,
         screen: event.screen,
+        userAgent: event.userAgent || null,
+        browser: event.browser || null,
+        browserName: event.browserName || null,
+        browserVersion: event.browserVersion || null,
+        platform: event.platform || null,
+        os: event.os || null,
+        device: event.device || null,
         sessionId: log.sessionId,
         timestampMs: event.timestampMs,
         details: event.details,

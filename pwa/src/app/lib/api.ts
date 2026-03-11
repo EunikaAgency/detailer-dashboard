@@ -93,7 +93,17 @@ export interface ProductsResponse {
   products: Product[];
 }
 
-export interface LoginEvent {
+export interface ClientInfoFields {
+  userAgent?: string;
+  browser?: string;
+  browserName?: string;
+  browserVersion?: string;
+  platform?: string;
+  os?: string;
+  device?: string;
+}
+
+export interface LoginEvent extends ClientInfoFields {
   eventId: string;
   eventType: 'login' | 'activity';
   action: string;
@@ -107,7 +117,7 @@ export interface LoginEvent {
   deckTitle?: string;
 }
 
-export interface LoginEventsRequest {
+export interface LoginEventsRequest extends ClientInfoFields {
   userId: string;
   login: string;
   username: string;
