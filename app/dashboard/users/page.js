@@ -56,6 +56,23 @@ const getDisplayUsername = (user) =>
 
 const getDisplayRepId = (user) => normalizeText(user?.repId || "");
 const getDisplayRole = (user) => normalizeText(user?.role || "");
+const getAccessType = (user) =>
+  normalizeText(user?.accessType || "").toLowerCase() === "admin" ? "admin" : "representative";
+
+const AccessBadge = ({ user }) => {
+  const accessType = getAccessType(user);
+  const isAdmin = accessType === "admin";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+        isAdmin ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200" : "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200"
+      }`}
+    >
+      {isAdmin ? "Admin" : "Representative"}
+    </span>
+  );
+};
 
 const IssuedCredentialCard = ({ credential, onCopy }) => {
   if (!credential) return null;
@@ -130,6 +147,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
+    password: "",
     reissueKeygen: false,
   });
 
@@ -210,6 +228,7 @@ export default function UsersPage() {
       username: getDisplayUsername(user),
       repId: getDisplayRepId(user),
       role: getDisplayRole(user),
+      password: "",
       reissueKeygen: false,
     });
   };
@@ -221,6 +240,7 @@ export default function UsersPage() {
       username: "",
       repId: "",
       role: "",
+      password: "",
       reissueKeygen: false,
     });
   };
@@ -244,12 +264,12 @@ export default function UsersPage() {
       createMode: "offline-credential",
       name: normalizeText(formValues.name),
       username: normalizeText(formValues.username),
-      repId: normalizeText(formValues.repId),
+      repId: normalizeText(formValues.username),
       role: normalizeText(formValues.role),
     };
 
-    if (!payload.name || !payload.username || !payload.repId || !payload.role) {
-      showToast("error", "Representative name, username, Rep ID, and role are required.");
+    if (!payload.name || !payload.username || !payload.role) {
+      showToast("error", "Representative name, OPPI, and team are required.");
       return;
     }
 
@@ -300,9 +320,15 @@ export default function UsersPage() {
     const username = normalizeText(editValues.username);
     const repId = normalizeText(editValues.repId);
     const role = normalizeText(editValues.role);
+    const password = String(editValues.password || "");
 
     if (!name || !username || !repId || !role) {
       showToast("error", "Name, username, Rep ID, and role are required.");
+      return;
+    }
+
+    if (password && password.length < 8) {
+      showToast("error", "Manual password must be at least 8 characters.");
       return;
     }
 
@@ -313,6 +339,9 @@ export default function UsersPage() {
       role,
       reissueKeygen: Boolean(editValues.reissueKeygen),
     };
+    if (password) {
+      updatePayload.password = password;
+    }
 
     setIsUpdating(true);
     try {
@@ -480,6 +509,30 @@ export default function UsersPage() {
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="edit-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Manual Password
+                </label>
+                <input
+                  id="edit-password"
+                  name="password"
+                  type="password"
+                  value={editValues.password}
+                  onChange={handleEditChange}
+                  placeholder="Leave blank to keep current password"
+                  autoComplete="new-password"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Optional. If entered, this becomes the dashboard login password.
+                </p>
+              </div>
+
+              <div>
+                <div className="block text-sm font-medium text-gray-700 mb-1">Access</div>
+                <AccessBadge user={editingUser} />
+              </div>
+
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
@@ -523,7 +576,7 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Representative Name
@@ -540,28 +593,14 @@ export default function UsersPage() {
 
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Username
+              OPPI
             </label>
             <input
               id="username"
               name="username"
               value={formValues.username}
               onChange={handleChange}
-              placeholder="Issued login username"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="repId" className="block text-sm font-medium text-gray-700 mb-1">
-              OPPI
-            </label>
-            <input
-              id="repId"
-              name="repId"
-              value={formValues.repId}
-              onChange={handleChange}
+              placeholder="Enter OPPI"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               required
             />
@@ -596,9 +635,9 @@ export default function UsersPage() {
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-5 space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Representatives</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Users</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Manage issued accounts and copy keygen passwords.
+              Manage dashboard admins and issued representative accounts.
             </p>
           </div>
 
@@ -624,6 +663,7 @@ export default function UsersPage() {
                 <tr>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Name</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-36 px-4 py-3 text-left font-semibold">Access</th>
                   <th className="w-32 px-4 py-3 text-left font-semibold">OPPI</th>
                   <th className="w-36 px-4 py-3 text-left font-semibold">Team</th>
                   <th className="w-[360px] px-4 py-3 text-left font-semibold">Password Key</th>
@@ -639,6 +679,7 @@ export default function UsersPage() {
                     <tr key={id} className="border-t border-gray-100">
                       <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
+                      <td className="px-4 py-3"><AccessBadge user={user} /></td>
                       <td className="px-4 py-3 truncate">{getDisplayRepId(user) || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayRole(user) || "-"}</td>
                       <td className="px-4 py-3">
