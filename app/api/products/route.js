@@ -6,7 +6,7 @@ import Product from "@/models/Product";
 import { requireApiAuthIfEnabled } from "@/lib/apiAccess";
 import { requireAdmin } from "@/lib/auth";
 import { isPdf, isPpt } from "@/lib/fileConverter";
-import { applyProductImageLibrary } from "@/lib/productImageLibrary";
+import { applyProductImageLibrary, loadProductImageLibraryManifest } from "@/lib/productImageLibrary";
 import "@/lib/conversionWorker";
 
 export const runtime = "nodejs";
@@ -200,12 +200,21 @@ const buildConvertedIndex = async () => {
   }
 };
 
-const attachConvertedMedia = (product, convertedIndex) => {
+const canonicalizeMediaUrl = (url = "", mappings = {}) => {
+  const clean = getUrlWithoutQuery(url);
+  return mappings?.[clean] || clean;
+};
+
+const attachConvertedMedia = (product, convertedIndex, manifestMappings = {}) => {
   const nameKey = normalizeKey(product?.name);
   if (!nameKey) return product;
 
   const existing = Array.isArray(product.media) ? product.media : [];
-  const existingUrls = new Set(existing.map((item) => item?.url).filter(Boolean));
+  const existingUrls = new Set(
+    existing
+      .map((item) => canonicalizeMediaUrl(item?.url, manifestMappings))
+      .filter(Boolean)
+  );
 
   const matchedImages = convertedIndex
     .filter((entry) => entry.normalized.includes(nameKey))
@@ -217,7 +226,7 @@ const attachConvertedMedia = (product, convertedIndex) => {
         sourceName: product?.name || "",
       }))
     )
-    .filter((item) => !existingUrls.has(item.url));
+    .filter((item) => !existingUrls.has(canonicalizeMediaUrl(item.url, manifestMappings)));
 
   if (!matchedImages.length) return product;
   return { ...product, media: [...existing, ...matchedImages] };
@@ -286,10 +295,14 @@ export async function GET(request) {
 
     await connectDB();
     const convertedIndex = await buildConvertedIndex();
+    const manifest = await loadProductImageLibraryManifest();
+    const manifestMappings = manifest?.mappings && typeof manifest.mappings === "object"
+      ? manifest.mappings
+      : {};
     const products = await Product.find().sort({ createdAt: -1 }).lean();
     const enriched = convertedIndex.length
       ? products.map((product) => {
-          const withMedia = attachConvertedMedia(product, convertedIndex);
+          const withMedia = attachConvertedMedia(product, convertedIndex, manifestMappings);
           const mediaGroups = buildMediaGroupsFromMedia(withMedia.media);
           return { ...withMedia, media: mediaGroups };
         })

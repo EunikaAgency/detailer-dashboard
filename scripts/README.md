@@ -232,3 +232,28 @@ bash scripts/security-audit-report.sh --config /etc/server-audit-report.conf
 **Docs:**
 - `scripts/SECURITY_AUDIT.md`
 - `scripts/security-audit.conf.example`
+
+---
+
+### 7. Daily Products API Backup
+
+**Purpose:** Save a git-friendly daily snapshot of the live `GET /api/products` response.
+
+**Commands:**
+```bash
+# Run one backup immediately
+npm run backup:products-api
+```
+
+**What it does:**
+- fetches the live API response from `http://127.0.0.1:7001/api/products`
+- writes a pretty JSON snapshot under `backups/api-products/YYYY/YYYY-MM-DD.json`
+- refreshes `backups/api-products/latest.json`
+- stores a SHA-256 checksum of the raw response
+
+**PM2 process:**
+- `detailer-products-api-backup`
+
+**Notes:**
+- the worker runs hourly but only writes one snapshot per calendar day
+- snapshots are plain JSON and intended to be easy to diff and commit to git

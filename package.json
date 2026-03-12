@@ -17,7 +17,8 @@
     "export-db:staging": "node scripts/export-db.js staging",
     "export-db:live": "node scripts/export-db.js live",
     "import-db:staging": "node scripts/import-db.js staging",
-    "import-db:live": "node scripts/import-db.js live"
+    "import-db:live": "node scripts/import-db.js live",
+    "backup:products-api": "node scripts/products-api-backup-cron.js --once"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

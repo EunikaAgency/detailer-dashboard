@@ -57,6 +57,26 @@ module.exports = {
       out_file: '/tmp/detailer-conversion-cron-out.log',
       log_file: '/tmp/detailer-conversion-cron-combined.log',
       time: true
+    },
+    {
+      name: 'detailer-products-api-backup',
+      cwd: '/var/public/otsukadetailer/detailer/web',
+      script: 'node',
+      args: 'scripts/products-api-backup-cron.js',
+      env: {
+        NODE_ENV: 'production',
+        PRODUCTS_API_BACKUP_URL: 'http://127.0.0.1:7001/api/products',
+        PRODUCTS_API_BACKUP_INTERVAL_MS: '3600000',
+        PRODUCTS_API_BACKUP_DIR: '/var/public/otsukadetailer/detailer/web/backups/api-products'
+      },
+      instances: 1,
+      exec_mode: 'fork',
+      watch: false,
+      max_memory_restart: '256M',
+      error_file: '/tmp/detailer-products-api-backup-err.log',
+      out_file: '/tmp/detailer-products-api-backup-out.log',
+      log_file: '/tmp/detailer-products-api-backup-combined.log',
+      time: true
     }
   ]
 };
