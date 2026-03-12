@@ -26,35 +26,35 @@ const getDisplayAccess = (user) =>
 const AuthIndicator = ({ user, loading, onLogout, compact = false }) => {
   const baseClass = compact
     ? "rounded-xl border border-gray-200 bg-gray-50 px-3 py-3"
-    : "flex max-w-[17rem] items-center gap-3 rounded-full border border-gray-200 bg-white px-3 py-2 shadow-sm";
+    : "flex max-w-[16rem] items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm";
 
   return (
     <div className={baseClass}>
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4.5 w-4.5" aria-hidden="true">
           <path d="M20 21a8 8 0 10-16 0" />
           <circle cx="12" cy="8" r="4" />
         </svg>
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-green-600">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-green-600">
           {loading ? "Checking session" : "Logged in"}
         </div>
-        <div className="truncate text-sm font-semibold text-gray-900">
+        <div className="truncate text-xs font-semibold text-gray-900">
           {loading ? "Loading account..." : getDisplayIdentity(user)}
         </div>
-        <div className="truncate text-xs text-gray-500">
+        <div className="truncate text-[11px] text-gray-500">
           {loading ? "" : [getDisplayMeta(user), getDisplayAccess(user)].filter(Boolean).join(" • ")}
         </div>
       </div>
       <button
         type="button"
         onClick={onLogout}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900"
         aria-label="Logout"
         title="Logout"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4.5 w-4.5" aria-hidden="true">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
           <path d="M16 17l5-5-5-5" />
           <path d="M21 12H9" />
@@ -188,8 +188,8 @@ export default function DashboardShell({ children }) {
         </div>
       )}
 
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <button
             className="text-gray-600 hover:text-gray-900 focus:outline-none"
             onClick={() => setSidebarOpen(true)}
@@ -199,7 +199,7 @@ export default function DashboardShell({ children }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">Otsuka Admin Dashboard</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Otsuka Admin Dashboard</h1>
         </div>
         <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} />
       </header>

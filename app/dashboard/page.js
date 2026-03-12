@@ -1,6 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+
+const toSlug = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const buildProductSlug = (product) =>
+  toSlug(`${product?.name || ""}-${product?.brandName || product?.brand || ""}`);
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ products: 0 });
@@ -31,12 +42,27 @@ export default function Dashboard() {
         const brandCounts = safeProducts.reduce((acc, product) => {
           const rawBrand = typeof product?.brandName === "string" ? product.brandName : "";
           const brand = rawBrand.trim() || "Unbranded";
-          acc.set(brand, (acc.get(brand) || 0) + 1);
+          const current = acc.get(brand) || {
+            brand,
+            count: 0,
+            slug:
+              (typeof product?.slug === "string" && product.slug.trim()) ||
+              buildProductSlug(product) ||
+              "",
+          };
+          current.count += 1;
+          if (!current.slug) {
+            current.slug =
+              (typeof product?.slug === "string" && product.slug.trim()) ||
+              buildProductSlug(product) ||
+              "";
+          }
+          acc.set(brand, current);
           return acc;
         }, new Map());
-        const brands = Array.from(brandCounts.entries())
-          .map(([brand, count]) => ({ brand, count }))
-          .sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand));
+        const brands = Array.from(brandCounts.values()).sort(
+          (a, b) => b.count - a.count || a.brand.localeCompare(b.brand)
+        );
 
         if (isMounted) {
           setStats({
@@ -134,7 +160,18 @@ export default function Dashboard() {
                 <tbody>
                   {brandRows.map((row) => (
                     <tr key={row.brand} className="border-t border-gray-100">
-                      <td className="px-4 py-3">{row.brand}</td>
+                      <td className="px-4 py-3">
+                        {row.slug ? (
+                          <Link
+                            href={`/dashboard/products/${row.slug}`}
+                            className="font-medium text-blue-700 hover:text-blue-900 hover:underline"
+                          >
+                            {row.brand}
+                          </Link>
+                        ) : (
+                          row.brand
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-right font-medium">{row.count}</td>
                     </tr>
                   ))}

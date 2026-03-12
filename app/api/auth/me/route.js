@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
+import { getUserAccessType } from '@/lib/userAccess';
 
 export async function GET(request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request) {
         username: user.username || "",
         repId: user.repId || "",
         role: user.role || "",
-        accessType: user.accessType || "",
+        accessType: getUserAccessType(user),
       }
     });
   } catch (error) {

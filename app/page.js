@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { requireAuth } from "@/lib/auth";
+import { isAdminUser } from "@/lib/userAccess";
 
 export const metadata = {
   title: "Otsuka One Detailer",
@@ -13,8 +14,18 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const auth = await requireAuth();
   const isSignedIn = !auth?.error;
-  const authHref = isSignedIn ? "/dashboard" : "/login";
-  const authLabel = isSignedIn ? "Dashboard" : "Sign In";
+  const isAdmin = isSignedIn ? isAdminUser(auth.user) : false;
+  const identityLabel = isSignedIn
+    ? String(auth?.user?.name || auth?.user?.email || auth?.user?.username || auth?.user?.repId || "Unknown user").trim()
+    : "Guest";
+  const identityMeta = isSignedIn
+    ? String(auth?.user?.email || auth?.user?.username || auth?.user?.repId || (isAdmin ? "Admin" : "User")).trim()
+    : "Not signed in";
+  const appHref = "/pwa";
+  const authHref = isSignedIn ? (isAdmin ? "/dashboard" : appHref) : "/login";
+  const authLabel = isSignedIn ? (isAdmin ? "Dashboard" : "App") : "Sign In";
+  const primaryHref = isAdmin ? "/dashboard" : appHref;
+  const primaryLabel = isAdmin ? "Open Dashboard" : "Open App";
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -31,20 +42,44 @@ export default async function Home() {
               <Link href="/" className="font-semibold text-slate-900">
                 Home
               </Link>
-              <Link href="/dashboard" className="text-slate-600 transition-colors hover:text-slate-900">
-                Dashboard
+              {isAdmin ? (
+                <Link href="/dashboard" className="text-slate-600 transition-colors hover:text-slate-900">
+                  Dashboard
+                </Link>
+              ) : null}
+              <Link href={appHref} className="text-slate-600 transition-colors hover:text-slate-900">
+                App
               </Link>
               <Link href="/download" className="text-slate-600 transition-colors hover:text-slate-900">
                 Download
               </Link>
             </div>
           </div>
-          <Link
-            href={authHref}
-            className="rounded-full bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
-          >
-            {authLabel}
-          </Link>
+          <div className="flex items-center gap-3">
+            <div className="hidden min-w-0 max-w-[14rem] items-center gap-2 rounded-full border border-sky-100 bg-white/85 px-2.5 py-1.5 shadow-sm backdrop-blur sm:flex">
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-sky-700"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4" aria-hidden="true">
+                  <path d="M20 21a8 8 0 10-16 0" />
+                  <circle cx="12" cy="8" r="4" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className={`text-[9px] font-semibold uppercase tracking-[0.14em] ${isSignedIn ? "text-emerald-600" : "text-slate-500"}`}>
+                  {isSignedIn ? "Logged in" : "Signed out"}
+                </div>
+                <div className="truncate text-[13px] font-semibold leading-4 text-slate-900">{identityLabel}</div>
+                <div className="truncate text-[10px] leading-4 text-slate-500">{identityMeta}</div>
+              </div>
+            </div>
+            <Link
+              href={authHref}
+              className="rounded-full bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+            >
+              {authLabel}
+            </Link>
+          </div>
         </nav>
 
         <div className="mx-auto mt-14 w-full max-w-7xl px-4 sm:px-6">
@@ -67,10 +102,10 @@ export default async function Home() {
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <Link
-                href="/dashboard"
+                href={primaryHref}
                 className="inline-flex items-center justify-center rounded-2xl bg-sky-500 px-7 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:bg-sky-600 hover:shadow-xl"
               >
-                Open Presentation Library
+                {primaryLabel}
               </Link>
               <Link
                 href={authHref}
@@ -174,6 +209,15 @@ export default async function Home() {
               <h3 className="mb-4 text-lg font-semibold text-white">Quick Links</h3>
               <div className="space-y-3">
                 <Link
+                  href={appHref}
+                  className="group flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-sky-500/60 hover:bg-slate-800"
+                >
+                  <span className="font-medium text-white">App</span>
+                  <span className="text-xs text-slate-400 transition-colors group-hover:text-sky-400">
+                    https://otsukadetailer.site/pwa
+                  </span>
+                </Link>
+                <Link
                   href="/download"
                   className="group flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-sky-500/60 hover:bg-slate-800"
                 >
@@ -182,15 +226,17 @@ export default async function Home() {
                     https://otsukadetailer.site/download
                   </span>
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className="group flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-sky-500/60 hover:bg-slate-800"
-                >
-                  <span className="font-medium text-white">Dashboard</span>
-                  <span className="text-xs text-slate-400 transition-colors group-hover:text-sky-400">
-                    https://otsukadetailer.site/dashboard
-                  </span>
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    href="/dashboard"
+                    className="group flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-sky-500/60 hover:bg-slate-800"
+                  >
+                    <span className="font-medium text-white">Dashboard</span>
+                    <span className="text-xs text-slate-400 transition-colors group-hover:text-sky-400">
+                      https://otsukadetailer.site/dashboard
+                    </span>
+                  </Link>
+                ) : null}
                 <Link
                   href="/privacy-policy"
                   className="group flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 transition-all hover:border-sky-500/60 hover:bg-slate-800"

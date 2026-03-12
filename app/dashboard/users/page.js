@@ -47,11 +47,6 @@ const EyeIcon = ({ closed = false }) => {
   );
 };
 
-const maskKey = (value) => {
-  if (!value) return "N/A";
-  return "●●●●●●";
-};
-
 const getUserId = (user) => {
   if (!user) return "";
   if (typeof user.id === "string" && user.id) return user.id;
@@ -167,7 +162,6 @@ export default function UsersPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [toast, setToast] = useState(null);
   const [query, setQuery] = useState("");
-  const [visibleKeygens, setVisibleKeygens] = useState(new Set());
   const [issuedCredential, setIssuedCredential] = useState(null);
   const [showCreatePassword, setShowCreatePassword] = useState(false);
 
@@ -436,18 +430,6 @@ export default function UsersPage() {
     }
   };
 
-  const toggleKeygenVisibility = (userId) => {
-    setVisibleKeygens((prev) => {
-      const next = new Set(prev);
-      if (next.has(userId)) {
-        next.delete(userId);
-      } else {
-        next.add(userId);
-      }
-      return next;
-    });
-  };
-
   const handleDelete = async (userId) => {
     if (!userId) {
       showToast("error", "User id is missing.");
@@ -574,6 +556,30 @@ export default function UsersPage() {
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Optional. If entered, this becomes the dashboard login password.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Secret Password
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-900">
+                    <span className="block truncate font-mono">
+                      {normalizeText(editingUser?.keygen) || "N/A"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(editingUser?.keygen)}
+                    disabled={!normalizeText(editingUser?.keygen)}
+                    className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Admin secret keygen for offline credential use.
                 </p>
               </div>
 
@@ -732,7 +738,7 @@ export default function UsersPage() {
           <div className="w-full md:w-72">
             <input
               type="search"
-              placeholder="Search name, username, rep ID"
+              placeholder="Search name, username, email"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -749,58 +755,21 @@ export default function UsersPage() {
             <table className="w-full table-fixed text-sm text-gray-700">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Name</th>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Username</th>
-                  <th className="w-36 px-4 py-3 text-left font-semibold">Access</th>
-                  <th className="w-32 px-4 py-3 text-left font-semibold">OPPI</th>
-                  <th className="w-36 px-4 py-3 text-left font-semibold">Team</th>
-                  <th className="w-[360px] px-4 py-3 text-left font-semibold">Password Key</th>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Issued</th>
+                  <th className="w-56 px-4 py-3 text-left font-semibold">Name</th>
+                  <th className="w-56 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-40 px-4 py-3 text-left font-semibold">Access</th>
+                  <th className="w-52 px-4 py-3 text-left font-semibold">Issued</th>
                   <th className="w-32 px-4 py-3 text-right font-semibold">Options</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => {
                   const id = getUserId(user);
-                  const isVisible = visibleKeygens.has(id);
                   return (
                     <tr key={id} className="border-t border-gray-100">
                       <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
                       <td className="px-4 py-3"><AccessBadge user={user} /></td>
-                      <td className="px-4 py-3 truncate">{getDisplayRepId(user) || "-"}</td>
-                      <td className="px-4 py-3 truncate">{getDisplayRole(user) || "-"}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 max-w-[360px]">
-                          <span
-                            className={`text-xs text-gray-600 font-mono ${
-                              isVisible ? "break-all whitespace-normal" : "whitespace-nowrap"
-                            }`}
-                          >
-                            {user?.keygen ? (isVisible ? user?.keygen : maskKey(user?.keygen)) : "N/A"}
-                          </span>
-                          {user?.keygen ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => toggleKeygenVisibility(id)}
-                                className="inline-flex items-center rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                                aria-label={isVisible ? "Hide keygen" : "Show keygen"}
-                              >
-                                {isVisible ? "Hide" : "Show"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCopy(user?.keygen)}
-                                className="inline-flex items-center rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                                aria-label="Copy keygen"
-                              >
-                                Copy
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
-                      </td>
                       <td className="px-4 py-3 text-xs text-gray-600">{formatDate(user?.keygenIssuedAt || user?.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="inline-flex items-center gap-2">
