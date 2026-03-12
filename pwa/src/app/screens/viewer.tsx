@@ -35,6 +35,7 @@ export default function Viewer() {
   const hideNavButtonsTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const slideTransitionDirectionRef = useRef<'forward' | 'backward'>('forward');
+  const previousFullscreenRef = useRef(false);
   const slideContentRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRailRef = useRef<HTMLDivElement | null>(null);
   const viewerRootRef = useRef<HTMLDivElement | null>(null);
@@ -197,7 +198,10 @@ export default function Viewer() {
   }, []);
 
   useEffect(() => {
-    if (isFullscreen && isLandscapeViewport && showThumbnails) {
+    const enteringFullscreen = isFullscreen && !previousFullscreenRef.current;
+    previousFullscreenRef.current = isFullscreen;
+
+    if (enteringFullscreen && isLandscapeViewport && showThumbnails) {
       setShowThumbnails(false);
     }
   }, [isFullscreen, isLandscapeViewport, showThumbnails]);
