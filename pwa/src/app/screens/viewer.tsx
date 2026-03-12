@@ -283,10 +283,9 @@ export default function Viewer() {
       webkitExitFullscreen?: () => Promise<void> | void;
       webkitFullscreenElement?: Element | null;
     };
-    const fullscreenElement =
-      document.fullscreenElement ||
-      fullscreenDocument.webkitFullscreenElement ||
-      null;
+    const fullscreenElement = document.fullscreenElement || fullscreenDocument.webkitFullscreenElement || null;
+    const shouldEnterFullscreen = !fullscreenElement && !isFullscreen;
+    let nextFullscreenState = shouldEnterFullscreen;
 
     try {
       if (fullscreenElement) {
@@ -295,7 +294,7 @@ export default function Viewer() {
         } else if (fullscreenDocument.webkitExitFullscreen) {
           await fullscreenDocument.webkitExitFullscreen();
         }
-      } else if (rootElement) {
+      } else if (shouldEnterFullscreen && rootElement) {
         const fullscreenTarget = rootElement as HTMLDivElement & {
           webkitRequestFullscreen?: () => Promise<void> | void;
         };
@@ -310,7 +309,12 @@ export default function Viewer() {
       console.warn("Fullscreen toggle failed:", error);
     }
 
-    const nextFullscreenState = !fullscreenElement;
+    const nativeFullscreenElement =
+      document.fullscreenElement ||
+      fullscreenDocument.webkitFullscreenElement ||
+      null;
+    nextFullscreenState = Boolean(nativeFullscreenElement) || shouldEnterFullscreen;
+
     setIsFullscreen(nextFullscreenState);
     trackEvent('activity', 'fullscreen_toggled', 'presentation', {
       fullscreen: nextFullscreenState
