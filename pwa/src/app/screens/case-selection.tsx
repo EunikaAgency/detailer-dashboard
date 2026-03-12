@@ -4,12 +4,11 @@ import { Card } from "../components/ui/card";
 import { Clock, Download, CheckCircle2, LayoutTemplate } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  getLocallyAvailableProducts,
-  getProductById,
   getProductDecks,
   getRenderableSlides,
   estimateDuration,
   getDeckTitle,
+  resolveProductById,
 } from "../lib/products";
 import { trackEvent } from "../lib/sessions";
 import { buildDomId } from "../lib/dom-ids";
@@ -42,37 +41,46 @@ export default function CaseSelection() {
       return;
     }
 
-    // Get product from cached products
-    const products = getLocallyAvailableProducts();
-    const foundProduct = getProductById(presentationId, products);
+    let active = true;
 
-    if (!foundProduct) {
-      navigate("/presentations");
-      return;
-    }
+    void resolveProductById(presentationId).then((foundProduct) => {
+      if (!active) return;
 
-    setProduct(foundProduct);
-    const currentProductId = foundProduct._id || foundProduct.id || "";
-    const existingRecord = getOfflinePresentationRecord(currentProductId);
-    setOfflineRecord(existingRecord);
-    if (existingRecord) {
-      void verifyOfflinePresentation(foundProduct).then(setOfflineRecord);
-    }
-    
-    // Get decks/cases from product
-    const productDecks = getProductDecks(foundProduct);
-    const decksWithSlides = productDecks.map((deck, groupIndex) => {
-      const slides = getRenderableSlides(deck.items || deck.slides || []);
-      return {
-        id: deck.groupId,
-        title: getDeckTitle(deck, groupIndex),
-        slides: slides.length,
-        duration: estimateDuration(slides.length),
-        items: deck.items || deck.slides || [],
-      };
-    }).filter(deck => deck.slides > 0); // Only show decks with renderable slides
+      if (!foundProduct) {
+        navigate("/presentations");
+        return;
+      }
 
-    setDecks(decksWithSlides);
+      setProduct(foundProduct);
+      const currentProductId = foundProduct._id || foundProduct.id || "";
+      const existingRecord = getOfflinePresentationRecord(currentProductId);
+      setOfflineRecord(existingRecord);
+      if (existingRecord) {
+        void verifyOfflinePresentation(foundProduct).then((record) => {
+          if (active) setOfflineRecord(record);
+        });
+      }
+
+      const productDecks = getProductDecks(foundProduct);
+      const decksWithSlides = productDecks
+        .map((deck, groupIndex) => {
+          const slides = getRenderableSlides(deck.items || deck.slides || []);
+          return {
+            id: deck.groupId,
+            title: getDeckTitle(deck, groupIndex),
+            slides: slides.length,
+            duration: estimateDuration(slides.length),
+            items: deck.items || deck.slides || [],
+          };
+        })
+        .filter((deck) => deck.slides > 0);
+
+      setDecks(decksWithSlides);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [presentationId, navigate]);
 
   useEffect(() => {

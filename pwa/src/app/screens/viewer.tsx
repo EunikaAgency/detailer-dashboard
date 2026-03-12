@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen } from "lucide-react";
-import { getLocallyAvailableProducts, getProductById, normalizeSlides, type NormalizedSlide } from "../lib/products";
+import { normalizeSlides, resolveProductById, type NormalizedSlide } from "../lib/products";
 import { trackEvent } from "../lib/sessions";
 import { useAppSettings } from "../lib/settings";
 import { buildDomId } from "../lib/dom-ids";
@@ -30,6 +30,7 @@ export default function Viewer() {
   const [isLoading, setIsLoading] = useState(true);
   const [showNavButtons, setShowNavButtons] = useState(true);
   const [isCompactLandscape, setIsCompactLandscape] = useState(false);
+  const [isLandscapeViewport, setIsLandscapeViewport] = useState(false);
   const settings = useAppSettings();
   const hideNavButtonsTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -53,42 +54,48 @@ export default function Viewer() {
       return;
     }
 
-    const products = getLocallyAvailableProducts();
-    const product = getProductById(presentationId, products);
+    let active = true;
 
-    if (!product) {
-      navigate("/presentations");
-      return;
-    }
-    // Find the deck/case
-    const deck = product.media?.find(m => m.groupId === caseId);
+    void resolveProductById(presentationId).then((product) => {
+      if (!active) return;
 
-    if (!deck) {
-      navigate(`/case-selection/${presentationId}`);
-      return;
-    }
+      if (!product) {
+        navigate("/presentations");
+        return;
+      }
 
-    setDeckTitle(deck.title || "");
+      const deck = product.media?.find((mediaGroup) => mediaGroup.groupId === caseId);
 
-    // Normalize slides with hotspot resolution
-    const normalizedSlides = normalizeSlides(deck.items || []);
-    
-    // Filter to renderable slides only
-    const renderableSlides = normalizedSlides.filter(slide => 
-      ['image', 'video', 'html'].includes(slide.type)
-    );
+      if (!deck) {
+        navigate(`/case-selection/${presentationId}`);
+        return;
+      }
 
-    setSlides(renderableSlides);
-    setIsLoading(false);
+      setDeckTitle(deck.title || "");
+
+      const normalizedDeckSlides = normalizeSlides(deck.items || []);
+      const renderableSlides = normalizedDeckSlides.filter((slide) =>
+        ['image', 'video', 'html'].includes(slide.type)
+      );
+
+      setSlides(renderableSlides);
+      setIsLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [presentationId, caseId, navigate]);
 
   useEffect(() => {
     const updateCompactLandscape = () => {
       if (typeof window === "undefined") {
         setIsCompactLandscape(false);
+        setIsLandscapeViewport(false);
         return;
       }
 
+      setIsLandscapeViewport(window.innerWidth > window.innerHeight);
       setIsCompactLandscape(window.innerWidth > window.innerHeight && window.innerHeight <= 500);
     };
 
@@ -188,6 +195,12 @@ export default function Viewer() {
       document.removeEventListener("webkitfullscreenchange", syncFullscreenState as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    if (isFullscreen && isLandscapeViewport && showThumbnails) {
+      setShowThumbnails(false);
+    }
+  }, [isFullscreen, isLandscapeViewport, showThumbnails]);
 
   const totalSlides = slides.length;
   const viewerId = "viewer";
@@ -405,13 +418,21 @@ export default function Viewer() {
   const slideId = buildDomId(viewerId, "slide", currentSlide + 1, currentSlideData.type);
   const thumbnailToggleLabel = showThumbnails ? "Hide thumbnails" : "Show thumbnails";
   const goHome = () => navigate("/presentations#presentations-screen-content");
+  const titleUsesBottomSpace = !isFullscreen && !isCompactLandscape;
+  const slideFrameClassName = isFullscreen && currentSlideData.type === 'image'
+    ? 'relative z-10 h-full w-full max-h-full max-w-full overflow-hidden bg-transparent shadow-none'
+    : `relative z-10 w-full max-h-full bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-2xl overflow-hidden ${
+        orientationMode === 'portrait' ? 'max-w-2xl aspect-[9/16]' :
+        orientationMode === 'landscape' ? 'max-w-6xl aspect-[16/9]' :
+        'max-w-5xl aspect-[16/9]'
+      }`;
 
   return (
     <div id={`${viewerId}-root`} ref={viewerRootRef} className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       {/* Top Bar */}
       <div
         id={`${viewerId}-topbar`}
-        className={`bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 px-4 ${
+        className={`${isFullscreen ? "hidden" : "relative z-10"} bg-slate-800/90 backdrop-blur-lg border-b border-slate-700 px-4 ${
           isCompactLandscape ? "py-2" : "py-3"
         }`}
       >
@@ -447,25 +468,20 @@ export default function Viewer() {
             icon={<ArrowLeft className="w-5 h-5" />}
           />
         </div>
-
-        <div
-          id={`${viewerId}-title-group`}
-          className={`${isCompactLandscape ? "mt-1" : "mt-2"} text-center`}
-        >
-          <div id={`${viewerId}-title`} className="font-semibold text-white">{deckTitle}</div>
-          <div id={`${viewerId}-slide-counter`} className="text-sm text-slate-400">Slide {currentSlide + 1} of {totalSlides}</div>
-        </div>
       </div>
 
       {/* Main Content Area */}
       <div
         id={`${viewerId}-content`}
-        className={`flex-1 min-h-0 flex overflow-hidden ${isCompactLandscape ? "flex-row" : "flex-col lg:flex-row"}`}
+        className={`${isFullscreen ? "h-full flex-1" : "flex-1 min-h-0"} flex overflow-hidden ${
+          isCompactLandscape ? "flex-row" : "flex-col lg:flex-row"
+        }`}
       >
         {/* Slide Stage */}
         <div 
           id={`${viewerId}-stage`}
-          className={`flex-1 min-h-0 relative flex items-center justify-center overflow-hidden ${
+          className={`flex-1 min-h-0 relative flex overflow-hidden ${
+            isFullscreen ? "h-full w-full px-0 py-0" :
             isCompactLandscape ? "px-3 py-3" : "px-4 py-4 lg:p-8"
           }`}
           onPointerMove={revealNavigationButtons}
@@ -478,85 +494,136 @@ export default function Viewer() {
         >
           {/* Backdrop overlay for dynamic backdrop */}
           {dynamicBackdrop && currentSlideData.type === 'image' && (
-            <div id={`${viewerId}-dynamic-backdrop`} className="absolute inset-0 bg-slate-900/80 backdrop-blur-2xl" />
+            <div
+              id={`${viewerId}-dynamic-backdrop`}
+              className={`${isFullscreen ? "fixed inset-0" : "absolute inset-0"} bg-slate-900/80 backdrop-blur-2xl`}
+            />
           )}
 
-          {/* Slide Container */}
-          <div 
-            id={`${viewerId}-slide-frame`}
-            className={`relative z-10 w-full max-h-full bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-2xl overflow-hidden ${
-              orientationMode === 'portrait' ? 'max-w-2xl aspect-[9/16]' :
-              orientationMode === 'landscape' ? 'max-w-6xl aspect-[16/9]' :
-              'max-w-5xl aspect-[16/9]'
+          <div
+            id={`${viewerId}-stage-stack`}
+            className={`relative z-10 flex w-full ${
+              titleUsesBottomSpace
+                ? "max-h-full flex-col items-center justify-center gap-4 pt-14"
+                : "h-full items-center justify-center"
             }`}
-            onTouchStartCapture={handleTouchStart}
-            onTouchEndCapture={handleTouchEnd}
-            onTouchCancelCapture={handleTouchCancel}
-            onPointerMove={revealNavigationButtons}
-            onClick={revealNavigationButtons}
-            style={{ touchAction: 'pan-y pinch-zoom' }}
           >
-            {/* Image Slide */}
-            <div
-              key={`${currentSlideData.id}-${currentSlide}`}
-              ref={slideContentRef}
-              className="absolute inset-0"
+            {/* Slide Container */}
+            <div 
+              id={`${viewerId}-slide-frame`}
+              className={slideFrameClassName}
+              onTouchStartCapture={handleTouchStart}
+              onTouchEndCapture={handleTouchEnd}
+              onTouchCancelCapture={handleTouchCancel}
+              onPointerMove={revealNavigationButtons}
+              onClick={revealNavigationButtons}
+              style={{ touchAction: 'pan-y pinch-zoom' }}
             >
-              {currentSlideData.type === 'image' && (
-                <ImageSlide
-                  idPrefix={slideId}
-                  url={currentSlideData.url}
-                  title={currentSlideData.title || `Slide ${currentSlide + 1}`}
-                  hotspots={currentSlideData.hotspots}
-                  onHotspotClick={handleHotspotClick}
-                  onZoomToggle={handleZoomToggle}
-                />
+              {/* Image Slide */}
+              <div
+                key={`${currentSlideData.id}-${currentSlide}`}
+                ref={slideContentRef}
+                className="absolute inset-0"
+              >
+                {currentSlideData.type === 'image' && (
+                  <ImageSlide
+                    idPrefix={slideId}
+                    url={currentSlideData.url}
+                    title={currentSlideData.title || `Slide ${currentSlide + 1}`}
+                    hotspots={currentSlideData.hotspots}
+                    onHotspotClick={handleHotspotClick}
+                    onZoomToggle={handleZoomToggle}
+                  />
+                )}
+
+                {/* Video Slide */}
+                {currentSlideData.type === 'video' && (
+                  <VideoSlide
+                    idPrefix={slideId}
+                    url={currentSlideData.url}
+                    title={currentSlideData.title || `Slide ${currentSlide + 1}`}
+                  />
+                )}
+
+                {/* HTML Slide */}
+                {currentSlideData.type === 'html' && (
+                  <HtmlSlide
+                    idPrefix={slideId}
+                    url={currentSlideData.url}
+                    thumbnailUrl={currentSlideData.thumbnailUrl}
+                    hotspots={currentSlideData.hotspots}
+                    onHotspotClick={handleHotspotClick}
+                    title={currentSlideData.title || `Slide ${currentSlide + 1}`}
+                  />
+                )}
+              </div>
+
+              {!titleUsesBottomSpace && (
+                <div
+                  id={`${viewerId}-title-group`}
+                  className={`pointer-events-none absolute left-1/2 z-20 flex -translate-x-1/2 flex-col items-center text-center ${
+                    isCompactLandscape
+                      ? "bottom-3 max-w-[calc(100%-6rem)]"
+                      : "bottom-3 max-w-[calc(100%-1.5rem)] sm:bottom-4 sm:max-w-[min(30rem,calc(100%-2rem))]"
+                  }`}
+                >
+                  <div
+                    id={`${viewerId}-title`}
+                    className={`line-clamp-2 px-3 py-1 font-medium text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)] ${
+                      isCompactLandscape ? "text-xs" : "text-sm"
+                    }`}
+                  >
+                    {deckTitle}
+                  </div>
+                  <div
+                    id={`${viewerId}-slide-counter`}
+                    className="mt-1 text-xs text-slate-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)]"
+                  >
+                    Slide {currentSlide + 1} of {totalSlides}
+                  </div>
+                </div>
               )}
 
-              {/* Video Slide */}
-              {currentSlideData.type === 'video' && (
-                <VideoSlide
-                  idPrefix={slideId}
-                  url={currentSlideData.url}
-                  title={currentSlideData.title || `Slide ${currentSlide + 1}`}
-                />
-              )}
-
-              {/* HTML Slide */}
-              {currentSlideData.type === 'html' && (
-                <HtmlSlide
-                  idPrefix={slideId}
-                  url={currentSlideData.url}
-                  thumbnailUrl={currentSlideData.thumbnailUrl}
-                  hotspots={currentSlideData.hotspots}
-                  onHotspotClick={handleHotspotClick}
-                  title={currentSlideData.title || `Slide ${currentSlide + 1}`}
-                />
-              )}
+              {/* Navigation Buttons (overlay on slide) */}
+              <button
+                id={`${viewerId}-previous-slide-button`}
+                onClick={goToPreviousSlide}
+                disabled={currentSlide === 0}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full transition-[opacity,background-color] duration-500 disabled:cursor-not-allowed z-20 ${
+                  showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                } ${currentSlide === 0 ? 'disabled:opacity-30' : ''}`}
+              >
+                <ChevronLeft className="w-6 h-6 text-white" />
+              </button>
+              
+              <button
+                id={`${viewerId}-next-slide-button`}
+                onClick={goToNextSlide}
+                disabled={currentSlide === totalSlides - 1}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full transition-[opacity,background-color] duration-500 disabled:cursor-not-allowed z-20 ${
+                  showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                } ${currentSlide === totalSlides - 1 ? 'disabled:opacity-30' : ''}`}
+              >
+                <ChevronRight className="w-6 h-6 text-white" />
+              </button>
             </div>
 
-            {/* Navigation Buttons (overlay on slide) */}
-            <button
-              id={`${viewerId}-previous-slide-button`}
-              onClick={goToPreviousSlide}
-              disabled={currentSlide === 0}
-              className={`absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full transition-[opacity,background-color] duration-500 disabled:cursor-not-allowed z-20 ${
-                showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              } ${currentSlide === 0 ? 'disabled:opacity-30' : ''}`}
-            >
-              <ChevronLeft className="w-6 h-6 text-white" />
-            </button>
-            
-            <button
-              id={`${viewerId}-next-slide-button`}
-              onClick={goToNextSlide}
-              disabled={currentSlide === totalSlides - 1}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full transition-[opacity,background-color] duration-500 disabled:cursor-not-allowed z-20 ${
-                showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              } ${currentSlide === totalSlides - 1 ? 'disabled:opacity-30' : ''}`}
-            >
-              <ChevronRight className="w-6 h-6 text-white" />
-            </button>
+            {titleUsesBottomSpace && (
+              <div
+                id={`${viewerId}-title-group`}
+                className="pointer-events-none flex max-w-[min(30rem,calc(100%-1.5rem))] flex-col items-center text-center"
+              >
+                <div
+                  id={`${viewerId}-title`}
+                  className="line-clamp-2 px-3 py-1 text-sm font-medium text-white"
+                >
+                  {deckTitle}
+                </div>
+                <div id={`${viewerId}-slide-counter`} className="mt-1 text-xs text-slate-300">
+                  Slide {currentSlide + 1} of {totalSlides}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Controls */}

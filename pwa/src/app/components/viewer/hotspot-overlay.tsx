@@ -75,38 +75,25 @@ export function HotspotOverlay({
         return;
       }
 
-      // Get natural image dimensions
+      // Measure the rendered image box and derive the painted area for object-fit: contain.
+      const imageRect = imageElement.getBoundingClientRect();
       const naturalWidth = imageElement.naturalWidth;
       const naturalHeight = imageElement.naturalHeight;
-      
-      // Get container dimensions
       const containerRect = container.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
 
-      // Calculate aspect ratios
-      const imageAspect = naturalWidth / naturalHeight;
-      const containerAspect = containerWidth / containerHeight;
-
-      let renderedWidth: number;
-      let renderedHeight: number;
-      let offsetX: number;
-      let offsetY: number;
-
-      // object-fit: contain logic
-      if (imageAspect > containerAspect) {
-        // Image is wider - fit to width
-        renderedWidth = containerWidth;
-        renderedHeight = containerWidth / imageAspect;
-        offsetX = 0;
-        offsetY = (containerHeight - renderedHeight) / 2;
-      } else {
-        // Image is taller - fit to height
-        renderedHeight = containerHeight;
-        renderedWidth = containerHeight * imageAspect;
-        offsetX = (containerWidth - renderedWidth) / 2;
-        offsetY = 0;
+      if (!naturalWidth || !naturalHeight || !imageRect.width || !imageRect.height) {
+        setImageBounds(null);
+        return;
       }
+
+      const scale = Math.min(
+        imageRect.width / naturalWidth,
+        imageRect.height / naturalHeight
+      );
+      const renderedWidth = naturalWidth * scale;
+      const renderedHeight = naturalHeight * scale;
+      const offsetX = imageRect.left - containerRect.left + ((imageRect.width - renderedWidth) / 2);
+      const offsetY = imageRect.top - containerRect.top + ((imageRect.height - renderedHeight) / 2);
 
       setImageBounds({
         left: offsetX,
@@ -173,7 +160,7 @@ export function HotspotOverlay({
             id={idPrefix ? `${idPrefix}-hotspot-${index + 1}` : undefined}
             key={hotspot.id || `hotspot-${index}`}
             onClick={() => onHotspotClick(hotspot.targetIndex, hotspot)}
-            className={`absolute pointer-events-auto cursor-pointer transition-colors ${
+            className={`absolute box-border pointer-events-auto cursor-pointer transition-colors ${
               showAreas
                 ? 'bg-blue-500/20 border-2 border-blue-500 hover:bg-blue-500/30'
                 : 'bg-transparent hover:bg-blue-500/10'

@@ -246,7 +246,7 @@ function cleanDeckLabel(raw: string) {
   return trimmed
     .replace(/\.[a-z0-9]{2,5}$/i, "")
     .replace(/^\d{10,}-\d+-/i, "")
-    .replace(/(^|[_-])one[_-]?detailer($|[_-])/gi, " ")
+    .replace(/\be[-_\s]*detailer\b/gi, "ONE DETAILER")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -268,17 +268,21 @@ export function getDeckTitle(deck: any, fallbackIndex = 0) {
     pickFirstString(firstItem?.sourceName, firstItem?.title, deck?.groupId, deck?.id)
   );
 
-  return derivedTitle || `Case ${fallbackIndex + 1}`;
+  return (derivedTitle || `Case ${fallbackIndex + 1}`).toUpperCase();
 }
 
 export async function resolveProductById(id: string) {
   const localProduct = getProductById(id, getLocallyAvailableProducts());
-  if (localProduct) {
+  const localHasRenderableSlides = localProduct
+    ? getProductDecks(localProduct).some((deck) => getRenderableSlides(deck.items || deck.slides || []).length > 0)
+    : false;
+
+  if (localProduct && localHasRenderableSlides) {
     return localProduct;
   }
 
   const result = await getProducts();
-  return getProductById(id, result.products);
+  return getProductById(id, result.products) || localProduct;
 }
 
 export function extractCategories(products: Product[]) {
