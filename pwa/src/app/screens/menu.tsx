@@ -107,7 +107,7 @@ export default function Menu() {
               <div className="font-medium text-slate-900">{installButtonLabel}</div>
               <div className="text-sm text-slate-500">
                 {installState.canPrompt
-                  ? 'Add to your home screen'
+                  ? 'Use the native install prompt for app-style launch'
                   : 'Manual install instructions for this device'}
               </div>
             </div>

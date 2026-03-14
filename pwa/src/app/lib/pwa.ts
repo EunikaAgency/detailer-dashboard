@@ -7,6 +7,7 @@ import { registerSW } from "virtual:pwa-register";
 export interface InstallState {
   canPrompt: boolean;
   standalone: boolean;
+  displayMode: "browser" | "standalone" | "fullscreen" | "minimal-ui" | "window-controls-overlay";
   ios: boolean;
   safari: boolean;
   showAction: boolean;
@@ -17,6 +18,14 @@ export interface AppUpdateState {
   refreshing: boolean;
   readyOffline: boolean;
 }
+
+const shouldDebugPwa =
+  typeof window !== "undefined" &&
+  (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    new URLSearchParams(window.location.search).has("pwaDebug")
+  );
 
 let deferredPrompt: any = null;
 const subscribers = new Set<(state: InstallState) => void>();
@@ -49,6 +58,35 @@ function publishAppUpdateState() {
       // Ignore subscriber errors.
     }
   });
+}
+
+function logPwaDebug(event: string, details?: Record<string, unknown>) {
+  if (!shouldDebugPwa) {
+    return;
+  }
+
+  console.info(`[PWA] ${event}`, details || {});
+}
+
+export function getDisplayMode(): InstallState["displayMode"] {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return "browser";
+  }
+
+  if (window.matchMedia("(display-mode: window-controls-overlay)").matches) {
+    return "window-controls-overlay";
+  }
+  if (window.matchMedia("(display-mode: fullscreen)").matches) {
+    return "fullscreen";
+  }
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    return "standalone";
+  }
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) {
+    return "minimal-ui";
+  }
+
+  return "browser";
 }
 
 /**
@@ -117,7 +155,8 @@ export function isSafari(): boolean {
  * Get install state
  */
 export function getInstallState(): InstallState {
-  const standalone = isStandalone();
+  const displayMode = getDisplayMode();
+  const standalone = displayMode !== "browser" || isStandalone();
   const ios = isIOS();
   const safari = isSafari();
   const canPrompt = !!deferredPrompt && !standalone;
@@ -130,6 +169,7 @@ export function getInstallState(): InstallState {
   return {
     canPrompt,
     standalone,
+    displayMode,
     ios,
     safari,
     showAction,
@@ -230,6 +270,21 @@ const isSecureOrigin =
 if (typeof window !== "undefined" && import.meta.env.PROD && isSecureOrigin && "serviceWorker" in navigator) {
   serviceWorkerUpdater = registerSW({
     immediate: true,
+    onRegisteredSW(swScriptUrl, registration) {
+      logPwaDebug("service worker registered", {
+        swScriptUrl,
+        scope: registration?.scope || "",
+        controller: navigator.serviceWorker.controller?.scriptURL || "",
+      });
+
+      void navigator.serviceWorker.ready.then((readyRegistration) => {
+        logPwaDebug("service worker ready", {
+          scope: readyRegistration.scope,
+          activeState: readyRegistration.active?.state || "",
+          controller: navigator.serviceWorker.controller?.scriptURL || "",
+        });
+      });
+    },
     onNeedRefresh() {
       appUpdateState = {
         ...appUpdateState,
@@ -239,6 +294,7 @@ if (typeof window !== "undefined" && import.meta.env.PROD && isSecureOrigin && "
       publishAppUpdateState();
     },
     onOfflineReady() {
+      logPwaDebug("offline shell ready");
       appUpdateState = {
         ...appUpdateState,
         readyOffline: true,
@@ -250,9 +306,19 @@ if (typeof window !== "undefined" && import.meta.env.PROD && isSecureOrigin && "
     },
   });
 
+  navigator.serviceWorker?.addEventListener?.("message", (event) => {
+    const data = event.data;
+    if (data?.type === "ONE_DETAILER_SW_DEBUG") {
+      logPwaDebug(`sw:${String(data.event || "message")}`, data.details || {});
+    }
+  });
+
   navigator.serviceWorker?.addEventListener?.(
     "controllerchange",
     () => {
+      logPwaDebug("service worker controller changed", {
+        controller: navigator.serviceWorker.controller?.scriptURL || "",
+      });
       window.location.reload();
     },
     { once: false }

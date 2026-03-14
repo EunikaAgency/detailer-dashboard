@@ -2,6 +2,7 @@
 const nextConfig = {
   reactCompiler: process.env.NODE_ENV === "production",
   reactStrictMode: false,
+  skipTrailingSlashRedirect: true,
   allowedDevOrigins: ["staging.otsukadetailer.site"],
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000,

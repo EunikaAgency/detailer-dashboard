@@ -20,7 +20,7 @@ import {
 } from '../lib/media-cache';
 import { getCachedProducts } from '../lib/products';
 import { getSessionSyncDiagnostics } from '../lib/sessions';
-import { getAppUpdateState } from '../lib/pwa';
+import { getAppUpdateState, getDisplayMode, getInstallState } from '../lib/pwa';
 
 export default function Diagnostics() {
   const navigate = useNavigate();
@@ -44,6 +44,8 @@ export default function Diagnostics() {
   const apiKey = getApiKey();
   const offlineSummary = getOfflinePresentationSummary();
   const updateState = getAppUpdateState();
+  const installState = getInstallState();
+  const displayMode = getDisplayMode();
 
   useEffect(() => {
     void getMediaCacheEntryCount().then(setMediaCacheEntries);
@@ -181,6 +183,44 @@ export default function Diagnostics() {
                 </pre>
               </div>
             )}
+          </div>
+        </Card>
+
+        <Card id={`${screenId}-pwa-state-card`} className="p-5">
+          <h2 className="font-semibold text-slate-900 mb-4">PWA Install State</h2>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center gap-2">
+              {installState.canPrompt ? (
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-slate-400" />
+              )}
+              <span className="font-medium">Native Install Prompt:</span>
+              <span className={installState.canPrompt ? 'text-green-600' : 'text-slate-500'}>
+                {installState.canPrompt ? 'Available' : 'Not currently available'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {installState.standalone ? (
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+              )}
+              <span className="font-medium">Display Mode:</span>
+              <span className={installState.standalone ? 'text-green-600' : 'text-amber-700'}>
+                {displayMode}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-slate-400" />
+              <span className="font-medium">Standalone Launch:</span>
+              <span className="text-slate-500">
+                {installState.standalone ? 'Opened as installed app' : 'Currently running in browser/tab mode'}
+              </span>
+            </div>
           </div>
         </Card>
 
