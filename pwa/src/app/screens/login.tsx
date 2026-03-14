@@ -14,6 +14,8 @@ function parseAutoLoginCredentials(search: string): AutoLoginCredentials | null 
   const params = new URLSearchParams(search);
   const identifier =
     [
+      params.get("u"),
+      params.get("user"),
       params.get("employeeId"),
       params.get("oppi"),
       params.get("identifier"),
@@ -22,7 +24,13 @@ function parseAutoLoginCredentials(search: string): AutoLoginCredentials | null 
     ]
       .map((value) => String(value || "").trim())
       .find(Boolean) || "";
-  const password = String(params.get("password") || "").trim();
+  const password =
+    [
+      params.get("p"),
+      params.get("pass"),
+      params.get("password"),
+    ]
+      .find((value) => value != null) || "";
   const rememberRaw = String(params.get("remember") || "").trim().toLowerCase();
   const remember = rememberRaw
     ? !["0", "false", "no", "off"].includes(rememberRaw)
@@ -106,7 +114,7 @@ export default function Login() {
         autoLoginCredentials.password,
         autoLoginCredentials.remember
       );
-    }, 2000);
+    }, 250);
 
     return () => {
       window.clearTimeout(timeoutId);
