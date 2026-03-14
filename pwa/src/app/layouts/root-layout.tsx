@@ -48,7 +48,7 @@ export default function RootLayout() {
 
   return (
     <div data-ui-scale={settings.uiScale} data-action-labels={settings.actionLabels}>
-      {!online && (
+      {!online && !isViewerRoute && (
         <div className="sticky top-0 z-[60] bg-amber-100 border-b border-amber-200 px-4 py-2">
           <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-amber-900">

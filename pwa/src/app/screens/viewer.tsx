@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen, WifiOff } from "lucide-react";
 import { normalizeSlides, resolveProductById, type NormalizedSlide } from "../lib/products";
 import { trackEvent } from "../lib/sessions";
 import { useAppSettings } from "../lib/settings";
@@ -31,6 +31,7 @@ export default function Viewer() {
   const [showNavButtons, setShowNavButtons] = useState(true);
   const [isCompactLandscape, setIsCompactLandscape] = useState(false);
   const [isLandscapeViewport, setIsLandscapeViewport] = useState(false);
+  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
   const settings = useAppSettings();
   const hideNavButtonsTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -105,6 +106,19 @@ export default function Viewer() {
 
     return () => {
       window.removeEventListener("resize", updateCompactLandscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -427,6 +441,7 @@ export default function Viewer() {
   const thumbnailToggleLabel = showThumbnails ? "Hide thumbnails" : "Show thumbnails";
   const goHome = () => navigate("/presentations#presentations-screen-content");
   const titleUsesBottomSpace = !isFullscreen && !isCompactLandscape;
+  const showOfflineHint = !online;
   const slideFrameClassName = isFullscreen && currentSlideData.type === 'image'
     ? 'relative z-10 h-full w-full max-h-full max-w-full overflow-hidden bg-transparent shadow-none'
     : `relative z-10 w-full max-h-full bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-2xl overflow-hidden ${
@@ -466,6 +481,19 @@ export default function Viewer() {
             />
           </div>
 
+          <div id={`${viewerId}-status-slot`} className="flex min-w-0 flex-1 justify-center px-2">
+            {showOfflineHint && (
+              <div
+                id={`${viewerId}-offline-chip`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-100 shadow-sm backdrop-blur-sm"
+                aria-label="Offline mode active"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+                <span className="truncate">Offline</span>
+              </div>
+            )}
+          </div>
+
           <ActionButton
             id={`${viewerId}-back-button`}
             onClick={() => navigate(`/case-selection/${presentationId}`)}
@@ -485,6 +513,18 @@ export default function Viewer() {
           isCompactLandscape ? "flex-row" : "flex-col lg:flex-row"
         }`}
       >
+        {showOfflineHint && isFullscreen && (
+          <div
+            id={`${viewerId}-fullscreen-offline-chip`}
+            className="pointer-events-none absolute left-3 z-30 inline-flex items-center gap-1.5 rounded-full border border-amber-200/15 bg-slate-950/50 px-2.5 py-1 text-[11px] font-medium text-amber-100 shadow-lg backdrop-blur-md"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+            aria-label="Offline mode active"
+          >
+            <WifiOff className="h-3.5 w-3.5" />
+            <span>Offline</span>
+          </div>
+        )}
+
         {/* Slide Stage */}
         <div 
           id={`${viewerId}-stage`}
