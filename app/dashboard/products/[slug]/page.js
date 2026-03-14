@@ -34,6 +34,14 @@ const getFilenameFromUrl = (value = "") => {
   return clean.split("/").pop() || clean;
 };
 
+const pickFirstNonEmptyString = (...values) => {
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return "";
+};
+
 const toFlatMedia = (media = []) => {
   if (!Array.isArray(media) || media.length === 0) return [];
   if (media[0] && Array.isArray(media[0].items)) {
@@ -42,6 +50,7 @@ const toFlatMedia = (media = []) => {
         ...item,
         url: item?.url,
         groupId: group.groupId || item?.groupId,
+        groupTitle: item?.groupTitle || group?.title || "",
       }))
     );
   }
@@ -69,6 +78,7 @@ const mapProduct = (product) => {
       thumbnailUrl: item.thumbnailUrl,
       type: item.type,
       title: item.title,
+      groupTitle: item.groupTitle,
       size: item.size,
       status: item.status,
       groupId: item.groupId,
@@ -107,12 +117,20 @@ const groupExistingMedia = (mediaItems) => {
 
   mediaItems.forEach((item) => {
     const url = item.url || "";
+    const preferredLabel = pickFirstNonEmptyString(
+      item.groupTitle,
+      item.sourceName,
+      item.originalName,
+      item.groupId
+    );
     if (item.groupId) {
       const key = `group:${item.groupId}`;
       if (!groups.has(key)) {
         groups.set(key, {
           key,
-          label: item.sourceName || item.originalName || item.groupId,
+          label: preferredLabel,
+          sourceName: item.sourceName || item.originalName || item.groupId || "",
+          groupTitle: item.groupTitle || "",
           items: [],
         });
       }
@@ -127,7 +145,13 @@ const groupExistingMedia = (mediaItems) => {
       const label = labelBase ? `${labelBase} (converted)` : "Converted media";
       const key = `converted:${folderName}`;
       if (!groups.has(key)) {
-        groups.set(key, { key, label, items: [] });
+        groups.set(key, {
+          key,
+          label: pickFirstNonEmptyString(preferredLabel, label),
+          sourceName: item.sourceName || item.originalName || label,
+          groupTitle: item.groupTitle || "",
+          items: [],
+        });
       }
       groups.get(key).items.push(item);
       return;
@@ -136,7 +160,13 @@ const groupExistingMedia = (mediaItems) => {
     const filename = url.split("/").pop() || url || "Media file";
     const key = `file:${filename}`;
     if (!groups.has(key)) {
-      groups.set(key, { key, label: filename, items: [] });
+      groups.set(key, {
+        key,
+        label: pickFirstNonEmptyString(preferredLabel, filename),
+        sourceName: item.sourceName || item.originalName || filename,
+        groupTitle: item.groupTitle || "",
+        items: [],
+      });
     }
     groups.get(key).items.push(item);
   });
@@ -525,7 +555,7 @@ const HotspotEditor = ({
   };
 
   const handleSave = () => {
-    onSave(hotspotsByPage);
+    onSave(hotspotsByPage, currentPage?.pageId || initialPageId || "");
     onClose();
   };
 
@@ -950,10 +980,14 @@ export default function ProductDetailPage() {
   const [mediaThumbnailTargetUrl, setMediaThumbnailTargetUrl] = useState("");
   const [draggingMedia, setDraggingMedia] = useState(null);
   const [dragOverUrl, setDragOverUrl] = useState("");
+  const [expandedMediaGroups, setExpandedMediaGroups] = useState({});
+  const [lastEditedHotspotItemUrl, setLastEditedHotspotItemUrl] = useState("");
   const formRef = useRef(null);
   const groupImageInputRef = useRef(null);
   const replaceImageInputRef = useRef(null);
   const mediaThumbnailInputRef = useRef(null);
+  const hotspotHighlightTimeoutRef = useRef(null);
+  const mediaItemRefs = useRef(new Map());
   const [hotspotEditor, setHotspotEditor] = useState({
     isOpen: false,
     groupId: "",
@@ -1036,6 +1070,47 @@ export default function ProductDetailPage() {
 
     return () => clearInterval(timer);
   }, [existingMedia]);
+
+  useEffect(() => {
+    return () => {
+      if (hotspotHighlightTimeoutRef.current) {
+        clearTimeout(hotspotHighlightTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!lastEditedHotspotItemUrl) return;
+    const itemElement = mediaItemRefs.current.get(lastEditedHotspotItemUrl);
+    if (!itemElement) return;
+    itemElement.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+  }, [lastEditedHotspotItemUrl, existingMedia]);
+
+  const triggerHotspotSaveHint = (itemUrl = "", itemGroupId = "") => {
+    const highlightUrl = String(itemUrl || "").trim();
+    if (!highlightUrl) return;
+
+    const groupKey = itemGroupId ? `group:${itemGroupId}` : "";
+    if (groupKey) {
+      setExpandedMediaGroups((prev) => ({
+        ...prev,
+        [groupKey]: true,
+      }));
+    }
+
+    setLastEditedHotspotItemUrl(highlightUrl);
+    if (hotspotHighlightTimeoutRef.current) {
+      clearTimeout(hotspotHighlightTimeoutRef.current);
+    }
+    hotspotHighlightTimeoutRef.current = setTimeout(() => {
+      setLastEditedHotspotItemUrl("");
+      hotspotHighlightTimeoutRef.current = null;
+    }, 1800);
+  };
 
   const handleDelete = async () => {
     if (!product?.id) {
@@ -1175,6 +1250,16 @@ export default function ProductDetailPage() {
   };
 
   const groupedExistingMedia = groupExistingMedia(existingMedia);
+  const updateGroupTitle = (group, nextTitle) => {
+    const targetUrls = new Set((group?.items || []).map((item) => item?.url).filter(Boolean));
+    setExistingMedia((prev) =>
+      prev.map((item) =>
+        targetUrls.has(item.url)
+          ? { ...item, groupTitle: String(nextTitle || "").trim() }
+          : item
+      )
+    );
+  };
   const removeExistingMediaItem = async (targetUrl) => {
     if (!targetUrl) return;
     const confirmed = window.confirm("Remove this file?");
@@ -1386,7 +1471,8 @@ export default function ProductDetailPage() {
     if (!groupId || !groupImageInputRef.current) return;
     setTargetGroupForAdd({
       groupId,
-      sourceName: group.label || "Manual upload",
+      groupTitle: group.groupTitle || group.label || "",
+      sourceName: group.sourceName || group.label || "Manual upload",
     });
     groupImageInputRef.current.value = "";
     groupImageInputRef.current.click();
@@ -1408,6 +1494,7 @@ export default function ProductDetailPage() {
     try {
       const mediaPayload = new FormData();
       mediaPayload.append("groupId", targetGroupForAdd.groupId);
+      mediaPayload.append("groupTitle", targetGroupForAdd.groupTitle || "");
       mediaPayload.append("sourceName", targetGroupForAdd.sourceName || "Manual upload");
       files.forEach((file) => mediaPayload.append("mediaFile", file));
 
@@ -1439,6 +1526,10 @@ export default function ProductDetailPage() {
       showToast("error", "Add an image or set an HTML thumbnail before editing hotspots.");
       return;
     }
+    setExpandedMediaGroups((prev) => ({
+      ...prev,
+      [group.key]: true,
+    }));
     const groupId = getGroupId(group);
     const initialHotspotsByPage = pages.reduce((acc, page) => {
       const mediaItem = existingMedia.find((entry) => entry.url === page.pageId);
@@ -1457,19 +1548,23 @@ export default function ProductDetailPage() {
     });
   };
 
-  const saveHotspotsForGroup = async (nextHotspotsByPage) => {
+  const saveHotspotsForGroup = async (nextHotspotsByPage, activePageId = "") => {
     const nextMedia = existingMedia.map((item) =>
       nextHotspotsByPage[item.url]
         ? { ...item, hotspots: nextHotspotsByPage[item.url] }
         : item
     );
+    const activeItem = nextMedia.find((item) => item.url === activePageId);
     setExistingMedia(nextMedia);
+    triggerHotspotSaveHint(activePageId, activeItem?.groupId || "");
     if (!formRef.current) return;
     const payload = buildPayloadFromForm(formRef.current, nextMedia);
     const updated = await persistProduct(payload, { silent: true });
     if (updated) {
       showToast("success", "Hotspots saved.");
+      return;
     }
+    setLastEditedHotspotItemUrl("");
   };
 
   return (
@@ -1682,6 +1777,14 @@ export default function ProductDetailPage() {
                           return (
                           <details
                             key={group.key}
+                            open={Boolean(expandedMediaGroups[group.key])}
+                            onToggle={(event) => {
+                              const isOpen = Boolean(event.currentTarget?.open);
+                              setExpandedMediaGroups((prev) => ({
+                                ...prev,
+                                [group.key]: isOpen,
+                              }));
+                            }}
                             className="rounded-lg border border-gray-200 bg-white"
                           >
                             <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
@@ -1725,6 +1828,20 @@ export default function ProductDetailPage() {
                               </div>
                             </summary>
                             <div className="border-t border-gray-100 px-4 pb-4 pt-3">
+                              <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                                <label className="block text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                  Case title
+                                </label>
+                                <input
+                                  type="text"
+                                  value={group.groupTitle || group.label}
+                                  onChange={(event) => updateGroupTitle(group, event.target.value)}
+                                  className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <p className="mt-1 text-[11px] text-gray-400">
+                                  Update the case name here, then click Save Changes.
+                                </p>
+                              </div>
                               <div className="space-y-2">
                                 {pendingOnly ? (
                                   <div className="text-sm text-gray-500">
@@ -1750,15 +1867,26 @@ export default function ProductDetailPage() {
                                       draggingMedia?.groupKey === group.key &&
                                       draggingMedia?.url !== item.url;
                                     const isDragging = draggingMedia?.url === item.url;
+                                    const isLastEditedHotspotItem =
+                                      lastEditedHotspotItemUrl === item.url;
                                     return (
                                       <div
                                         key={item.url}
+                                        ref={(node) => {
+                                          if (node) {
+                                            mediaItemRefs.current.set(item.url, node);
+                                            return;
+                                          }
+                                          mediaItemRefs.current.delete(item.url);
+                                        }}
                                         onDragOver={(event) => handleMediaDragOver(event, group, item)}
                                         onDragLeave={(event) => handleMediaDragLeave(event, item)}
                                         onDrop={(event) => handleMediaDrop(event, group, item)}
                                         className={`flex flex-col gap-2 rounded-md border p-3 text-sm text-gray-700 sm:flex-row sm:items-center sm:justify-between ${
                                           isDropTarget
                                             ? "border-blue-300 bg-blue-50/40"
+                                          : isLastEditedHotspotItem
+                                            ? "border-amber-400 bg-amber-100 ring-4 ring-amber-200 shadow-md transition-all duration-300"
                                             : isDragging
                                             ? "border-blue-200 bg-blue-50/20"
                                             : "border-gray-100"
@@ -1794,8 +1922,15 @@ export default function ProductDetailPage() {
                                             </button>
                                           )}
                                           <div className="min-w-0">
-                                            <div className="truncate" title={filename}>
-                                              {filename}
+                                            <div className="flex items-center gap-2">
+                                              <div className="truncate" title={filename}>
+                                                {filename}
+                                              </div>
+                                              {isLastEditedHotspotItem && (
+                                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                                                  Last edited
+                                                </span>
+                                              )}
                                             </div>
                                             <div className="text-xs text-gray-400">
                                               {ext || "--"}

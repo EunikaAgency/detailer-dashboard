@@ -4,6 +4,7 @@ const MediaSchema = new mongoose.Schema({
   type: { type: String, enum: ['video', 'pdf', 'image', 'html'], required: true },
   url: { type: String, required: true },
   title: String,
+  groupTitle: String,
   size: Number,
   status: String,
   groupId: String,

@@ -77,6 +77,7 @@ export async function POST(request, { params }) {
     const formData = await request.formData();
     const requestedGroupId = String(formData.get("groupId") || "").trim();
     const requestedSourceName = String(formData.get("sourceName") || "").trim();
+    const requestedGroupTitle = String(formData.get("groupTitle") || "").trim();
     const mediaFiles = formData.getAll("mediaFile");
     if (!mediaFiles.length) {
       return NextResponse.json({ error: "No media files provided." }, { status: 400 });
@@ -107,6 +108,7 @@ export async function POST(request, { params }) {
             url: publicUrl,
             status: "pending",
             groupId,
+            groupTitle: requestedGroupTitle || undefined,
             sourceName: filename,
           });
         } else {
@@ -120,6 +122,7 @@ export async function POST(request, { params }) {
             type: getMediaType(mimeType || filename),
             url: publicUrl,
             groupId: batchGroupId,
+            groupTitle: requestedGroupTitle || undefined,
             sourceName: requestedSourceName || "Manual upload",
           });
         }

@@ -61,6 +61,14 @@ const resolveUniqueFilename = async (targetDir, originalName = "upload") => {
   return `${base}-${Date.now()}${ext}`;
 };
 
+const pickFirstNonEmptyString = (...values) => {
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return "";
+};
+
 const normalizeKey = (value) =>
   String(value || "")
     .toLowerCase()
@@ -242,7 +250,76 @@ const getConvertedFolderFromUrl = (url) => {
   return rest.split("/")[0] || "";
 };
 
-const buildMediaGroupsFromMedia = (media = []) => {
+const fileExists = async (filePath) => {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const restoreHtmlSlideItem = async (groupId, items = [], manifestMappings = {}) => {
+  const sanitizedGroupId = String(groupId || "").trim();
+  if (!sanitizedGroupId || !Array.isArray(items) || items.length === 0) {
+    return items;
+  }
+
+  const htmlUrl = `/uploads/converted/${sanitizedGroupId}/html-slide.html`;
+  const htmlFilePath = path.join(convertedDir, sanitizedGroupId, "html-slide.html");
+  const htmlThumbnailUrl = `/uploads/converted/${sanitizedGroupId}/html-slide.thumbnail.png`;
+  const mappedHtmlThumbnailUrl = manifestMappings?.[htmlThumbnailUrl] || "";
+
+  if (
+    items.some((item) => getUrlWithoutQuery(item?.url || "") === htmlUrl || String(item?.type || "").toLowerCase() === "html")
+  ) {
+    return items;
+  }
+
+  if (!(await fileExists(htmlFilePath))) {
+    return items;
+  }
+
+  const candidateIndex = items.findIndex((item) => {
+    const cleanUrl = getUrlWithoutQuery(item?.url || "");
+    const cleanThumbnailUrl = getUrlWithoutQuery(item?.thumbnailUrl || "");
+    return [cleanUrl, cleanThumbnailUrl].some(
+      (value) => value && (value === htmlThumbnailUrl || value === mappedHtmlThumbnailUrl)
+    );
+  });
+
+  if (candidateIndex !== -1) {
+    const candidate = items[candidateIndex];
+    const nextItems = [...items];
+    nextItems[candidateIndex] = {
+      ...candidate,
+      type: "html",
+      url: htmlUrl,
+      thumbnailUrl: candidate?.thumbnailUrl || mappedHtmlThumbnailUrl || htmlThumbnailUrl,
+      title: candidate?.title || "html-slide.html",
+      groupTitle: candidate?.groupTitle,
+      groupId: candidate?.groupId || sanitizedGroupId,
+    };
+    return nextItems;
+  }
+
+  return [
+    ...items,
+    {
+      type: "html",
+      url: htmlUrl,
+      thumbnailUrl: mappedHtmlThumbnailUrl || undefined,
+      title: "html-slide.html",
+      groupTitle: items[0]?.groupTitle,
+      groupId: sanitizedGroupId,
+      sourceName: items[0]?.sourceName,
+      status: items[0]?.status || "ready",
+      hotspots: [],
+    },
+  ];
+};
+
+const buildMediaGroupsFromMedia = async (media = [], manifestMappings = {}) => {
   if (!Array.isArray(media) || media.length === 0) return [];
   const groups = new Map();
 
@@ -257,6 +334,7 @@ const buildMediaGroupsFromMedia = (media = []) => {
       thumbnailUrl: item?.thumbnailUrl,
       type: item?.type,
       title: item?.title,
+      groupTitle: item?.groupTitle,
       size: item?.size,
       status: item?.status,
       groupId: item?.groupId,
@@ -266,10 +344,17 @@ const buildMediaGroupsFromMedia = (media = []) => {
     groups.set(folder, entry);
   });
 
-  return Array.from(groups.entries()).map(([groupId, items]) => ({
-    groupId,
-    items,
-  }));
+  return Promise.all(
+    Array.from(groups.entries()).map(async ([groupId, items]) => ({
+      groupId,
+      title: pickFirstNonEmptyString(
+        ...items.map((item) => item?.groupTitle),
+        ...items.map((item) => item?.sourceName),
+        groupId
+      ),
+      items: await restoreHtmlSlideItem(groupId, items, manifestMappings),
+    }))
+  );
 };
 
 const hasValidApiKey = (request) => {
@@ -301,15 +386,15 @@ export async function GET(request) {
       : {};
     const products = await Product.find().sort({ createdAt: -1 }).lean();
     const enriched = convertedIndex.length
-      ? products.map((product) => {
+      ? await Promise.all(products.map(async (product) => {
           const withMedia = attachConvertedMedia(product, convertedIndex, manifestMappings);
-          const mediaGroups = buildMediaGroupsFromMedia(withMedia.media);
+          const mediaGroups = await buildMediaGroupsFromMedia(withMedia.media, manifestMappings);
           return { ...withMedia, media: mediaGroups };
-        })
-      : products.map((product) => ({
+        }))
+      : await Promise.all(products.map(async (product) => ({
           ...product,
-          media: buildMediaGroupsFromMedia(product.media),
-        }));
+          media: await buildMediaGroupsFromMedia(product.media, manifestMappings),
+        })));
     const rewrittenProducts = await applyProductImageLibrary(enriched);
     const apiKeyAllowed = hasValidApiKey(request);
     const responseProducts = !auth.user && apiKeyAllowed

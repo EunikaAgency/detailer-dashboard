@@ -104,6 +104,29 @@ function getImageFiles(dirPath) {
     .map((entry) => path.join(dirPath, entry));
 }
 
+function isHtmlMedia(item) {
+  return String(item?.type || "").trim().toLowerCase() === "html";
+}
+
+function buildHtmlSlideItem(groupId, sourceName, thumbnailUrl) {
+  if (!groupId) return null;
+  const htmlPath = path.resolve(process.cwd(), "public", "uploads", "converted", groupId, "html-slide.html");
+  if (!fs.existsSync(htmlPath)) return null;
+
+  const stats = fs.statSync(htmlPath);
+  return {
+    type: "html",
+    url: toUploadUrl(htmlPath),
+    title: path.basename(htmlPath),
+    size: stats.size,
+    status: "ready",
+    groupId,
+    sourceName,
+    thumbnailUrl: thumbnailUrl || undefined,
+    hotspots: [],
+  };
+}
+
 function buildMediaItems(files, currentMedia, fallbackName) {
   const firstMedia = Array.isArray(currentMedia) ? currentMedia[0] : null;
   const groupId =
@@ -111,7 +134,7 @@ function buildMediaItems(files, currentMedia, fallbackName) {
     `repair-${Date.now()}-${fallbackName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   const sourceName = String(firstMedia?.sourceName || "").trim() || fallbackName;
 
-  return files.map((filePath) => {
+  const imageItems = files.map((filePath) => {
     const stats = fs.statSync(filePath);
     const url = toUploadUrl(filePath);
 
@@ -127,6 +150,59 @@ function buildMediaItems(files, currentMedia, fallbackName) {
       hotspots: [],
     };
   });
+
+  const existingHtml = Array.isArray(currentMedia) ? currentMedia.find(isHtmlMedia) : null;
+  const htmlThumbnailUrl =
+    String(existingHtml?.thumbnailUrl || "").trim() ||
+    imageItems.find((item) => /thumbnail/i.test(path.basename(item.url || "")))?.thumbnailUrl ||
+    "";
+  const htmlItem = buildHtmlSlideItem(groupId, sourceName, htmlThumbnailUrl);
+  const existingHtmlPlaceholder = Array.isArray(currentMedia)
+    ? currentMedia.find((item) => {
+        const itemUrl = String(item?.url || "").trim();
+        const itemThumbnailUrl = String(item?.thumbnailUrl || "").trim();
+        return itemUrl === htmlThumbnailUrl || itemThumbnailUrl === htmlThumbnailUrl;
+      })
+    : null;
+  const preservedHtmlHotspots = Array.isArray(existingHtml?.hotspots)
+    ? existingHtml.hotspots
+    : Array.isArray(existingHtmlPlaceholder?.hotspots)
+    ? existingHtmlPlaceholder.hotspots
+    : [];
+
+  if (htmlItem) {
+    const candidateIndex = imageItems.findIndex((item) => item.thumbnailUrl === htmlThumbnailUrl);
+    if (candidateIndex !== -1) {
+      imageItems[candidateIndex] = {
+        ...imageItems[candidateIndex],
+        ...htmlItem,
+        hotspots: preservedHtmlHotspots,
+      };
+    } else {
+      imageItems.push({
+        ...htmlItem,
+        hotspots: preservedHtmlHotspots,
+      });
+    }
+  }
+
+  const preservedNonImageItems = Array.isArray(currentMedia)
+    ? currentMedia.filter((item) => String(item?.type || "").trim().toLowerCase() !== "image")
+    : [];
+
+  preservedNonImageItems.forEach((item) => {
+    const normalizedUrl = String(item?.url || "").trim();
+    if (!normalizedUrl) return;
+    if (imageItems.some((entry) => entry.url === normalizedUrl)) return;
+    imageItems.push({
+      ...item,
+      groupId: item?.groupId || groupId,
+      sourceName: item?.sourceName || sourceName,
+      hotspots: Array.isArray(item?.hotspots) ? item.hotspots : [],
+    });
+  });
+
+  return imageItems;
 }
 
 async function main() {
