@@ -21,6 +21,14 @@ function getContentType(filePath) {
 }
 
 function getCacheControl(filePath) {
+  const filename = path.basename(filePath);
+
+  if (filename === "sw.js" || filename.startsWith("workbox-")) {
+    return "no-cache, no-store, must-revalidate";
+  }
+  if (filename === "manifest.webmanifest" || filename === "manifest.json") {
+    return "no-cache";
+  }
   if (filePath.endsWith(".html")) {
     return "no-cache";
   }
@@ -43,15 +51,21 @@ function resolveTargetPath(slug = []) {
 
 async function readResponseFile(filePath) {
   const body = await readFile(filePath);
+  const headers = {
+    "Cache-Control": getCacheControl(filePath),
+    "Content-Type": getContentType(filePath),
+  };
+
+  if (path.basename(filePath) === "sw.js") {
+    headers["Service-Worker-Allowed"] = "/pwa/";
+  }
+
   return new Response(body, {
-    headers: {
-      "Cache-Control": getCacheControl(filePath),
-      "Content-Type": getContentType(filePath),
-    },
+    headers,
   });
 }
 
-async function handleRequest(params = {}) {
+export async function servePwaAsset(params = {}) {
   const slug = Array.isArray(params.slug) ? params.slug : [];
   const targetPath = resolveTargetPath(slug);
 
@@ -73,14 +87,6 @@ async function handleRequest(params = {}) {
   }
 }
 
-export async function GET(_request, { params }) {
-  return handleRequest(await params);
-}
-
-export async function HEAD(_request, { params }) {
-  const response = await handleRequest(await params);
-  return new Response(null, {
-    status: response.status,
-    headers: response.headers,
-  });
+export async function servePwaShell() {
+  return readResponseFile(path.join(PWA_ROOT, "index.html"));
 }
