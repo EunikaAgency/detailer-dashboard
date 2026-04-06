@@ -76,6 +76,26 @@ const getConvertedFolderFromUrl = (url) => {
   return folder || null;
 };
 
+const cleanUrl = (value = "") => String(value || "").split("#")[0].split("?")[0].trim();
+
+const normalizeHotspots = (hotspots = []) => {
+  if (!Array.isArray(hotspots)) return [];
+  return hotspots.map((hotspot) => ({
+    ...hotspot,
+    targetPageId: cleanUrl(hotspot?.targetPageId || hotspot?.target || ""),
+  }));
+};
+
+const normalizeMediaItem = (item = {}) => ({
+  ...item,
+  url: cleanUrl(item?.url || ""),
+  thumbnailUrl: cleanUrl(item?.thumbnailUrl || ""),
+  hotspots: normalizeHotspots(item?.hotspots),
+});
+
+const normalizePayloadMedia = (media = []) =>
+  Array.isArray(media) ? media.map((item) => normalizeMediaItem(item)).filter((item) => item.url) : [];
+
 export async function PUT(request, { params }) {
   try {
     const auth = await requireAdmin(request);
@@ -119,8 +139,8 @@ export async function PUT(request, { params }) {
         brandName: formData.get("brandName") || existing.brandName,
         category: formData.get("category") || existing.category,
         description: formData.get("description") || existing.description,
-        thumbnailUrl: formData.get("thumbnailUrl") || existing.thumbnailUrl,
-        media: mediaOverride || existing.media || []
+        thumbnailUrl: cleanUrl(formData.get("thumbnailUrl") || existing.thumbnailUrl),
+        media: normalizePayloadMedia(mediaOverride || existing.media || []),
       };
 
       const thumbnailFile = formData.get("thumbnailFile");
@@ -194,6 +214,12 @@ export async function PUT(request, { params }) {
       // Handle JSON payload
       payload = await request.json();
     }
+
+    payload = {
+      ...payload,
+      thumbnailUrl: cleanUrl(payload?.thumbnailUrl || existing.thumbnailUrl || ""),
+      media: normalizePayloadMedia(payload?.media || existing.media || []),
+    };
 
     const nextMedia = Array.isArray(payload.media) ? payload.media : existing.media;
     const existingMediaItems = Array.isArray(existing.media) ? existing.media : [];

@@ -16,16 +16,46 @@ const buildProductSlug = (product) =>
 
 const FALLBACK_IMAGE = "/images/product-fallback.svg";
 const CONVERTED_PREFIX = "/uploads/converted/";
+const stripUrlSuffix = (value = "") => String(value || "").split("#")[0].split("?")[0].trim();
 
-const isImageUrl = (value = "") => /(png|jpg|jpeg|gif|webp)$/i.test(value);
-const isHtmlFilename = (value = "") => /\.(html|htm)$/i.test(value);
+const isImageUrl = (value = "") => /(png|jpg|jpeg|gif|webp)$/i.test(stripUrlSuffix(value));
+const isHtmlFilename = (value = "") => /\.(html|htm)$/i.test(stripUrlSuffix(value));
+
+const toMediaVersionToken = (product = {}) => {
+  const rawValue =
+    product?.updatedAt ||
+    product?.updated_at ||
+    product?.modifiedAt ||
+    product?.createdAt ||
+    "";
+  if (!rawValue) return "";
+  const timestamp = new Date(rawValue).getTime();
+  if (Number.isFinite(timestamp) && timestamp > 0) return String(timestamp);
+  return String(rawValue).trim();
+};
+
+const withMediaVersion = (url = "", version = "") => {
+  const clean = stripUrlSuffix(url);
+  if (!clean || !version || !clean.startsWith("/uploads/")) return clean || url;
+  const params = new URLSearchParams();
+  params.set("v", version);
+  return `${clean}?${params.toString()}`;
+};
+
+const toDisplayMediaUrl = (rawUrl = "", version = "") => {
+  const text = String(rawUrl || "").trim();
+  if (!text) return "";
+  const clean = stripUrlSuffix(text);
+  if (!clean) return "";
+  return clean !== text ? text : withMediaVersion(clean, version);
+};
 
 const isHtmlMediaItem = (item = {}) =>
   String(item?.type || "").toLowerCase() === "html" || isHtmlFilename(item?.url || "");
 
 const getHotspotPreviewUrl = (item = {}) => {
-  if (isImageUrl(item?.url || "")) return item.url;
-  if (isHtmlMediaItem(item)) return String(item?.thumbnailUrl || "").trim();
+  if (isImageUrl(item?.url || "")) return item.displayUrl || item.url;
+  if (isHtmlMediaItem(item)) return String(item?.displayThumbnailUrl || item?.thumbnailUrl || "").trim();
   return "";
 };
 
@@ -58,11 +88,35 @@ const toFlatMedia = (media = []) => {
 };
 
 const mapProduct = (product) => {
+  const mediaVersion = toMediaVersionToken(product);
   const flatMedia = toFlatMedia(product.media);
-  const image =
-    product.thumbnailUrl ||
-    flatMedia?.[0]?.url ||
-    FALLBACK_IMAGE;
+  const thumbnailUrl = stripUrlSuffix(product.thumbnailUrl || "");
+  const thumbnailDisplayUrl = toDisplayMediaUrl(product.thumbnailUrl || thumbnailUrl, mediaVersion);
+  const media = flatMedia.map((item) => {
+    const itemUrl = stripUrlSuffix(item?.url || "");
+    const itemThumbnailUrl = stripUrlSuffix(item?.thumbnailUrl || "");
+    return {
+      url: itemUrl,
+      displayUrl: toDisplayMediaUrl(item?.url || itemUrl, mediaVersion),
+      thumbnailUrl: itemThumbnailUrl,
+      displayThumbnailUrl: toDisplayMediaUrl(item?.thumbnailUrl || itemThumbnailUrl, mediaVersion),
+      type: item.type,
+      title: item.title,
+      groupTitle: item.groupTitle,
+      size: item.size,
+      status: item.status,
+      groupId: item.groupId,
+      sourceName: item.sourceName,
+      hotspots: Array.isArray(item?.hotspots)
+        ? item.hotspots.map((hotspot) => ({
+            ...hotspot,
+            targetPageId: stripUrlSuffix(hotspot?.targetPageId || ""),
+          }))
+        : [],
+    };
+  });
+  const image = thumbnailUrl || media?.[0]?.url || FALLBACK_IMAGE;
+  const imageDisplay = thumbnailDisplayUrl || media?.[0]?.displayUrl || FALLBACK_IMAGE;
 
   return {
     id: product._id?.toString?.() || product._id || product.id || "",
@@ -72,19 +126,11 @@ const mapProduct = (product) => {
     category: product.category,
     description: product.description,
     image,
-    thumbnailUrl: product.thumbnailUrl || "",
-    media: flatMedia.map((item) => ({
-      url: item.url,
-      thumbnailUrl: item.thumbnailUrl,
-      type: item.type,
-      title: item.title,
-      groupTitle: item.groupTitle,
-      size: item.size,
-      status: item.status,
-      groupId: item.groupId,
-      sourceName: item.sourceName,
-      hotspots: Array.isArray(item.hotspots) ? item.hotspots : [],
-    })),
+    imageDisplay,
+    thumbnailUrl,
+    thumbnailDisplayUrl,
+    mediaVersion,
+    media,
   };
 };
 
@@ -186,7 +232,7 @@ const getGroupId = (group) => {
   return group.key || "unknown-group";
 };
 
-const buildGroupPages = (group) =>
+const buildGroupPages = (group, mediaVersion = "") =>
   (group.items || [])
     .map((item) => ({
       item,
@@ -196,7 +242,7 @@ const buildGroupPages = (group) =>
     .map(({ item, previewUrl }, idx) => ({
       pageId: item.url,
       index: idx + 1,
-      imageUrl: previewUrl,
+      imageUrl: withMediaVersion(previewUrl, mediaVersion),
       filename: getFilenameFromUrl(item.url),
       type: item.type,
     }));
@@ -1013,7 +1059,7 @@ export default function ProductDetailPage() {
 
   const refreshProduct = async () => {
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products", { cache: "no-store" });
       if (!response.ok) return;
       const data = await response.json();
       const productsPayload = Array.isArray(data) ? data : data?.products;
@@ -1033,7 +1079,7 @@ export default function ProductDetailPage() {
     let isMounted = true;
     const loadProducts = async () => {
       try {
-        const response = await fetch("/api/products");
+        const response = await fetch("/api/products", { cache: "no-store" });
         if (!response.ok) return;
         const data = await response.json();
         const productsPayload = Array.isArray(data) ? data : data?.products;
@@ -1521,7 +1567,7 @@ export default function ProductDetailPage() {
   };
 
   const openHotspotEditor = (group, item) => {
-    const pages = buildGroupPages(group);
+    const pages = buildGroupPages(group, product?.mediaVersion || "");
     if (!pages.length) {
       showToast("error", "Add an image or set an HTML thumbnail before editing hotspots.");
       return;
@@ -1662,7 +1708,7 @@ export default function ProductDetailPage() {
             <div className="grid gap-4 md:grid-cols-[minmax(220px,340px)_minmax(0,1fr)] md:items-center">
               <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
                 <img
-                  src={product.image}
+                  src={product.imageDisplay}
                   alt={product.name}
                   onError={(event) => {
                     event.currentTarget.src = FALLBACK_IMAGE;
@@ -1728,7 +1774,7 @@ export default function ProductDetailPage() {
                 {product.thumbnailUrl ? (
                   <div className="mb-3 rounded-xl border border-gray-200 bg-white p-2">
                     <img
-                      src={product.thumbnailUrl}
+                      src={product.thumbnailDisplayUrl}
                       alt={`${product.name} thumbnail`}
                       onError={(event) => {
                         event.currentTarget.src = FALLBACK_IMAGE;
@@ -1858,9 +1904,9 @@ export default function ProductDetailPage() {
                                     const hotspotPreviewUrl = getHotspotPreviewUrl(item);
                                     const supportsHotspots = Boolean(hotspotPreviewUrl);
                                     const mediaPreviewUrl = isImage
-                                      ? item.url
+                                      ? item.displayUrl || ""
                                       : isHtml
-                                      ? item.thumbnailUrl || ""
+                                      ? item.displayThumbnailUrl || ""
                                       : "";
                                     const isDropTarget =
                                       dragOverUrl === item.url &&

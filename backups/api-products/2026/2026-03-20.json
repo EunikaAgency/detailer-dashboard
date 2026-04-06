@@ -1,11 +1,11 @@
 {
-  "backupDate": "2026-04-06",
-  "backedUpAt": "2026-04-05T16:47:11.042Z",
+  "backupDate": "2026-03-20",
+  "backedUpAt": "2026-03-19T16:48:25.025Z",
   "sourceUrl": "http://127.0.0.1:7001/api/products",
-  "sha256": "847a7c875ae1cb3fe183950e83f926f0a17420d78454f69ffb47d2aa76dc266c",
+  "sha256": "9b4004c14ee6d823279f3c53c2d434004c5f135f8a7be63eadc049711764551e",
   "productCount": 8,
   "response": {
-    "version": 1775404800000,
+    "version": 1773936000000,
     "products": [
       {
         "_id": "699d2471cd34d02077217d45",
@@ -19,8 +19,8 @@
             "title": "MEPTIN ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-001.jpg?v=1773205220266",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-001.jpg?v=1773205220266",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-001.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-001.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -50,8 +50,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-002.jpg?v=1773205221008",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-002.jpg?v=1773205221008",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-002.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-002.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -90,8 +90,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-003.jpg?v=1773205221736",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-003.jpg?v=1773205221736",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-003.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-003.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -166,8 +166,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-004.jpg?v=1773205222479",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-004.jpg?v=1773205222479",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-004.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-004.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -206,8 +206,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-005.jpg?v=1773205223196",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-005.jpg?v=1773205223196",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-005.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-005.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -246,8 +246,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-006.jpg?v=1773205223807",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-006.jpg?v=1773205223807",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-006.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-006.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -286,8 +286,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-007.jpg?v=1773205224487",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-007.jpg?v=1773205224487",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-007.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-007.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -326,8 +326,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-008.jpg?v=1773205225185",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-008.jpg?v=1773205225185",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-008.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-008.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -366,8 +366,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-009.jpg?v=1773205226049",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-009.jpg?v=1773205226049",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-009.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-009.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -406,8 +406,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-010.jpg?v=1773205226641",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-010.jpg?v=1773205226641",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-010.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-010.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -446,8 +446,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-011.jpg?v=1773205227388",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-011.jpg?v=1773205227388",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-011.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-011.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -486,8 +486,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-012.jpg?v=1773205228065",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-012.jpg?v=1773205228065",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-012.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-012.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -526,8 +526,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-013.jpg?v=1773205228877",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-013.jpg?v=1773205228877",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-013.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-013.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -566,8 +566,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-014.jpg?v=1773205229465",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-014.jpg?v=1773205229465",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-014.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-014.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -606,8 +606,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-015.jpg?v=1773205230219",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-015.jpg?v=1773205230219",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-015.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-015.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -646,8 +646,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-016.jpg?v=1773205231041",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-016.jpg?v=1773205231041",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-016.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-016.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -686,8 +686,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-017.jpg?v=1773205231759",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-017.jpg?v=1773205231759",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-017.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-017.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-017.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -726,8 +726,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-018.jpg?v=1773205232516",
-                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-018.jpg?v=1773205232516",
+                "url": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-018.jpg",
+                "thumbnailUrl": "/uploads/product-library/meptin/meptin-one-detailer/meptin-meptin-one-detailer-slide-018.jpg",
                 "type": "image",
                 "title": "meptin-meptin-one-detailer-slide-018.jpg",
                 "groupTitle": "MEPTIN ONE DETAILER",
@@ -766,8 +766,8 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-019.html?v=1773648803772",
-                "thumbnailUrl": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-019.thumbnail.jpeg?v=1773640771243",
+                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-019.html",
+                "thumbnailUrl": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-019.thumbnail.jpeg",
                 "type": "html",
                 "groupTitle": "MEPTIN ONE DETAILER",
                 "groupId": "1771906161187-473013110-MEPTIN_ONE_DETAILER",
@@ -803,8 +803,8 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-020.html?v=1773648032535",
-                "thumbnailUrl": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-020.thumbnail.jpeg?v=1773640805784",
+                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-020.html",
+                "thumbnailUrl": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-020.thumbnail.jpeg",
                 "type": "html",
                 "groupTitle": "MEPTIN ONE DETAILER",
                 "groupId": "1771906161187-473013110-MEPTIN_ONE_DETAILER",
@@ -840,8 +840,7 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-021.jpg?v=1773641101827",
-                "thumbnailUrl": "",
+                "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-021.jpg",
                 "type": "image",
                 "groupTitle": "MEPTIN ONE DETAILER",
                 "groupId": "1771906161187-473013110-MEPTIN_ONE_DETAILER",
@@ -851,9 +850,9 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/meptin/meptin-product-thumbnail.jpg?v=1773205234879",
+        "thumbnailUrl": "/uploads/product-library/meptin/meptin-product-thumbnail.jpg",
         "createdAt": "2026-02-24T04:09:21.833Z",
-        "updatedAt": "2026-03-27T08:31:02.028Z",
+        "updatedAt": "2026-03-16T08:23:34.686Z",
         "__v": 0
       },
       {
@@ -868,24 +867,24 @@
             "title": "AMINOLEBAN ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-001.jpg?v=1774513074205",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-001.jpg?v=1774513074205",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-001.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-001.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 1889178,
+                "size": 2004443,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
                 "hotspots": []
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-002.jpg?v=1774513085317",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-002.jpg?v=1774513085317",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-002.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-002.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 382332,
+                "size": 384923,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -920,12 +919,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-003.jpg?v=1774513096301",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-003.jpg?v=1774513096301",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-003.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-003.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 1810615,
+                "size": 328203,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -960,12 +959,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-004.jpg?v=1774513114667",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-004.jpg?v=1774513114667",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-004.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-004.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 1030026,
+                "size": 268007,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1027,12 +1026,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-005.jpg?v=1774513120231",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-005.jpg?v=1774513120231",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-005.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-005.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 402641,
+                "size": 281728,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1067,12 +1066,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-006.jpg?v=1774513128077",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-006.jpg?v=1774513128077",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-006.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-006.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 396568,
+                "size": 202289,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1107,12 +1106,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-007.jpg?v=1774513139541",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-007.jpg?v=1774513139541",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-007.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-007.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 525710,
+                "size": 218485,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1147,12 +1146,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-008.jpg?v=1774513146038",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-008.jpg?v=1774513146038",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-008.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-008.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 597625,
+                "size": 186462,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1187,12 +1186,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-009.jpg?v=1774513152516",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-009.jpg?v=1774513152516",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-009.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-009.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 419149,
+                "size": 264826,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1227,12 +1226,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-010.jpg?v=1774513159224",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-010.jpg?v=1774513159224",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-010.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-010.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 470054,
+                "size": 232213,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1267,12 +1266,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-011.jpg?v=1774513176517",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-011.jpg?v=1774513176517",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-011.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-011.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 619716,
+                "size": 167868,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1307,12 +1306,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-012.jpg?v=1774513184115",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-012.jpg?v=1774513184115",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-012.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-012.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 575016,
+                "size": 248680,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1347,12 +1346,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-013.jpg?v=1774513189407",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-013.jpg?v=1774513189407",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-013.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-013.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 1684554,
+                "size": 249707,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1387,8 +1386,8 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban-oral-aminoleban-one-detailer-slide-014.html?v=1773648915242",
-                "thumbnailUrl": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban_1.thumbnail.png?v=1773394094503",
+                "url": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban-oral-aminoleban-one-detailer-slide-014.html",
+                "thumbnailUrl": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban_1.thumbnail.png",
                 "type": "html",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
@@ -1424,8 +1423,8 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban-oral-aminoleban-one-detailer-slide-015.html?v=1773648957323",
-                "thumbnailUrl": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban_2.thumbnail.png?v=1773394272666",
+                "url": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban-oral-aminoleban-one-detailer-slide-015.html",
+                "thumbnailUrl": "/uploads/converted/1771906002820-969792917-AMINOLEBAN_ONE_DETAILER/aminoleban_2.thumbnail.png",
                 "type": "html",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
@@ -1461,12 +1460,12 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-016.jpg?v=1774513197745",
-                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-016.jpg?v=1774513197745",
+                "url": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-one-detailer/aminoleban-oral-aminoleban-one-detailer-slide-016.jpg",
                 "type": "image",
                 "title": "aminoleban-oral-aminoleban-one-detailer-slide-016.jpg",
                 "groupTitle": "AMINOLEBAN ONE DETAILER",
-                "size": 276062,
+                "size": 117246,
                 "status": "ready",
                 "groupId": "1771906002820-969792917-AMINOLEBAN_ONE_DETAILER",
                 "sourceName": "AMINOLEBAN ONE DETAILER",
@@ -1475,9 +1474,9 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-oral-product-thumbnail.jpg?v=1773205247544",
+        "thumbnailUrl": "/uploads/product-library/aminoleban-oral/aminoleban-oral-product-thumbnail.jpg",
         "createdAt": "2026-02-24T04:06:43.167Z",
-        "updatedAt": "2026-03-26T08:20:15.971Z",
+        "updatedAt": "2026-03-16T08:23:09.648Z",
         "__v": 0
       },
       {
@@ -1492,8 +1491,8 @@
             "title": "PLETAAL ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-001.jpg?v=1773205248305",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-001.jpg?v=1773205248305",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-001.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-001.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1568,8 +1567,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-002.jpg?v=1773205248997",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-002.jpg?v=1773205248997",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-002.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-002.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1608,8 +1607,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-003.jpg?v=1773205249740",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-003.jpg?v=1773205249740",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-003.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-003.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1648,8 +1647,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-004.jpg?v=1773205250457",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-004.jpg?v=1773205250457",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-004.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-004.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1688,8 +1687,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-005.jpg?v=1773205251088",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-005.jpg?v=1773205251088",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-005.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-005.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1728,8 +1727,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-006.jpg?v=1773205251731",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-006.jpg?v=1773205251731",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-006.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-006.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1768,8 +1767,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-007.jpg?v=1773205252407",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-007.jpg?v=1773205252407",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-007.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-007.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1808,8 +1807,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-008.jpg?v=1773205253053",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-008.jpg?v=1773205253053",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-008.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-008.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1848,8 +1847,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-009.jpg?v=1773205253706",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-009.jpg?v=1773205253706",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-009.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-009.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1888,8 +1887,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-010.jpg?v=1773205254295",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-010.jpg?v=1773205254295",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-010.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-010.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1928,8 +1927,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-011.jpg?v=1773205255261",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-011.jpg?v=1773205255261",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-011.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-011.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -1968,8 +1967,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-012.jpg?v=1773205256760",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-012.jpg?v=1773205256760",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-012.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-012.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2008,8 +2007,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-013.jpg?v=1773205257404",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-013.jpg?v=1773205257404",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-013.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-013.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2048,8 +2047,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-014.jpg?v=1773205257949",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-014.jpg?v=1773205257949",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-014.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-014.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2088,8 +2087,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-015.jpg?v=1773205258849",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-015.jpg?v=1773205258849",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-015.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-015.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2128,8 +2127,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-016.jpg?v=1773205259650",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-016.jpg?v=1773205259650",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-016.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-016.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2168,8 +2167,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-017.jpg?v=1773205260706",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-017.jpg?v=1773205260706",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-017.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-017.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-017.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2208,8 +2207,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-018.jpg?v=1773205261746",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-018.jpg?v=1773205261746",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-018.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-018.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-018.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2248,8 +2247,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-019.jpg?v=1773205263163",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-019.jpg?v=1773205263163",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-019.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-019.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-019.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2288,8 +2287,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-020.jpg?v=1773205263768",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-020.jpg?v=1773205263768",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-020.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-020.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-020.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2328,8 +2327,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-021.jpg?v=1773205265253",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-021.jpg?v=1773205265253",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-021.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-021.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-021.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2368,8 +2367,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-022.jpg?v=1773205265918",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-022.jpg?v=1773205265918",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-022.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-022.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-022.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2408,8 +2407,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-023.jpg?v=1773205266673",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-023.jpg?v=1773205266673",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-023.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-023.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-023.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2448,8 +2447,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-024.jpg?v=1773205267421",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-024.jpg?v=1773205267421",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-024.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-024.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-024.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2479,8 +2478,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-025.jpg?v=1773205268236",
-                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-025.jpg?v=1773205268236",
+                "url": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-025.jpg",
+                "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-slides/pletaal-pletaal-slides-slide-025.jpg",
                 "type": "image",
                 "title": "pletaal-pletaal-slides-slide-025.jpg",
                 "groupTitle": "PLETAAL ONE DETAILER",
@@ -2503,7 +2502,7 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-product-thumbnail.jpg?v=1773205269230",
+        "thumbnailUrl": "/uploads/product-library/pletaal/pletaal-product-thumbnail.jpg",
         "createdAt": "2026-02-24T03:41:26.230Z",
         "updatedAt": "2026-03-12T07:09:18.280Z",
         "__v": 0
@@ -2520,8 +2519,8 @@
             "title": "MUCOSTA ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-001.jpg?v=1773205269922",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-001.jpg?v=1773205269922",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-001.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-001.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2532,8 +2531,8 @@
                 "hotspots": []
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-002.jpg?v=1773205270729",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-002.jpg?v=1773205270729",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-002.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-002.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2581,8 +2580,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-003.jpg?v=1773205271525",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-003.jpg?v=1773205271525",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-003.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-003.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2621,8 +2620,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-004.jpg?v=1773205272215",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-004.jpg?v=1773205272215",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-004.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-004.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2661,8 +2660,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-005.jpg?v=1773205273026",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-005.jpg?v=1773205273026",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-005.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-005.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2701,8 +2700,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-006.jpg?v=1773205273690",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-006.jpg?v=1773205273690",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-006.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-006.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2741,8 +2740,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-007.jpg?v=1773205274616",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-007.jpg?v=1773205274616",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-007.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-007.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2781,8 +2780,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-008.jpg?v=1773205275374",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-008.jpg?v=1773205275374",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-008.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-008.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2821,8 +2820,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-009.jpg?v=1773205275975",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-009.jpg?v=1773205275975",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-009.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-009.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2861,8 +2860,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-010.jpg?v=1773205276707",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-010.jpg?v=1773205276707",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-010.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-010.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2901,8 +2900,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-011.jpg?v=1773205277513",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-011.jpg?v=1773205277513",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-011.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-011.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2941,8 +2940,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-012.jpg?v=1773205278194",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-012.jpg?v=1773205278194",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-012.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-012.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2981,8 +2980,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-013.jpg?v=1773205278782",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-013.jpg?v=1773205278782",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-013.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-013.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3021,8 +3020,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-014.jpg?v=1773205279667",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-014.jpg?v=1773205279667",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-014.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-014.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3061,8 +3060,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-015.jpg?v=1773205280297",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-015.jpg?v=1773205280297",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-015.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-015.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3101,8 +3100,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-016.jpg?v=1773205280789",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-016.jpg?v=1773205280789",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-016.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-016.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3141,8 +3140,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-017.jpg?v=1773205281596",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-017.jpg?v=1773205281596",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-017.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-017.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-017.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3181,8 +3180,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-018.jpg?v=1773205282230",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-018.jpg?v=1773205282230",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-018.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-018.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-018.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3221,8 +3220,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-019.jpg?v=1773205283053",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-019.jpg?v=1773205283053",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-019.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-019.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-019.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3261,8 +3260,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-020.jpg?v=1773205283558",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-020.jpg?v=1773205283558",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-020.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-020.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-020.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3301,8 +3300,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-021.jpg?v=1773205284371",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-021.jpg?v=1773205284371",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-021.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-021.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-021.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3341,8 +3340,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-022.jpg?v=1773205285011",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-022.jpg?v=1773205285011",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-022.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-022.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-022.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3381,8 +3380,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-023.jpg?v=1773205285716",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-023.jpg?v=1773205285716",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-023.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-023.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-023.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3421,8 +3420,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-024.jpg?v=1773205286346",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-024.jpg?v=1773205286346",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-024.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-024.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-024.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3461,8 +3460,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-025.jpg?v=1773205287123",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-025.jpg?v=1773205287123",
+                "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-025.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-025.jpg",
                 "type": "image",
                 "title": "muscosta-mucosta-daily-detailer-2026-slide-025.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3475,7 +3474,7 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/muscosta/muscosta-product-thumbnail.jpg?v=1773205287578",
+        "thumbnailUrl": "/uploads/product-library/muscosta/muscosta-product-thumbnail.jpg",
         "createdAt": "2026-02-24T02:57:05.082Z",
         "updatedAt": "2026-03-12T07:07:34.426Z",
         "__v": 0
@@ -3492,8 +3491,8 @@
             "title": "JINARC ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-001.jpg?v=1773205288627",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-001.jpg?v=1773205288627",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-001.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-001.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3559,8 +3558,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-002.jpg?v=1773205289381",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-002.jpg?v=1773205289381",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-002.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-002.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3653,8 +3652,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-003.jpg?v=1773205290092",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-003.jpg?v=1773205290092",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-003.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-003.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3729,8 +3728,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-004.jpg?v=1773205290695",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-004.jpg?v=1773205290695",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-004.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-004.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3805,8 +3804,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-005.jpg?v=1773205291355",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-005.jpg?v=1773205291355",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-005.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-005.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3872,8 +3871,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-006.jpg?v=1773205291957",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-006.jpg?v=1773205291957",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-006.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-006.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -3939,8 +3938,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-007.jpg?v=1773205292663",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-007.jpg?v=1773205292663",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-007.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-007.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4006,8 +4005,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-008.jpg?v=1773205293322",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-008.jpg?v=1773205293322",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-008.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-008.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4073,8 +4072,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-009.jpg?v=1773205293925",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-009.jpg?v=1773205293925",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-009.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-009.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4140,8 +4139,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-010.jpg?v=1773205294583",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-010.jpg?v=1773205294583",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-010.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-010.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4207,8 +4206,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-011.jpg?v=1773205295321",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-011.jpg?v=1773205295321",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-011.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-011.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4274,8 +4273,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-012.jpg?v=1773205295958",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-012.jpg?v=1773205295958",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-012.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-012.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4341,8 +4340,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-013.jpg?v=1773205296652",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-013.jpg?v=1773205296652",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-013.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-013.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4408,8 +4407,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-014.jpg?v=1773205297110",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-014.jpg?v=1773205297110",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-014.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-014.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4475,8 +4474,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-015.jpg?v=1773205297929",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-015.jpg?v=1773205297929",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-015.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-015.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4542,8 +4541,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-016.jpg?v=1773205298643",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-016.jpg?v=1773205298643",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-016.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-016.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4609,8 +4608,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-017.jpg?v=1773205299105",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-017.jpg?v=1773205299105",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-017.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-017.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-017.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4676,8 +4675,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-018.jpg?v=1773205299855",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-018.jpg?v=1773205299855",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-018.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-018.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-018.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4743,8 +4742,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-019.jpg?v=1773205300395",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-019.jpg?v=1773205300395",
+                "url": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-019.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/jinarc-case-based-detailer-2026/tolvaptan-jinarc-case-based-detailer-2026-slide-019.jpg",
                 "type": "image",
                 "title": "tolvaptan-jinarc-case-based-detailer-2026-slide-019.jpg",
                 "groupTitle": "JINARC ONE DETAILER",
@@ -4812,7 +4811,7 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/tolvaptan/tolvaptan-product-thumbnail.jpg?v=1773205300890",
+        "thumbnailUrl": "/uploads/product-library/tolvaptan/tolvaptan-product-thumbnail.jpg",
         "createdAt": "2026-01-07T16:18:54.994Z",
         "updatedAt": "2026-03-12T07:06:36.614Z",
         "__v": 0
@@ -4829,8 +4828,8 @@
             "title": "SAMSCA ONE DETAILER",
             "items": [
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-001.jpg?v=1773205301648",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-001.jpg?v=1773205301648",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-001.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-001.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -4887,8 +4886,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-002.jpg?v=1773205302293",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-002.jpg?v=1773205302293",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-002.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-002.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -4945,8 +4944,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-003.jpg?v=1773205302922",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-003.jpg?v=1773205302922",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-003.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-003.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -4994,8 +4993,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-004.jpg?v=1773205303549",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-004.jpg?v=1773205303549",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-004.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-004.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5025,8 +5024,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-005.jpg?v=1773205304136",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-005.jpg?v=1773205304136",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-005.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-005.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5074,8 +5073,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-006.jpg?v=1773205304933",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-006.jpg?v=1773205304933",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-006.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-006.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5123,8 +5122,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-007.jpg?v=1773205305527",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-007.jpg?v=1773205305527",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-007.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-007.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5172,8 +5171,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-008.jpg?v=1773205306200",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-008.jpg?v=1773205306200",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-008.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-008.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5230,8 +5229,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-009.jpg?v=1773205306847",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-009.jpg?v=1773205306847",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-009.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-009.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5279,8 +5278,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-010.jpg?v=1773205307456",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-010.jpg?v=1773205307456",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-010.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-010.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5328,8 +5327,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-011.jpg?v=1773205308105",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-011.jpg?v=1773205308105",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-011.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-011.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5377,8 +5376,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-012.jpg?v=1773205308724",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-012.jpg?v=1773205308724",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-012.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-012.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5426,8 +5425,8 @@
                 ]
               },
               {
-                "url": "/uploads/converted/1771906427145-691694360-Samsca_Case-Based_Detailer_2026_F/html-slide.html?v=1772789745090",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-013-thumbnail.jpg?v=1773205311983",
+                "url": "/uploads/converted/1771906427145-691694360-Samsca_Case-Based_Detailer_2026_F/html-slide.html",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-013-thumbnail.jpg",
                 "type": "html",
                 "title": "html-slide.html",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5475,8 +5474,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-014.jpg?v=1773205309369",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-014.jpg?v=1773205309369",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-014.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-014.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5524,8 +5523,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-015.jpg?v=1773205309994",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-015.jpg?v=1773205309994",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-015.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-015.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5573,8 +5572,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-016.jpg?v=1773205310754",
-                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-016.jpg?v=1773205310754",
+                "url": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/tolvaptan/samsca-case-based-detailer-2026-f/tolvaptan-samsca-case-based-detailer-2026-f-slide-016.jpg",
                 "type": "image",
                 "title": "tolvaptan-samsca-case-based-detailer-2026-f-slide-016.jpg",
                 "groupTitle": "SAMSCA ONE DETAILER",
@@ -5633,7 +5632,7 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/tolvaptan/tolvaptan-product-thumbnail-2.jpg?v=1773205311222",
+        "thumbnailUrl": "/uploads/product-library/tolvaptan/tolvaptan-product-thumbnail-2.jpg",
         "createdAt": "2026-01-07T16:15:58.594Z",
         "updatedAt": "2026-03-12T07:08:20.029Z",
         "__v": 0
@@ -5650,11 +5649,8 @@
             "title": "Rexulti_AAD-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-001.jpg?v=1774409613338",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-001.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 1066705,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5697,11 +5693,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-002.jpg?v=1774409677604",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-002.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 647896,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5744,11 +5737,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-003.jpg?v=1774409770645",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-003.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 340770,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5791,11 +5781,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-004.jpg?v=1774409792138",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-004.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 322063,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5838,11 +5825,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-005.jpg?v=1774409823674",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-005.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 629824,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5885,11 +5869,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-006.jpg?v=1774409846912",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-006.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 408328,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5932,11 +5913,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-007.jpg?v=1774409867562",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-007.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 533529,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -5979,11 +5957,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-008.jpg?v=1774409883766",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-008.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_AAD-2026.pdf",
-                "size": 312395,
                 "groupId": "1771914073533-554372709-2 Rexulti_AAD-2026",
                 "sourceName": "Rexulti_AAD-2026.pdf",
                 "hotspots": [
@@ -6041,10 +6016,8 @@
             "title": "Rexulti_Adolescent Schiz-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-001.jpg?v=1773205317729",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-001.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6096,10 +6069,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-002.jpg?v=1773205318483",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-002.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6151,10 +6122,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-003.jpg?v=1773205319084",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-003.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6206,10 +6175,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-004.jpg?v=1773205319713",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-004.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6261,10 +6228,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-005.jpg?v=1773205320489",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-005.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6316,10 +6281,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-006.jpg?v=1773205321029",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-006.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6371,10 +6334,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-007.jpg?v=1773205321758",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-007.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
                 "sourceName": "Rexulti_Adolescent Schiz-2026.pdf",
                 "hotspots": [
@@ -6432,10 +6393,8 @@
             "title": "Rexulti_Adult Schizophrenia-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-001.jpg?v=1773205322534",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-001.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6487,10 +6446,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-002.jpg?v=1773205323099",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-002.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6542,10 +6499,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-003.jpg?v=1773205323797",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-003.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6597,10 +6552,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-004.jpg?v=1773205324445",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-004.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6652,10 +6605,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-005.jpg?v=1773205325108",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-005.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6707,10 +6658,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-006.jpg?v=1773205325700",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-006.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6762,10 +6711,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-007.jpg?v=1773205326388",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-007.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
                 "sourceName": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "hotspots": [
@@ -6823,11 +6770,8 @@
             "title": "Rexulti_MDD-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg?v=1774410222889",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 1130655,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
@@ -6870,11 +6814,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg?v=1774410231058",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 339499,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
@@ -6917,11 +6858,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-003.jpg?v=1774410235082",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-003.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 477482,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
@@ -6964,105 +6902,87 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg?v=1774410241239",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 373030,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915204404",
                     "x": 0,
-                    "y": 0.021071237405664606,
+                    "y": 0.20988791980937865,
                     "w": 0.030262698552982817,
                     "h": 0.18433452217699242,
-                    "shape": "rectangle",
-                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg"
-                  },
-                  {
-                    "id": "hotspot-1771915265164",
-                    "x": 0,
-                    "y": 0.2141657501893055,
-                    "w": 0.02763115954837561,
-                    "h": 0.170332153656214,
                     "shape": "rectangle",
                     "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg"
                   },
                   {
-                    "id": "hotspot-1771915276086",
-                    "x": 0,
-                    "y": 0.5800532944940228,
-                    "w": 0.027631159548375608,
-                    "h": 0.17498290281820372,
+                    "id": "hotspot-1771915265164",
+                    "x": 0.0031594850927507477,
+                    "y": 0.5917991149967337,
+                    "w": 0.02763115954837561,
+                    "h": 0.16800108350308174,
                     "shape": "rectangle",
                     "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-005.jpg"
                   },
                   {
-                    "id": "hotspot-2",
-                    "x": 0,
-                    "y": 0.7695445343027913,
-                    "w": 0.030263157894736843,
-                    "h": 0.1771613316380527,
+                    "id": "hotspot-1771915276086",
+                    "x": 0.0018437155904471472,
+                    "y": 0.7828563978165305,
+                    "w": 0.027631159548375608,
+                    "h": 0.15633434159314552,
                     "shape": "rectangle",
                     "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg"
                   }
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-005.jpg?v=1774410245080",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-005.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 748461,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915286166",
-                    "x": 0.0018436956190665365,
+                    "x": 0.0031594850927507477,
                     "y": 0.032553442778348,
-                    "w": 0.027631219462517443,
-                    "h": 0.17498816780463197,
+                    "w": 0.02368385104146481,
+                    "h": 0.17266778026705615,
                     "shape": "rectangle",
                     "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg"
                   },
                   {
                     "id": "hotspot-1771915292717",
-                    "x": 0.001843675647685926,
-                    "y": 0.21614298634119855,
-                    "w": 0.028947008936201654,
-                    "h": 0.17028258850742323,
+                    "x": 0.004475254595054348,
+                    "y": 0.2184633738787744,
+                    "w": 0.02368385104146481,
+                    "h": 0.16100103835711993,
                     "shape": "rectangle",
                     "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg"
                   },
                   {
                     "id": "hotspot-1771915299533",
-                    "x": 0.0018436756476859278,
-                    "y": 0.3952868748193106,
-                    "w": 0.026315429988833232,
-                    "h": 0.17725671196456205,
+                    "x": 0.004475254595054348,
+                    "y": 0.7711896559065943,
+                    "w": 0.02368385104146481,
+                    "h": 0.16333438673910716,
                     "shape": "rectangle",
-                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg"
+                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg"
                   },
                   {
                     "id": "hotspot-1771915309356",
-                    "x": 0.0005278861740017279,
-                    "y": 0.7596507296666872,
-                    "w": 0.027631219462517443,
-                    "h": 0.17724375112015062,
+                    "x": 0.004475254595054348,
+                    "y": 0.4092722114927377,
+                    "w": 0.02368385104146481,
+                    "h": 0.16100103835711993,
                     "shape": "rectangle",
-                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg"
+                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg"
                   }
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg?v=1774410248668",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 633418,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
@@ -7091,7 +7011,7 @@
                     "w": 0.02631539004607201,
                     "h": 0.16800108350308168,
                     "shape": "rectangle",
-                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg"
+                    "targetPageId": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-003.jpg"
                   },
                   {
                     "id": "hotspot-1771915344988",
@@ -7105,11 +7025,8 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-007.jpg?v=1774410253159",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-007.jpg",
                 "type": "image",
-                "groupTitle": "Rexulti_MDD-2026.pdf",
-                "size": 369451,
                 "groupId": "1771914664593-552477758-1 Rexulti_MDD-2026",
                 "sourceName": "Rexulti_MDD-2026.pdf",
                 "hotspots": [
@@ -7163,9 +7080,9 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/brexpiprazole/brexpiprazole-product-thumbnail.jpg?v=1773205331270",
+        "thumbnailUrl": "/uploads/product-library/brexpiprazole/brexpiprazole-product-thumbnail.jpg",
         "createdAt": "2026-01-07T15:59:37.644Z",
-        "updatedAt": "2026-03-25T10:00:24.302Z",
+        "updatedAt": "2026-03-11T06:49:06.981Z",
         "__v": 0
       },
       {
@@ -7180,8 +7097,7 @@
             "title": "Abilify Maintena-Bipolar-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-001.jpg?v=1773205331963",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-001.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7226,8 +7142,7 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-002.jpg?v=1773205332508",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-002.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7272,8 +7187,7 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-003.jpg?v=1773205333094",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-003.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7318,8 +7232,7 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-004.jpg?v=1773205333701",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-004.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7364,8 +7277,7 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-005.jpg?v=1773205334287",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-005.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7410,8 +7322,7 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-006.jpg?v=1773205334804",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-006.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7462,18 +7373,16 @@
             "title": "Abilify Maintena-Schizophrenia-2026.pdf",
             "items": [
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-001.jpg?v=1774508175062",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-001.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 825820,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915308135",
                     "x": 0,
-                    "y": 0.2124025526279681,
+                    "y": 0.1984242777939889,
                     "w": 0.03289473684210527,
                     "h": 0.16340822877152028,
                     "shape": "rectangle",
@@ -7482,7 +7391,7 @@
                   {
                     "id": "hotspot-1771915320934",
                     "x": 0.004605263157894736,
-                    "y": 0.3931093371960017,
+                    "y": 0.38379048730668225,
                     "w": 0.031578947368421054,
                     "h": 0.14940180916253282,
                     "shape": "rectangle",
@@ -7490,8 +7399,8 @@
                   },
                   {
                     "id": "hotspot-1771915324057",
-                    "x": 0.004605263157894734,
-                    "y": 0.5750187471335699,
+                    "x": 0.003289473684210526,
+                    "y": 0.5517216224102713,
                     "w": 0.030263157894736843,
                     "h": 0.14940180916253287,
                     "shape": "rectangle",
@@ -7509,18 +7418,16 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-002.jpg?v=1774508175613",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-002.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 710360,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915347031",
                     "x": 0,
-                    "y": 0.024973822209683014,
+                    "y": 0.03895535453749635,
                     "w": 0.03355263157894737,
                     "h": 0.15873942223519114,
                     "shape": "rectangle",
@@ -7529,7 +7436,7 @@
                   {
                     "id": "hotspot-1771915349211",
                     "x": 0.003289473684210526,
-                    "y": 0.3931073609783622,
+                    "y": 0.38145608403851766,
                     "w": 0.028947368421052635,
                     "h": 0.14940180916253282,
                     "shape": "rectangle",
@@ -7537,8 +7444,8 @@
                   },
                   {
                     "id": "hotspot-1771915351809",
-                    "x": 0.0006578947368421047,
-                    "y": 0.5750283241701559,
+                    "x": 0.001973684210526316,
+                    "y": 0.5540560256784359,
                     "w": 0.034210526315789476,
                     "h": 0.14940180916253287,
                     "shape": "rectangle",
@@ -7547,7 +7454,7 @@
                   {
                     "id": "hotspot-1771915354628",
                     "x": 0,
-                    "y": 0.7547981152198067,
+                    "y": 0.7454770936679311,
                     "w": 0.03355263157894737,
                     "h": 0.15407061569886193,
                     "shape": "rectangle",
@@ -7556,18 +7463,16 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-003.jpg?v=1774508176138",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-003.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 495755,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915371187",
                     "x": 0.0006578947368421052,
-                    "y": 0.024973822209683014,
+                    "y": 0.03895535453749635,
                     "w": 0.031578947368421054,
                     "h": 0.15873942223519114,
                     "shape": "rectangle",
@@ -7575,8 +7480,8 @@
                   },
                   {
                     "id": "hotspot-1771915376692",
-                    "x": 0.0019736842105263163,
-                    "y": 0.20638413468656588,
+                    "x": 0.0006578947368421052,
+                    "y": 0.21104464546250365,
                     "w": 0.031578947368421054,
                     "h": 0.15873942223519114,
                     "shape": "rectangle",
@@ -7584,17 +7489,17 @@
                   },
                   {
                     "id": "hotspot-1771915380534",
-                    "x": 0,
-                    "y": 0.5726939209019913,
+                    "x": 0.004605263157894736,
+                    "y": 0.5517216224102713,
                     "w": 0.03026315789473684,
                     "h": 0.15640501896702663,
                     "shape": "rectangle",
-                    "targetPageId": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-004.jpg"
+                    "targetPageId": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-003.jpg"
                   },
                   {
                     "id": "hotspot-1771915383006",
                     "x": 0.004605263157894736,
-                    "y": 0.7594627738759401,
+                    "y": 0.7478114969360957,
                     "w": 0.031578947368421054,
                     "h": 0.15640501896702652,
                     "shape": "rectangle",
@@ -7603,18 +7508,16 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-004.jpg?v=1774508176660",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-004.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 622627,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915398207",
-                    "x": 0,
-                    "y": 0.03429709707829955,
+                    "x": 0.0006578947368421052,
+                    "y": 0.045958564341990076,
                     "w": 0.03421052631578947,
                     "h": 0.14473300262620367,
                     "shape": "rectangle",
@@ -7623,7 +7526,7 @@
                   {
                     "id": "hotspot-1771915400747",
                     "x": 0.001973684210526316,
-                    "y": 0.20872290108689787,
+                    "y": 0.22271666180332653,
                     "w": 0.031578947368421054,
                     "h": 0.1400641960898745,
                     "shape": "rectangle",
@@ -7631,8 +7534,8 @@
                   },
                   {
                     "id": "hotspot-1771915403131",
-                    "x": 0.001973684210526316,
-                    "y": 0.39530394455068596,
+                    "x": 0.004605263157894736,
+                    "y": 0.38131018383425735,
                     "w": 0.03026315789473684,
                     "h": 0.14706740589436823,
                     "shape": "rectangle",
@@ -7641,7 +7544,7 @@
                   {
                     "id": "hotspot-1771915405241",
                     "x": 0.003289473684210526,
-                    "y": 0.7571364511161951,
+                    "y": 0.7431426903997665,
                     "w": 0.03289473684210527,
                     "h": 0.1587394222351911,
                     "shape": "rectangle",
@@ -7650,18 +7553,16 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-005.jpg?v=1774508177227",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-005.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 1002089,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915418567",
-                    "x": 0,
-                    "y": 0.03431479974365618,
+                    "x": 0.003289473684210526,
+                    "y": 0.0436241610738255,
                     "w": 0.035526315789473684,
                     "h": 0.14473300262620367,
                     "shape": "rectangle",
@@ -7670,7 +7571,7 @@
                   {
                     "id": "hotspot-1771915422399",
                     "x": 0.001973684210526316,
-                    "y": 0.20640409066866344,
+                    "y": 0.2157134519988328,
                     "w": 0.030263157894736846,
                     "h": 0.14706740589436823,
                     "shape": "rectangle",
@@ -7679,7 +7580,7 @@
                   {
                     "id": "hotspot-1771915425930",
                     "x": 0.001973684210526316,
-                    "y": 0.3976015661620536,
+                    "y": 0.38131018383425735,
                     "w": 0.034210526315789476,
                     "h": 0.14940180916253282,
                     "shape": "rectangle",
@@ -7688,7 +7589,7 @@
                   {
                     "id": "hotspot-1771915428781",
                     "x": 0.003289473684210526,
-                    "y": 0.5679988788668233,
+                    "y": 0.5470528158739423,
                     "w": 0.028947368421052635,
                     "h": 0.15407061569886193,
                     "shape": "rectangle",
@@ -7697,18 +7598,16 @@
                 ]
               },
               {
-                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-006.jpg?v=1774508178098",
-                "thumbnailUrl": "",
+                "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-006.jpg",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
-                "size": 550474,
                 "groupId": "1771914831064-390267980-Abilify_Maintena-Schizophrenia-2026",
                 "sourceName": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "hotspots": [
                   {
                     "id": "hotspot-1771915448985",
-                    "x": 0.0006578947368421064,
-                    "y": 0.029660119078571502,
+                    "x": 0.001973684210526316,
+                    "y": 0.0436241610738255,
                     "w": 0.031578947368421054,
                     "h": 0.15640501896702655,
                     "shape": "rectangle",
@@ -7717,7 +7616,7 @@
                   {
                     "id": "hotspot-1771915450929",
                     "x": 0,
-                    "y": 0.1994008808641697,
+                    "y": 0.20871024219433906,
                     "w": 0.03223684210526316,
                     "h": 0.16107382550335572,
                     "shape": "rectangle",
@@ -7734,8 +7633,8 @@
                   },
                   {
                     "id": "hotspot-1771915455103",
-                    "x": 0.0006578947368421064,
-                    "y": 0.5679988788668233,
+                    "x": 0.0059210526315789476,
+                    "y": 0.5470528158739423,
                     "w": 0.038157894736842106,
                     "h": 0.17274584184417852,
                     "shape": "rectangle",
@@ -7746,9 +7645,9 @@
             ]
           }
         ],
-        "thumbnailUrl": "/uploads/product-library/aripiprazole/aripiprazole-product-thumbnail.jpg?v=1773205339331",
+        "thumbnailUrl": "/uploads/product-library/aripiprazole/aripiprazole-product-thumbnail.jpg",
         "createdAt": "2025-12-15T09:44:48.863Z",
-        "updatedAt": "2026-03-26T06:43:14.924Z",
+        "updatedAt": "2026-03-12T06:52:02.561Z",
         "__v": 0
       }
     ]

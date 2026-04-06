@@ -397,7 +397,8 @@ export async function GET(request) {
         })));
     const rewrittenProducts = await applyProductImageLibrary(enriched);
     const apiKeyAllowed = hasValidApiKey(request);
-    const responseProducts = !auth.user && apiKeyAllowed
+    const shouldCacheBustMedia = !auth.user || apiKeyAllowed;
+    const responseProducts = shouldCacheBustMedia
       ? await applyCacheBustToProductPayload(rewrittenProducts)
       : rewrittenProducts;
     const version = Math.floor(Date.now() / 3600000) * 3600000;

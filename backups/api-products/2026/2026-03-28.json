@@ -1,11 +1,11 @@
 {
-  "backupDate": "2026-04-06",
-  "backedUpAt": "2026-04-05T16:47:11.042Z",
+  "backupDate": "2026-03-28",
+  "backedUpAt": "2026-03-27T16:56:21.476Z",
   "sourceUrl": "http://127.0.0.1:7001/api/products",
-  "sha256": "847a7c875ae1cb3fe183950e83f926f0a17420d78454f69ffb47d2aa76dc266c",
+  "sha256": "7b2eacc1c410f7fc9bdf1ac368f946b1de4b4b51f1165fffadb92fba06ff54b6",
   "productCount": 8,
   "response": {
-    "version": 1775404800000,
+    "version": 1774627200000,
     "products": [
       {
         "_id": "699d2471cd34d02077217d45",

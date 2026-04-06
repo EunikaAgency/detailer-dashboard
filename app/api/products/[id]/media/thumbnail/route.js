@@ -162,6 +162,7 @@ export async function POST(request, { params }) {
       {
         $set: {
           "media.$.thumbnailUrl": nextThumbnailUrl,
+          updatedAt: new Date(),
         },
       }
     );

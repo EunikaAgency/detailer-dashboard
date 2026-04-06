@@ -277,12 +277,17 @@ export async function resolveProductById(id: string) {
     ? getProductDecks(localProduct).some((deck) => getRenderableSlides(deck.items || deck.slides || []).length > 0)
     : false;
 
-  if (localProduct && localHasRenderableSlides) {
+  const isOnline = typeof navigator === "undefined" ? true : navigator.onLine;
+  if (!isOnline && localProduct && localHasRenderableSlides) {
     return localProduct;
   }
 
-  const result = await getProducts();
-  return getProductById(id, result.products) || localProduct;
+  try {
+    const result = await getProducts();
+    return getProductById(id, result.products) || localProduct;
+  } catch {
+    return localProduct;
+  }
 }
 
 export function extractCategories(products: Product[]) {

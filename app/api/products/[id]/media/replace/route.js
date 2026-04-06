@@ -24,8 +24,10 @@ const isImageFile = (filename = "", mimeType = "") => {
   return lower.includes("image") || lower.match(/\.(png|jpg|jpeg|gif|webp)$/);
 };
 
+const cleanUrl = (value = "") => String(value || "").split("#")[0].split("?")[0].trim();
+
 const toPublicFilePath = (url = "") => {
-  const clean = String(url || "").split("#")[0].split("?")[0];
+  const clean = cleanUrl(url);
   if (!clean.startsWith("/uploads/")) return null;
   const relative = clean.replace(/^\/+/, "");
   return path.join(process.cwd(), "public", relative);
@@ -51,7 +53,7 @@ export async function POST(request, { params }) {
     }
 
     const formData = await request.formData();
-    const oldUrl = String(formData.get("oldUrl") || "").trim();
+    const oldUrl = cleanUrl(formData.get("oldUrl"));
     const mediaFile = formData.get("mediaFile");
 
     if (!oldUrl) {
@@ -95,6 +97,7 @@ export async function POST(request, { params }) {
           "media.$.url": publicUrl,
           "media.$.type": "image",
           "media.$.size": buffer.length,
+          updatedAt: new Date(),
         },
       }
     );
