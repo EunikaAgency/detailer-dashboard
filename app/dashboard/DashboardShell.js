@@ -25,11 +25,11 @@ const getDisplayAccess = (user) =>
 
 const AuthIndicator = ({ user, loading, onLogout, compact = false }) => {
   const baseClass = compact
-    ? "rounded-xl border border-gray-200 bg-gray-50 px-3 py-3"
+    ? "flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3"
     : "flex max-w-[16rem] items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm";
 
   return (
-    <div className={baseClass}>
+    <div className={`${baseClass} min-w-0`}>
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4.5 w-4.5" aria-hidden="true">
           <path d="M20 21a8 8 0 10-16 0" />
@@ -188,23 +188,30 @@ export default function DashboardShell({ children }) {
         </div>
       )}
 
-      <header className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            className="text-gray-600 hover:text-gray-900 focus:outline-none"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900">Otsuka Admin Dashboard</h1>
+      <header className="border-b border-gray-200 bg-white px-3 py-2 sm:px-4 sm:py-2.5">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="min-w-0 flex items-center gap-2 sm:gap-3">
+            <button
+              className="rounded-lg p-1 text-gray-600 hover:text-gray-900 focus:outline-none"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar"
+            >
+              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="truncate text-sm font-semibold text-gray-900 sm:text-lg">Otsuka Admin Dashboard</h1>
+          </div>
+          <div className="hidden shrink-0 sm:block">
+            <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} />
+          </div>
         </div>
-        <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} />
+        <div className="mt-2 sm:hidden">
+          <AuthIndicator user={currentUser} loading={isCheckingUser} onLogout={handleLogout} compact />
+        </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] px-6 py-8">
+      <main className="mx-auto w-full max-w-[1500px] px-3 py-5 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
         {children}
       </main>
     </div>
