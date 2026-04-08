@@ -4,6 +4,7 @@ import connectDB from "@/lib/db";
 import User from "@/models/User";
 import PendingCredential from "@/models/PendingCredential";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeReportDivision } from "@/lib/reportDivision";
 import { getUserAccessType, normalizeAccessType } from "@/lib/userAccess";
 import {
   getOfflineCredentialSecret,
@@ -49,6 +50,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
+  division: user?.division || "",
   accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
   keygenIssuedAt: user?.keygenIssuedAt || null,
@@ -140,6 +142,7 @@ export async function POST(request) {
     const usernameInput = normalizeText(body?.username);
     const repId = normalizeText(body?.repId);
     const role = normalizeText(body?.role);
+    const division = normalizeReportDivision(body?.division);
     const email = normalizeEmail(body?.email);
     const rawPassword = String(body?.password || "");
 
@@ -220,6 +223,7 @@ export async function POST(request) {
         username,
         repId,
         role: role || "Representative",
+        division,
         accessType: "representative",
         email: resolvedEmail,
         password: passwordHash,
@@ -239,6 +243,7 @@ export async function POST(request) {
             dateCreated: issuedAt,
             repId,
             role: role || "Representative",
+            division,
           },
         },
         { status: 201 }
@@ -267,6 +272,7 @@ export async function POST(request) {
       name: trimmedName,
       username: usernameInput || trimmedEmail,
       email: trimmedEmail,
+      division,
       accessType: normalizeAccessType(body?.accessType) || "admin",
       password: hashedPassword,
     });

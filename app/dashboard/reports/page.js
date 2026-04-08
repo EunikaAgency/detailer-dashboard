@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
 import {
   ArcElement,
   BarElement,
@@ -36,7 +37,7 @@ const FILTERS = [
 const FILTER_OPTIONS = {
   year: [],
   month: [],
-  division: ["All"],
+  division: REPORT_DIVISION_FILTER_OPTIONS,
   team: ["All"],
   psr: ["All"],
   brand: ["All"],
@@ -71,6 +72,8 @@ const MONTH_SERIES_COLORS = {
 };
 
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
+const EMPTY_CHART_MESSAGE = "No data available for the selected filters.";
+const EMPTY_TABLE_MESSAGE = "No rows available for the selected filters.";
 
 const EMPTY_REPORT = {
   filters: {
@@ -109,9 +112,12 @@ const EMPTY_REPORT = {
     series: [],
   },
   specialtyCharts: [],
+  slideRetentionSlides: [],
   meta: {
     totalSessionsInYear: 0,
     totalInteractionsInMonth: 0,
+    totalSlideViewsInMonth: 0,
+    totalSlideMinutesInMonth: 0,
   },
 };
 
@@ -165,15 +171,15 @@ function formatPercent(value) {
 
 function ChartLoading() {
   return (
-    <div className="flex h-full min-h-[240px] items-center justify-center text-sm text-gray-500">
+    <div className="flex w-full min-h-[240px] items-center justify-center text-sm text-gray-500">
       {LOADING_PLACEHOLDER_TEXT}
     </div>
   );
 }
 
-function ChartEmpty({ message = LOADING_PLACEHOLDER_TEXT }) {
+function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
   return (
-    <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
+    <div className="flex w-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
       {message}
     </div>
   );
@@ -190,6 +196,25 @@ function FilterTile({ filterKey, label, hint, value, options, onChange }) {
         value={value}
         onChange={(event) => onChange(filterKey, event.target.value)}
         className="mt-2 w-full rounded-md border border-white/35 bg-white/95 px-3 py-1.5 text-sm font-medium text-slate-800 outline-none ring-0 md:mt-3 md:py-2"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function InlineSelect({ label, value, options, onChange }) {
+  return (
+    <label className="flex min-w-[220px] flex-col gap-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+      <span>{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-slate-800 outline-none transition focus:border-sky-400"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -335,6 +360,40 @@ function buildSingleBarData(items, options = {}) {
   };
 }
 
+function getSlideOrder(item) {
+  const explicitValue = Number(item?.slideNumber || 0);
+  if (Number.isFinite(explicitValue) && explicitValue > 0) return explicitValue;
+
+  const label = String(item?.slide || item?.label || "").trim();
+  const matched = label.match(/slide\s+(\d+)/i);
+  return matched ? Number(matched[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function buildSlideTrendData(items, options = {}) {
+  const sortedItems = [...items].sort(
+    (left, right) => getSlideOrder(left) - getSlideOrder(right) || String(left.label || "").localeCompare(String(right.label || ""))
+  );
+
+  return {
+    labels: sortedItems.map((item) => `Slide ${getSlideOrder(item)}`),
+    datasets: [
+      {
+        label: options.datasetLabel || "Minutes Viewed",
+        data: sortedItems.map((item) => Number(item.value || 0)),
+        backgroundColor: rgba(options.color || SERIES_COLORS[0], 0.9),
+        borderColor: rgba(options.color || SERIES_COLORS[0], 1),
+        borderWidth: 1,
+        borderRadius: 4,
+        maxBarThickness: 28,
+        fullLabels: sortedItems.map((item) => {
+          const slide = String(item.slide || item.label || "").trim() || "Unknown Slide";
+          return slide;
+        }),
+      },
+    ],
+  };
+}
+
 function buildMonthGroupedData(config) {
   const rows = Array.isArray(config?.rows) ? config.rows : [];
   const monthKeys = Array.isArray(config?.monthKeys) ? config.monthKeys : [];
@@ -428,6 +487,107 @@ function buildBarOptions({
   };
 }
 
+function buildHorizontalBarOptions({ xTitle = "Minutes Viewed" } = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: "y",
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label(context) {
+            return `${context.dataset.label}: ${Number(context.parsed.x || 0).toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: { color: "rgba(148, 163, 184, 0.18)" },
+        border: { display: false },
+        ticks: {
+          color: "#475569",
+          font: { size: 11 },
+        },
+        title: {
+          display: Boolean(xTitle),
+          text: xTitle,
+          color: "#64748b",
+          font: { size: 12, weight: "600" },
+        },
+      },
+      y: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          color: "#475569",
+          font: { size: 11 },
+        },
+      },
+    },
+  };
+}
+
+function buildSlideBarOptions({ yTitle = "Minutes Viewed" } = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: "x",
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title(context) {
+            const dataset = context?.[0]?.dataset;
+            const dataIndex = context?.[0]?.dataIndex ?? 0;
+            return dataset?.fullLabels?.[dataIndex] || context?.[0]?.label || "";
+          },
+          label(context) {
+            return `Minutes Viewed: ${Number(context.parsed.y || 0).toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 16,
+          color: "#475569",
+          font: { size: 11 },
+        },
+        title: {
+          display: true,
+          text: "Slide Sequence",
+          color: "#64748b",
+          font: { size: 12, weight: "600" },
+        },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: "rgba(148, 163, 184, 0.18)" },
+        border: { display: false },
+        ticks: {
+          color: "#475569",
+          font: { size: 11 },
+        },
+        title: {
+          display: Boolean(yTitle),
+          text: yTitle,
+          color: "#64748b",
+          font: { size: 12, weight: "600" },
+        },
+      },
+    },
+  };
+}
+
 function buildPieOptions() {
   return {
     responsive: true,
@@ -450,6 +610,9 @@ export default function ReportsPage() {
   const [reportData, setReportData] = useState(EMPTY_REPORT);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [slideActivityBrand, setSlideActivityBrand] = useState("All Brands");
+  const [slideActivityProduct, setSlideActivityProduct] = useState("All Products");
+  const [slideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -527,6 +690,147 @@ export default function ReportsPage() {
   const generalTimeRows = reportData.generalTimeModules;
   const brandTotalRows = reportData.brandTotalModules;
   const specialtyCharts = reportData.specialtyCharts;
+  const slideRetentionRows = reportData.slideRetentionSlides;
+
+  const slideRetentionBrandOptions = useMemo(() => {
+    const brands = Array.from(
+      new Set(
+        (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+          .map((row) => String(row?.brand || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((left, right) => left.localeCompare(right));
+
+    return ["All Brands", ...brands];
+  }, [slideRetentionRows]);
+
+  useEffect(() => {
+    setSlideActivityBrand((current) =>
+      slideRetentionBrandOptions.includes(current) ? current : slideRetentionBrandOptions[0] || "All Brands"
+    );
+  }, [slideRetentionBrandOptions]);
+
+  const slideRetentionProductOptions = useMemo(() => {
+    const products = Array.from(
+      new Set(
+        (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+          .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
+          .map((row) => String(row?.product || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((left, right) => left.localeCompare(right));
+
+    return ["All Products", ...products];
+  }, [slideRetentionRows, slideActivityBrand]);
+
+  useEffect(() => {
+    setSlideActivityProduct((current) =>
+      slideRetentionProductOptions.includes(current) ? current : slideRetentionProductOptions[0] || "All Products"
+    );
+  }, [slideRetentionProductOptions]);
+
+  const slideRetentionAttachmentOptions = useMemo(() => {
+    const attachments = Array.from(
+      new Set(
+        (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+          .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
+          .filter((row) => slideActivityProduct === "All Products" || row.product === slideActivityProduct)
+          .map((row) => String(row?.attachment || "").trim())
+          .filter(Boolean)
+      )
+    ).sort((left, right) => left.localeCompare(right));
+
+    return ["All Attachments", ...attachments];
+  }, [slideRetentionRows, slideActivityBrand, slideActivityProduct]);
+
+  useEffect(() => {
+    setSlideActivityAttachment((current) =>
+      slideRetentionAttachmentOptions.includes(current) ? current : slideRetentionAttachmentOptions[0] || "All Attachments"
+    );
+  }, [slideRetentionAttachmentOptions]);
+
+  const slideActivityBrandRows = useMemo(
+    () => {
+      const grouped = new Map();
+
+      (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+        .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
+        .forEach((row) => {
+          const productLabel = String(row?.product || "").trim() || "Unknown Product";
+          const current = grouped.get(productLabel) || {
+            label: productLabel,
+            value: 0,
+            brand: row.brand,
+          };
+
+          current.value += Number(row?.totalMinutes || 0);
+          grouped.set(productLabel, current);
+        });
+
+      return Array.from(grouped.values())
+        .filter((row) => row.value > 0)
+        .sort((left, right) => right.value - left.value || String(left.label || "").localeCompare(String(right.label || "")))
+        .slice(0, 10);
+    },
+    [slideRetentionRows, slideActivityBrand]
+  );
+  const slideActivityProductRows = useMemo(
+    () => {
+      const grouped = new Map();
+
+      (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+        .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
+        .filter((row) => slideActivityProduct === "All Products" || row.product === slideActivityProduct)
+        .forEach((row) => {
+          const attachmentLabel = String(row?.attachment || "").trim() || "Unknown Attachment";
+          const current = grouped.get(attachmentLabel) || {
+            label: attachmentLabel,
+            value: 0,
+            brand: row.brand,
+            product: row.product,
+          };
+
+          current.value += Number(row?.totalMinutes || 0);
+          grouped.set(attachmentLabel, current);
+        });
+
+      return Array.from(grouped.values())
+        .filter((row) => row.value > 0)
+        .sort((left, right) => right.value - left.value || String(left.label || "").localeCompare(String(right.label || "")));
+    },
+    [slideRetentionRows, slideActivityBrand, slideActivityProduct]
+  );
+  const slideActivityAttachmentRows = useMemo(
+    () => {
+      const grouped = new Map();
+
+      (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
+        .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
+        .filter((row) => slideActivityProduct === "All Products" || row.product === slideActivityProduct)
+        .filter((row) => slideActivityAttachment === "All Attachments" || row.attachment === slideActivityAttachment)
+        .forEach((row) => {
+          const slideLabel = String(row?.slide || row?.label || "").trim() || "Unknown Slide";
+          const slideOrder = Number(row?.slideNumber || 0) || null;
+          const groupKey = slideOrder ? `slide-${slideOrder}` : slideLabel;
+          const current = grouped.get(groupKey) || {
+            label: slideLabel,
+            value: 0,
+            slideNumber: slideOrder,
+            brand: row.brand,
+            product: row.product,
+            attachment: row.attachment,
+          };
+
+          current.value += Number(row?.totalMinutes || 0);
+          grouped.set(groupKey, current);
+        });
+
+      return Array.from(grouped.values())
+        .filter((row) => row.value > 0)
+        .sort((left, right) => getSlideOrder(left) - getSlideOrder(right) || String(left.label || "").localeCompare(String(right.label || "")));
+    },
+    [slideRetentionRows, slideActivityBrand, slideActivityProduct, slideActivityAttachment]
+  );
 
   const brandShareChart = useMemo(() => buildPieData(brandShareRows, filters.brand), [brandShareRows, filters.brand]);
   const appShareChart = useMemo(() => buildPieData(appShareRows, filters.brand), [appShareRows, filters.brand]);
@@ -536,6 +840,23 @@ export default function ReportsPage() {
   const movingMonthlyChart = useMemo(() => buildMonthGroupedData(reportData?.movingMonthly), [reportData?.movingMonthly]);
   const allPerTeamChart = useMemo(() => buildTeamGroupedData(reportData?.allPerTeam), [reportData?.allPerTeam]);
   const divisionPerTeamChart = useMemo(() => buildTeamGroupedData(reportData?.divisionPerTeam), [reportData?.divisionPerTeam]);
+  const slideActivityBrandChart = useMemo(
+    () => buildSingleBarData(slideActivityBrandRows, { datasetLabel: "Minutes", color: SERIES_COLORS[5], maxBarThickness: 28 }),
+    [slideActivityBrandRows]
+  );
+  const slideActivityProductChart = useMemo(
+    () => buildSingleBarData(slideActivityProductRows, { datasetLabel: "Minutes", color: SERIES_COLORS[2], maxBarThickness: 28 }),
+    [slideActivityProductRows]
+  );
+  const slideActivityAttachmentChart = useMemo(
+    () => buildSlideTrendData(slideActivityAttachmentRows, { datasetLabel: "Minutes Viewed", color: SERIES_COLORS[0] }),
+    [slideActivityAttachmentRows]
+  );
+  const isAttachmentDrilldown = slideActivityAttachment !== "All Attachments";
+  const slideActivitySummaryHeight = useMemo(
+    () => `${Math.max(260, Math.min(560, slideActivityProductRows.length * 38))}px`,
+    [slideActivityProductRows.length]
+  );
 
   const isAllYears = filters.year === "All";
   const isAllMonths = filters.month === "All";
@@ -563,15 +884,18 @@ export default function ReportsPage() {
   const activeFilterText = `${filters.year} / ${filters.month} / ${filters.division} / ${filters.team} / ${filters.psr} / ${filters.brand}`;
   const visibleTeamRankingRows = isLoading ? [] : teamRankingRows;
   const visibleRepRankingRows = isLoading ? [] : repRankingRows;
-  const showBrandShareLoading = isLoading || brandShareRows.length === 0;
-  const showAppShareLoading = isLoading || appShareRows.length === 0;
-  const showGeneralCountLoading = isLoading || generalCountRows.length === 0;
-  const showGeneralTimeLoading = isLoading || generalTimeRows.length === 0;
-  const showBrandTotalLoading = isLoading || brandTotalRows.length === 0;
-  const showMovingMonthlyLoading = isLoading || !reportData?.movingMonthly?.rows?.length;
-  const showAllPerTeamLoading = isLoading || !reportData?.allPerTeam?.labels?.length;
-  const showDivisionPerTeamLoading = isLoading || !reportData?.divisionPerTeam?.labels?.length;
-  const showSpecialtyLoading = isLoading || specialtyCharts.length === 0;
+  const hasBrandShareData = brandShareRows.length > 0;
+  const hasAppShareData = appShareRows.length > 0;
+  const hasGeneralCountData = generalCountRows.length > 0;
+  const hasGeneralTimeData = generalTimeRows.length > 0;
+  const hasBrandTotalData = brandTotalRows.length > 0;
+  const hasMovingMonthlyData = Boolean(reportData?.movingMonthly?.rows?.length);
+  const hasAllPerTeamData = Boolean(reportData?.allPerTeam?.labels?.length);
+  const hasDivisionPerTeamData = Boolean(reportData?.divisionPerTeam?.labels?.length);
+  const hasSpecialtyData = specialtyCharts.length > 0;
+  const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
+  const hasSlideActivityProductData = slideActivityProductRows.length > 0;
+  const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
 
   return (
     <div className="max-w-full space-y-5 sm:space-y-8">
@@ -611,6 +935,18 @@ export default function ReportsPage() {
             <span className="font-semibold text-slate-800">{filters.month || "selected month"}</span> across{" "}
             <span className="font-semibold text-slate-800">{reportData?.meta?.totalSessionsInYear || 0}</span> session
             {(reportData?.meta?.totalSessionsInYear || 0) === 1 ? "" : "s"} in {filters.year || "selected year"}.
+            {" "}Slide retention captured{" "}
+            <span className="font-semibold text-slate-800">
+              {(reportData?.meta?.totalSlideMinutesInMonth || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+              })}
+            </span>{" "}
+            minutes across{" "}
+            <span className="font-semibold text-slate-800">
+              {(reportData?.meta?.totalSlideViewsInMonth || 0).toLocaleString()}
+            </span>{" "}
+            slide view{(reportData?.meta?.totalSlideViewsInMonth || 0) === 1 ? "" : "s"}.
           </span>
         )}
       </div>
@@ -619,30 +955,38 @@ export default function ReportsPage() {
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Share of Voice (Brand)" subtitle={countScopeLabel}>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
-              {showBrandShareLoading ? (
-                <ChartEmpty />
+              {isLoading ? (
+                <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
-                <>
-                  <div className="h-[240px] sm:h-[320px]">
-                    <Pie data={brandShareChart} options={buildPieOptions()} />
-                  </div>
-                  <PieLegend items={brandShareRows} selectedBrand={filters.brand} />
-                </>
+                hasBrandShareData ? (
+                  <>
+                    <div className="h-[240px] sm:h-[320px]">
+                      <Pie data={brandShareChart} options={buildPieOptions()} />
+                    </div>
+                    <PieLegend items={brandShareRows} selectedBrand={filters.brand} />
+                  </>
+                ) : (
+                  <ChartEmpty />
+                )
               )}
             </div>
           </ReportCard>
 
           <ReportCard title="Share of Voice (ONE App Detailer)" subtitle={timeScopeLabel}>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
-              {showAppShareLoading ? (
-                <ChartEmpty />
+              {isLoading ? (
+                <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
-                <>
-                  <div className="h-[240px] sm:h-[320px]">
-                    <Pie data={appShareChart} options={buildPieOptions()} />
-                  </div>
-                  <PieLegend items={appShareRows} selectedBrand={filters.brand} />
-                </>
+                hasAppShareData ? (
+                  <>
+                    <div className="h-[240px] sm:h-[320px]">
+                      <Pie data={appShareChart} options={buildPieOptions()} />
+                    </div>
+                    <PieLegend items={appShareRows} selectedBrand={filters.brand} />
+                  </>
+                ) : (
+                  <ChartEmpty />
+                )
               )}
             </div>
           </ReportCard>
@@ -654,7 +998,7 @@ export default function ReportsPage() {
             subtitle={rankingScopeLabel}
             rows={visibleTeamRankingRows}
             columns={TEAM_TABLE_COLUMNS}
-            emptyMessage={LOADING_PLACEHOLDER_TEXT}
+            emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
           />
 
           <div className="grid gap-3">
@@ -663,7 +1007,7 @@ export default function ReportsPage() {
               subtitle={rankingScopeLabel}
               rows={visibleRepRankingRows}
               columns={REP_TABLE_COLUMNS}
-              emptyMessage={LOADING_PLACEHOLDER_TEXT}
+              emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
             />
             <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
               <p>* Ranking can extend to show all teams from highest to lowest, then Top 10 or 20 reps.</p>
@@ -680,7 +1024,9 @@ export default function ReportsPage() {
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization (All) - Based on Count" subtitle={countScopeLabel}>
-            {showGeneralCountLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasGeneralCountData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -690,7 +1036,9 @@ export default function ReportsPage() {
           </ReportCard>
 
           <ReportCard title="Module Utilization (All) - Based on Time Spent" subtitle={timeScopeLabel}>
-            {showGeneralTimeLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasGeneralTimeData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -709,7 +1057,9 @@ export default function ReportsPage() {
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization by Brand Total" subtitle={brandTotalScopeLabel}>
-            {showBrandTotalLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasBrandTotalData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -722,7 +1072,9 @@ export default function ReportsPage() {
             title="Moving Monthly per Module"
             subtitle={movingMonthlyScopeLabel}
           >
-            {showMovingMonthlyLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasMovingMonthlyData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -752,7 +1104,9 @@ export default function ReportsPage() {
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization (All) per Team" subtitle={teamScopeLabel}>
-            {showAllPerTeamLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasAllPerTeamData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -765,7 +1119,9 @@ export default function ReportsPage() {
           </ReportCard>
 
           <ReportCard title="Module Utilization per Division / Team" subtitle={divisionScopeLabel}>
-            {showDivisionPerTeamLoading ? (
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasDivisionPerTeamData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
@@ -788,7 +1144,11 @@ export default function ReportsPage() {
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          {showSpecialtyLoading ? (
+          {isLoading ? (
+            <ReportCard title="Specialty Breakdown" subtitle={specialtyScopeLabel}>
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            </ReportCard>
+          ) : !hasSpecialtyData ? (
             <ReportCard title="Specialty Breakdown" subtitle={specialtyScopeLabel}>
               <ChartEmpty />
             </ReportCard>
@@ -806,6 +1166,100 @@ export default function ReportsPage() {
             ))
           )}
         </div>
+      </div>
+
+      <div className="space-y-3 sm:space-y-4">
+        <div>
+          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Retention</div>
+          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+            Tracks how long the logged-in rep stayed on each slide before moving to another one.
+          </p>
+        </div>
+
+        <ReportCard
+          title="Per-Brand Slide Activity"
+          subtitle={`Choose a brand to view slide activity for ${periodScopeLabel}.`}
+        >
+          <div className="mb-4 flex justify-end">
+            <InlineSelect
+              label="Brand"
+              value={slideActivityBrand}
+              options={slideRetentionBrandOptions}
+              onChange={setSlideActivityBrand}
+            />
+          </div>
+
+          {isLoading ? (
+            <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+          ) : !hasSlideActivityBrandData ? (
+            <ChartEmpty
+              message={
+                slideActivityBrand === "All Brands"
+                  ? EMPTY_CHART_MESSAGE
+                  : `No slide activity found for ${slideActivityBrand}.`
+              }
+            />
+          ) : (
+            <div className="h-[260px] sm:h-[340px]">
+              <Bar data={slideActivityBrandChart} options={buildBarOptions({ yTitle: "Minutes Viewed" })} />
+            </div>
+          )}
+        </ReportCard>
+
+        <ReportCard
+          title="Per-Slides Slide Activity"
+          subtitle={
+            isAttachmentDrilldown
+              ? `${slideActivityAttachment} slide flow for ${periodScopeLabel}.`
+              : `Choose an attachment linked to ${slideActivityProduct} to drill into slide activity for ${periodScopeLabel}.`
+          }
+        >
+          <div className="mb-4 flex justify-end">
+            <InlineSelect
+              label="Attachment"
+              value={slideActivityAttachment}
+              options={slideRetentionAttachmentOptions}
+              onChange={setSlideActivityAttachment}
+            />
+          </div>
+
+          {isLoading ? (
+            <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+          ) : !hasSlideActivityAttachmentData ? (
+            <ChartEmpty
+              message={
+                slideActivityAttachment === "All Attachments"
+                  ? `No slide activity found for ${slideActivityProduct}.`
+                  : `No slide activity found for ${slideActivityAttachment}.`
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500 sm:text-sm">
+                {isAttachmentDrilldown
+                  ? "Slide-by-slide bar view keeps long decks readable and preserves slide order."
+                  : "Attachment summary view keeps large result sets compact. Pick one attachment to switch to a slide-by-slide bar chart."}
+              </p>
+              {isAttachmentDrilldown ? (
+                <div className="h-[280px] sm:h-[340px]">
+                  <Bar
+                    key={`slide-attachment-${slideActivityAttachment}`}
+                    data={slideActivityAttachmentChart}
+                    options={buildSlideBarOptions({ yTitle: "Minutes Viewed" })}
+                  />
+                </div>
+              ) : (
+                <div style={{ height: slideActivitySummaryHeight }}>
+                  <Bar
+                    key="slide-attachment-summary"
+                    data={slideActivityProductChart}
+                    options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </ReportCard>
       </div>
     </div>
   );

@@ -129,6 +129,40 @@ export interface LoginEventsResponse {
   success: boolean;
 }
 
+export interface SlideRetentionEntry extends ClientInfoFields {
+  retentionId: string;
+  sessionId?: string;
+  method?: string;
+  source?: "online" | "offline";
+  presentationId: string;
+  caseId: string;
+  deckId?: string;
+  presentationTitle?: string;
+  deckTitle?: string;
+  slideId?: string;
+  slideIndex: number;
+  slideNumber: number;
+  slideTitle?: string;
+  slideType?: string;
+  startedAt: string;
+  endedAt: string;
+  durationMs: number;
+  durationSeconds: number;
+  durationMinutes: number;
+  details?: Record<string, unknown>;
+}
+
+export interface SlideRetentionRequest extends ClientInfoFields {
+  userId: string;
+  entries: SlideRetentionEntry[];
+}
+
+export interface SlideRetentionResponse {
+  success: boolean;
+  received: number;
+  inserted: number;
+}
+
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
@@ -294,6 +328,20 @@ class ApiClient {
     };
 
     return this.requestJson<LoginEventsResponse>(buildRelativeOrAbsoluteUrl(API_BASE_URL, "/login-events"), {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async syncSlideRetention(data: SlideRetentionRequest): Promise<SlideRetentionResponse> {
+    const authToken = localStorage.getItem("authToken");
+    const payload: SlideRetentionRequest = {
+      ...data,
+      userId: resolveUserId(authToken, data),
+    };
+
+    return this.requestJson<SlideRetentionResponse>(buildRelativeOrAbsoluteUrl(API_BASE_URL, "/slide-retention"), {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(payload),

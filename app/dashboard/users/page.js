@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { REPORT_DIVISION_VALUES } from "@/lib/reportDivision";
 
 const Toast = ({ toast, onClose }) => {
   if (!toast) return null;
@@ -71,6 +72,7 @@ const getDisplayUsername = (user) =>
 
 const getDisplayRepId = (user) => normalizeText(user?.repId || "");
 const getDisplayRole = (user) => normalizeText(user?.role || "");
+const getDisplayDivision = (user) => normalizeText(user?.division || "");
 const getAccessType = (user) =>
   normalizeText(user?.accessType || "").toLowerCase() === "admin" ? "admin" : "representative";
 
@@ -170,6 +172,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
+    division: "",
     password: "",
   });
 
@@ -179,6 +182,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
+    division: "",
     accessType: "representative",
     password: "",
     reissueKeygen: false,
@@ -198,12 +202,14 @@ export default function UsersPage() {
       const username = getDisplayUsername(user).toLowerCase();
       const repId = getDisplayRepId(user).toLowerCase();
       const role = getDisplayRole(user).toLowerCase();
+      const division = getDisplayDivision(user).toLowerCase();
       const email = normalizeText(user?.email).toLowerCase();
       return (
         name.includes(term) ||
         username.includes(term) ||
         repId.includes(term) ||
         role.includes(term) ||
+        division.includes(term) ||
         email.includes(term)
       );
     });
@@ -261,6 +267,7 @@ export default function UsersPage() {
       username: getDisplayUsername(user),
       repId: getDisplayRepId(user),
       role: getDisplayRole(user),
+      division: getDisplayDivision(user),
       accessType: getAccessType(user),
       password: "",
       reissueKeygen: false,
@@ -274,6 +281,7 @@ export default function UsersPage() {
       username: "",
       repId: "",
       role: "",
+      division: "",
       accessType: "representative",
       password: "",
       reissueKeygen: false,
@@ -301,6 +309,7 @@ export default function UsersPage() {
       username: normalizeText(formValues.username),
       repId: normalizeText(formValues.username),
       role: normalizeText(formValues.role),
+      division: normalizeText(formValues.division),
       password: String(formValues.password || ""),
     };
 
@@ -343,6 +352,7 @@ export default function UsersPage() {
         username: "",
         repId: "",
         role: "",
+        division: "",
         password: "",
       });
       showToast("success", "User created and secret key issued.");
@@ -361,6 +371,7 @@ export default function UsersPage() {
     const username = normalizeText(editValues.username);
     const repId = normalizeText(editValues.repId);
     const role = normalizeText(editValues.role);
+    const division = normalizeText(editValues.division);
     const accessType = getAccessType(editValues);
     const password = String(editValues.password || "");
 
@@ -379,6 +390,7 @@ export default function UsersPage() {
       username,
       repId,
       role,
+      division,
       accessType,
       reissueKeygen: Boolean(editValues.reissueKeygen),
     };
@@ -511,7 +523,7 @@ export default function UsersPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div>
                   <label htmlFor="edit-repId" className="block text-sm font-medium text-gray-700 mb-1">
                     OPPI
@@ -537,6 +549,25 @@ export default function UsersPage() {
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                     required
                   />
+                </div>
+                <div>
+                  <label htmlFor="edit-division" className="block text-sm font-medium text-gray-700 mb-1">
+                    Division
+                  </label>
+                  <select
+                    id="edit-division"
+                    name="division"
+                    value={editValues.division}
+                    onChange={handleEditChange}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="">Unassigned</option>
+                    {REPORT_DIVISION_VALUES.map((division) => (
+                      <option key={division} value={division}>
+                        {division}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -642,7 +673,7 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Representative Name
@@ -684,6 +715,26 @@ export default function UsersPage() {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               required
             />
+          </div>
+
+          <div>
+            <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">
+              Division
+            </label>
+            <select
+              id="division"
+              name="division"
+              value={formValues.division}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Unassigned</option>
+              {REPORT_DIVISION_VALUES.map((division) => (
+                <option key={division} value={division}>
+                  {division}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -738,7 +789,7 @@ export default function UsersPage() {
           <div className="w-full md:w-72">
             <input
               type="search"
-              placeholder="Search name, username, email"
+              placeholder="Search name, username, team, division"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -757,6 +808,7 @@ export default function UsersPage() {
                 <tr>
                   <th className="w-56 px-4 py-3 text-left font-semibold">Name</th>
                   <th className="w-56 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-44 px-4 py-3 text-left font-semibold">Division</th>
                   <th className="w-40 px-4 py-3 text-left font-semibold">Access</th>
                   <th className="w-52 px-4 py-3 text-left font-semibold">Issued</th>
                   <th className="w-32 px-4 py-3 text-right font-semibold">Options</th>
@@ -769,6 +821,7 @@ export default function UsersPage() {
                     <tr key={id} className="border-t border-gray-100">
                       <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
+                      <td className="px-4 py-3 truncate">{getDisplayDivision(user) || "-"}</td>
                       <td className="px-4 py-3"><AccessBadge user={user} /></td>
                       <td className="px-4 py-3 text-xs text-gray-600">{formatDate(user?.keygenIssuedAt || user?.createdAt)}</td>
                       <td className="px-4 py-3 text-right">

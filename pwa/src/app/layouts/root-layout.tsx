@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { dismissAppUpdate, getAppUpdateState, initPWAInstall, refreshAppNow, subscribeAppUpdateState } from "../lib/pwa";
 import { initSessionSync, trackAppLaunch } from "../lib/sessions";
+import { initSlideRetentionSync } from "../lib/slide-retention";
 import { useAppSettings } from "../lib/settings";
 import { ActionButton } from "../components/ui/action-button";
 
@@ -22,6 +23,7 @@ export default function RootLayout() {
     trackAppLaunch();
     initPWAInstall();
     initSessionSync();
+    initSlideRetentionSync();
   }, []);
 
   useEffect(() => subscribeAppUpdateState(setAppUpdateState), []);

@@ -18,6 +18,7 @@
     "export-db:live": "node scripts/export-db.js live",
     "import-db:staging": "node scripts/import-db.js staging",
     "import-db:live": "node scripts/import-db.js live",
+    "seed:slide-retention": "node scripts/seed-slide-retention-chart.js",
     "backup:products-api": "node scripts/products-api-backup-cron.js --once"
   },
   "dependencies": {

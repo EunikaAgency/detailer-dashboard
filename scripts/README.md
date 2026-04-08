@@ -257,3 +257,30 @@ npm run backup:products-api
 **Notes:**
 - the worker runs hourly but only writes one snapshot per calendar day
 - snapshots are plain JSON and intended to be easy to diff and commit to git
+
+---
+
+### 8. Seed Slide Retention Chart Data
+
+**Purpose:** Create idempotent dummy `SlideRetention` records for the dashboard slide-retention charts using the current DB's users, products, and media groups.
+
+**Commands:**
+```bash
+# Preview the seed plan against staging/dev data
+npm run seed:slide-retention
+
+# Apply the seed to staging/dev data
+npm run seed:slide-retention -- --apply
+
+# Apply the seed to a different env file or month
+npm run seed:slide-retention -- --apply --env .env.production --year 2026 --month 4
+```
+
+**What it does:**
+- reads the current users and prefers representative accounts
+- reads current products and attachment/media groups
+- targets the latest slide-retention month already present in the DB by default
+- seeds all discovered attachments and all slides by default unless `--attachments` or `--slides` is passed
+- replaces its own existing seeds for the target month before applying the current seed set
+- generates deterministic seed IDs so the inserted rows stay stable across reruns
+- upserts dummy slide views that immediately feed the charts on `/dashboard/reports`

@@ -193,6 +193,14 @@ function getCurrentSessionId() {
   return String(localStorage.getItem(CURRENT_SESSION_KEY) || '').trim();
 }
 
+export function getActiveSessionId() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return getCurrentSessionId();
+}
+
 function setCurrentSessionId(sessionId: string) {
   localStorage.setItem(CURRENT_SESSION_KEY, sessionId);
 }

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen, WifiOff } from "lucide-react";
 import { normalizeSlides, resolveProductById, type NormalizedSlide } from "../lib/products";
-import { trackEvent } from "../lib/sessions";
+import { getActiveSessionId, trackEvent } from "../lib/sessions";
+import { recordSlideRetention } from "../lib/slide-retention";
 import { useAppSettings } from "../lib/settings";
 import { buildDomId } from "../lib/dom-ids";
 import { isIOS } from "../lib/pwa";
@@ -13,6 +14,13 @@ import { Thumbnail } from "../components/viewer/thumbnail";
 import { ActionButton } from "../components/ui/action-button";
 
 type OrientationMode = 'auto' | 'portrait' | 'landscape';
+type ActiveSlideSegment = {
+  slideId?: string;
+  slideIndex: number;
+  slideTitle?: string;
+  slideType?: string;
+  startedAt: number | null;
+};
 
 const NAVIGATION_FADE_DELAY_MS = 1800;
 const SWIPE_THRESHOLD_PX = 48;
@@ -27,6 +35,7 @@ export default function Viewer() {
   const [orientationMode, setOrientationMode] = useState<OrientationMode>('auto');
   const [slides, setSlides] = useState<NormalizedSlide[]>([]);
   const [deckTitle, setDeckTitle] = useState("");
+  const [presentationTitle, setPresentationTitle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showNavButtons, setShowNavButtons] = useState(true);
   const [isCompactLandscape, setIsCompactLandscape] = useState(false);
@@ -40,9 +49,23 @@ export default function Viewer() {
   const slideContentRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRailRef = useRef<HTMLDivElement | null>(null);
   const viewerRootRef = useRef<HTMLDivElement | null>(null);
+  const activeSlideSegmentRef = useRef<ActiveSlideSegment | null>(null);
+  const viewerTrackingContextRef = useRef({
+    presentationId: presentationId || "",
+    caseId: caseId || "",
+    deckTitle: "",
+    presentationTitle: "",
+  });
 
   // Get settings
   const dynamicBackdrop = settings.dynamicSlideBackdrop;
+
+  viewerTrackingContextRef.current = {
+    presentationId: presentationId || "",
+    caseId: caseId || "",
+    deckTitle,
+    presentationTitle,
+  };
 
   // Load slides from product data
   useEffect(() => {
@@ -65,6 +88,8 @@ export default function Viewer() {
         navigate("/presentations");
         return;
       }
+
+      setPresentationTitle(product.name || "");
 
       const deck = product.media?.find((mediaGroup) => mediaGroup.groupId === caseId);
 
@@ -172,6 +197,118 @@ export default function Viewer() {
       animation.cancel();
     };
   }, [currentSlide]);
+
+  useEffect(() => {
+    if (!slides.length) {
+      activeSlideSegmentRef.current = null;
+      return;
+    }
+
+    const previousSegment = activeSlideSegmentRef.current;
+    if (previousSegment && previousSegment.startedAt !== null && previousSegment.slideIndex !== currentSlide) {
+      const endedAt = Date.now();
+      const startedAt = previousSegment.startedAt;
+      previousSegment.startedAt = null;
+
+      void recordSlideRetention({
+        sessionId: getActiveSessionId() || undefined,
+        presentationId: viewerTrackingContextRef.current.presentationId,
+        caseId: viewerTrackingContextRef.current.caseId,
+        deckId: viewerTrackingContextRef.current.caseId,
+        presentationTitle: viewerTrackingContextRef.current.presentationTitle,
+        deckTitle: viewerTrackingContextRef.current.deckTitle,
+        slideId: previousSegment.slideId,
+        slideIndex: previousSegment.slideIndex,
+        slideNumber: previousSegment.slideIndex + 1,
+        slideTitle: previousSegment.slideTitle,
+        slideType: previousSegment.slideType,
+        startedAt,
+        endedAt,
+        details: {
+          flushReason: "slide_change",
+        },
+      });
+    }
+
+    const activeSlide = slides[currentSlide];
+    if (!activeSlide) {
+      activeSlideSegmentRef.current = null;
+      return;
+    }
+
+    activeSlideSegmentRef.current = {
+      slideId: activeSlide.id,
+      slideIndex: currentSlide,
+      slideTitle: activeSlide.title,
+      slideType: activeSlide.type,
+      startedAt: Date.now(),
+    };
+  }, [slides, currentSlide]);
+
+  useEffect(() => {
+    const flushActiveSlideSegment = (flushReason: string) => {
+      const activeSegment = activeSlideSegmentRef.current;
+      if (!activeSegment?.startedAt) {
+        return;
+      }
+
+      const endedAt = Date.now();
+      const startedAt = activeSegment.startedAt;
+      activeSegment.startedAt = null;
+
+      void recordSlideRetention({
+        sessionId: getActiveSessionId() || undefined,
+        presentationId: viewerTrackingContextRef.current.presentationId,
+        caseId: viewerTrackingContextRef.current.caseId,
+        deckId: viewerTrackingContextRef.current.caseId,
+        presentationTitle: viewerTrackingContextRef.current.presentationTitle,
+        deckTitle: viewerTrackingContextRef.current.deckTitle,
+        slideId: activeSegment.slideId,
+        slideIndex: activeSegment.slideIndex,
+        slideNumber: activeSegment.slideIndex + 1,
+        slideTitle: activeSegment.slideTitle,
+        slideType: activeSegment.slideType,
+        startedAt,
+        endedAt,
+        details: {
+          flushReason,
+        },
+      });
+    };
+
+    const restartActiveSegment = () => {
+      const activeSegment = activeSlideSegmentRef.current;
+      if (!activeSegment || activeSegment.startedAt) {
+        return;
+      }
+
+      activeSegment.startedAt = Date.now();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushActiveSlideSegment("viewer_hidden");
+        return;
+      }
+
+      if (document.visibilityState === "visible") {
+        restartActiveSegment();
+      }
+    };
+
+    const handlePageHide = () => {
+      flushActiveSlideSegment("viewer_exit");
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      flushActiveSlideSegment("viewer_unmount");
+    };
+  }, []);
 
   useEffect(() => {
     if (!showThumbnails) {

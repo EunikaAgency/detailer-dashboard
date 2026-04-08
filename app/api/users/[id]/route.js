@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { requireAdmin } from "@/lib/auth";
+import { normalizeReportDivision } from "@/lib/reportDivision";
 import { getUserAccessType, normalizeAccessType } from "@/lib/userAccess";
 import { getOfflineCredentialSecret, issueOfflineCredential, normalizeIdentity } from "@/lib/offlineCredential";
 
@@ -19,6 +20,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
+  division: user?.division || "",
   storedAccessType: normalizeAccessType(user?.accessType),
   accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
@@ -93,6 +95,7 @@ export async function PUT(request, { params }) {
     const hasUsername = typeof body?.username === "string";
     const hasRepId = typeof body?.repId === "string";
     const hasRole = typeof body?.role === "string";
+    const hasDivision = typeof body?.division === "string";
     const hasAccessType = typeof body?.accessType === "string";
     const hasPassword = typeof body?.password === "string";
     const rawPassword = hasPassword ? String(body.password || "") : "";
@@ -103,6 +106,7 @@ export async function PUT(request, { params }) {
       !hasUsername &&
       !hasRepId &&
       !hasRole &&
+      !hasDivision &&
       !hasAccessType &&
       !hasPassword &&
       !body?.reissueKeygen
@@ -156,6 +160,10 @@ export async function PUT(request, { params }) {
         return NextResponse.json({ error: "Role cannot be empty." }, { status: 400 });
       }
       user.role = nextRole;
+    }
+
+    if (hasDivision) {
+      user.division = normalizeReportDivision(body.division);
     }
 
     if (hasAccessType) {

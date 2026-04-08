@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { REPORT_DIVISION_VALUES } from "@/lib/reportDivision";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -7,6 +8,12 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, trim: true, lowercase: true, default: "" },
     repId: { type: String, trim: true, default: "" },
     role: { type: String, trim: true, default: "" },
+    division: {
+      type: String,
+      trim: true,
+      enum: ["", ...REPORT_DIVISION_VALUES],
+      default: "",
+    },
     accessType: {
       type: String,
       trim: true,
