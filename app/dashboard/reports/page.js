@@ -28,7 +28,7 @@ const Pie = dynamic(() => import("react-chartjs-2").then((mod) => mod.Pie), {
 const FILTERS = [
   { key: "year", label: "Year", hint: "" },
   { key: "month", label: "Month", hint: "(multiple selection)" },
-  { key: "division", label: "Division", hint: "(All, Carry-All GMA, Carry-All Prov, CNS)" },
+  { key: "division", label: "Division", hint: "(All, Carry-All GMA, Carry-All Prov, CNS, Unassigned Division)" },
   { key: "team", label: "Team", hint: "" },
   { key: "psr", label: "PSR", hint: "" },
   { key: "brand", label: "Brand", hint: "" },
