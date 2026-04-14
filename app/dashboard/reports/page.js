@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import * as XLSX from "xlsx";
 import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
 import {
   ArcElement,
@@ -142,6 +143,42 @@ const REP_TABLE_COLUMNS = [
   { key: "detailingCount", label: "Detailing Count", align: "right", format: (value) => value.toLocaleString() },
 ];
 
+const SHARE_EXPORT_COLUMNS = [
+  { key: "brand", label: "Brand" },
+  { key: "percent", label: "Percent" },
+];
+
+const TEAM_RANKING_EXPORT_COLUMNS = TEAM_TABLE_COLUMNS.map(({ key, label }) => ({ key, label }));
+const REP_RANKING_EXPORT_COLUMNS = REP_TABLE_COLUMNS.map(({ key, label }) => ({ key, label }));
+
+const MODULE_EXPORT_COLUMNS = [
+  { key: "module", label: "Module" },
+  { key: "brand", label: "Brand" },
+  { key: "value", label: "Value" },
+];
+
+const SLIDE_ACTIVITY_PRODUCT_EXPORT_COLUMNS = [
+  { key: "brand", label: "Brand" },
+  { key: "product", label: "Product" },
+  { key: "minutes", label: "Minutes Viewed" },
+];
+
+const SLIDE_ACTIVITY_ATTACHMENT_EXPORT_COLUMNS = [
+  { key: "brand", label: "Brand" },
+  { key: "product", label: "Product" },
+  { key: "attachment", label: "Attachment" },
+  { key: "minutes", label: "Minutes Viewed" },
+];
+
+const SLIDE_ACTIVITY_SLIDE_EXPORT_COLUMNS = [
+  { key: "brand", label: "Brand" },
+  { key: "product", label: "Product" },
+  { key: "attachment", label: "Attachment" },
+  { key: "slide", label: "Slide" },
+  { key: "slideNumber", label: "Slide Number" },
+  { key: "minutes", label: "Minutes Viewed" },
+];
+
 function rgba(color, alpha) {
   return `rgba(${color}, ${alpha})`;
 }
@@ -167,6 +204,252 @@ function toMultilineLabel(value, maxLineLength = 16) {
 
 function formatPercent(value) {
   return `${value}%`;
+}
+
+function escapeCsvCell(value) {
+  const text = normalizeExportCell(value);
+  if (!/[",\n]/.test(text)) return text;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function normalizeExportCell(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
+
+  const text = String(value);
+  return /^[=+\-@]/.test(text) ? `'${text}` : text;
+}
+
+function toExportNumber(value, fractionDigits = 2) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue)) return 0;
+  return Number(numericValue.toFixed(fractionDigits));
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toFileSlug(value) {
+  return (
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "all"
+  );
+}
+
+function buildFilenameBase(filters, reportName = "dashboard-reports") {
+  const parts = [
+    reportName,
+    filters?.year,
+    filters?.month,
+    filters?.division,
+    filters?.team,
+    filters?.psr,
+    filters?.brand,
+  ].map(toFileSlug);
+
+  return parts.join("-");
+}
+
+function buildMatrixExport(chart, firstColumnLabel) {
+  const labels = Array.isArray(chart?.labels) ? chart.labels : [];
+  const series = Array.isArray(chart?.series) ? chart.series : [];
+  const seriesColumns = series.map((item, index) => ({
+    key: `series_${index}`,
+    label: item?.label || `Series ${index + 1}`,
+  }));
+
+  return {
+    columns: [{ key: "label", label: firstColumnLabel }, ...seriesColumns],
+    rows: labels.map((label, rowIndex) => {
+      const row = { label };
+      seriesColumns.forEach((column, seriesIndex) => {
+        row[column.key] = Number(series?.[seriesIndex]?.values?.[rowIndex] || 0);
+      });
+      return row;
+    }),
+  };
+}
+
+function buildShareExportSection(title, rows) {
+  return {
+    title,
+    columns: SHARE_EXPORT_COLUMNS,
+    rows: (rows || []).map((row) => ({
+      brand: row.label,
+      percent: row.value,
+    })),
+  };
+}
+
+function buildModuleExportSection(title, rows) {
+  return {
+    title,
+    columns: MODULE_EXPORT_COLUMNS,
+    rows: (rows || []).map((row) => ({
+      module: row.label,
+      brand: row.brand || "",
+      value: row.value,
+    })),
+  };
+}
+
+function buildMovingMonthlyExportSection(chart) {
+  const monthKeys = Array.isArray(chart?.monthKeys) ? chart.monthKeys : [];
+  const rows = Array.isArray(chart?.rows) ? chart.rows : [];
+
+  return {
+    title: "Moving Monthly per Module",
+    columns: [
+      { key: "module", label: "Module" },
+      { key: "brand", label: "Brand" },
+      ...monthKeys.map((monthKey) => ({ key: monthKey, label: monthKey })),
+    ],
+    rows: rows.map((row) => ({
+      module: row.label,
+      brand: row.brand || "",
+      ...Object.fromEntries(monthKeys.map((monthKey) => [monthKey, Number(row?.values?.[monthKey] || 0)])),
+    })),
+  };
+}
+
+function buildTeamMatrixExportSection(title, chart) {
+  const matrix = buildMatrixExport(chart, "Module");
+  return {
+    title,
+    columns: matrix.columns,
+    rows: matrix.rows,
+  };
+}
+
+function buildSlideActivityExportSections({
+  slideActivityBrand,
+  slideActivityProduct,
+  slideActivityAttachment,
+  slideActivityBrandRows,
+  slideActivityProductRows,
+  slideActivityAttachmentRows,
+  isAttachmentDrilldown,
+}) {
+  const slideSection = isAttachmentDrilldown
+    ? {
+        title: `Per-Slides Slide Activity - ${slideActivityAttachment}`,
+        columns: SLIDE_ACTIVITY_SLIDE_EXPORT_COLUMNS,
+        rows: (slideActivityAttachmentRows || []).map((row) => ({
+          brand: row.brand || slideActivityBrand,
+          product: row.product || slideActivityProduct,
+          attachment: row.attachment || slideActivityAttachment,
+          slide: row.label,
+          slideNumber: row.slideNumber,
+          minutes: toExportNumber(row.value),
+        })),
+      }
+    : {
+        title: `Per-Slides Slide Activity - ${slideActivityProduct}`,
+        columns: SLIDE_ACTIVITY_ATTACHMENT_EXPORT_COLUMNS,
+        rows: (slideActivityProductRows || []).map((row) => ({
+          brand: row.brand || slideActivityBrand,
+          product: row.product || slideActivityProduct,
+          attachment: row.label,
+          minutes: toExportNumber(row.value),
+        })),
+      };
+
+  return [
+    {
+      title: `Per-Brand Slide Activity - ${slideActivityBrand}`,
+      columns: SLIDE_ACTIVITY_PRODUCT_EXPORT_COLUMNS,
+      rows: (slideActivityBrandRows || []).map((row) => ({
+        brand: row.brand || slideActivityBrand,
+        product: row.label,
+        minutes: toExportNumber(row.value),
+      })),
+    },
+    slideSection,
+  ];
+}
+
+function sectionsToCsv(sections) {
+  const lines = [];
+
+  sections.forEach((section, sectionIndex) => {
+    if (sectionIndex > 0) lines.push("");
+    lines.push(escapeCsvCell(section.title));
+
+    const columns = Array.isArray(section.columns) ? section.columns : [];
+    const rows = Array.isArray(section.rows) ? section.rows : [];
+
+    if (columns.length === 0 || rows.length === 0) {
+      lines.push("No data");
+      return;
+    }
+
+    lines.push(columns.map((column) => escapeCsvCell(column.label)).join(","));
+    rows.forEach((row) => {
+      lines.push(columns.map((column) => escapeCsvCell(row?.[column.key] ?? "")).join(","));
+    });
+  });
+
+  return `\ufeff${lines.join("\n")}`;
+}
+
+function normalizeExcelSheetName(value, fallback) {
+  const cleaned = String(value || fallback || "Sheet")
+    .replace(/[:\\/?*[\]]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (cleaned || fallback || "Sheet").slice(0, 31);
+}
+
+function toExcelCellValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number") return Number.isFinite(value) ? value : "";
+  return normalizeExportCell(value);
+}
+
+function sectionsToXlsxArray(sections) {
+  const workbook = XLSX.utils.book_new();
+  const usedSheetNames = new Set();
+
+  sections.forEach((section, sectionIndex) => {
+    const columns = Array.isArray(section.columns) ? section.columns : [];
+    const rows = Array.isArray(section.rows) ? section.rows : [];
+    const baseSheetName = normalizeExcelSheetName(section.title, `Sheet ${sectionIndex + 1}`);
+    let sheetName = baseSheetName;
+    let duplicateIndex = 2;
+
+    while (usedSheetNames.has(sheetName)) {
+      const suffix = ` ${duplicateIndex}`;
+      sheetName = `${baseSheetName.slice(0, 31 - suffix.length)}${suffix}`;
+      duplicateIndex += 1;
+    }
+    usedSheetNames.add(sheetName);
+
+    const tableRows =
+      columns.length > 0 && rows.length > 0
+        ? [
+            columns.map((column) => column.label),
+            ...rows.map((row) => columns.map((column) => toExcelCellValue(row?.[column.key]))),
+          ]
+        : [["No Data"], ["-"]];
+    const worksheet = XLSX.utils.aoa_to_sheet(tableRows);
+    worksheet["!cols"] = tableRows[0].map(() => ({ wch: 24 }));
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  });
+
+  return XLSX.write(workbook, { bookType: "xlsx", type: "array" });
 }
 
 function ChartLoading() {
@@ -235,13 +518,16 @@ function SectionTitle({ title, subtitle }) {
   );
 }
 
-function ReportCard({ title, subtitle, children, className = "" }) {
+function ReportCard({ title, subtitle, actions = null, children, className = "" }) {
   return (
     <section className={`min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 ${className}`}>
-      {title ? (
-        <div className="mb-4">
-          <h3 className="text-[0.92rem] font-semibold text-slate-900 sm:text-[1.05rem]">{title}</h3>
-          {subtitle ? <p className="mt-1 text-xs text-slate-600 sm:text-sm">{subtitle}</p> : null}
+      {title || actions ? (
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            {title ? <h3 className="text-[0.92rem] font-semibold text-slate-900 sm:text-[1.05rem]">{title}</h3> : null}
+            {subtitle ? <p className="mt-1 text-xs text-slate-600 sm:text-sm">{subtitle}</p> : null}
+          </div>
+          {actions ? <div className="shrink-0">{actions}</div> : null}
         </div>
       ) : null}
       {children}
@@ -276,9 +562,21 @@ function PieLegend({ items, selectedBrand }) {
   );
 }
 
-function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
+function RankingTable({ title, subtitle, rows, columns, emptyMessage, exportConfig }) {
   return (
-    <ReportCard title={title} subtitle={subtitle}>
+    <ReportCard
+      title={title}
+      subtitle={subtitle}
+      actions={
+        exportConfig ? (
+          <ExportButtons
+            disabled={exportConfig.disabled}
+            filenameBase={exportConfig.filenameBase}
+            sections={exportConfig.sections}
+          />
+        ) : null
+      }
+    >
       <div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
         <table className="w-max min-w-[760px] border border-slate-200 text-xs text-slate-700 sm:min-w-full sm:text-sm">
           <thead className="bg-slate-100 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">
@@ -327,6 +625,41 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
         </table>
       </div>
     </ReportCard>
+  );
+}
+
+function ExportButtons({ disabled, filenameBase, sections }) {
+  const handleExportCsv = () => {
+    downloadFile(`${filenameBase}.csv`, sectionsToCsv(sections), "text/csv;charset=utf-8;");
+  };
+
+  const handleExportExcel = () => {
+    downloadFile(
+      `${filenameBase}.xlsx`,
+      sectionsToXlsxArray(sections),
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={handleExportCsv}
+        disabled={disabled}
+        className="rounded-md border border-sky-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-sky-800 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs"
+      >
+        CSV
+      </button>
+      <button
+        type="button"
+        onClick={handleExportExcel}
+        disabled={disabled}
+        className="rounded-md border border-sky-700 bg-sky-700 px-2.5 py-1.5 text-[11px] font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs"
+      >
+        Excel
+      </button>
+    </div>
   );
 }
 
@@ -896,6 +1229,86 @@ export default function ReportsPage() {
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
   const hasSlideActivityProductData = slideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
+  const isExportDisabled = isLoading || Boolean(error);
+  const brandShareExportSections = useMemo(
+    () => [buildShareExportSection("Share of Voice - Brand", brandShareRows)],
+    [brandShareRows]
+  );
+  const appShareExportSections = useMemo(
+    () => [buildShareExportSection("Share of Voice - ONE App Detailer", appShareRows)],
+    [appShareRows]
+  );
+  const teamRankingExportSections = useMemo(
+    () => [
+      {
+        title: "Team Rankings",
+        columns: TEAM_RANKING_EXPORT_COLUMNS,
+        rows: teamRankingRows || [],
+      },
+    ],
+    [teamRankingRows]
+  );
+  const repRankingExportSections = useMemo(
+    () => [
+      {
+        title: "Rep Rankings",
+        columns: REP_RANKING_EXPORT_COLUMNS,
+        rows: repRankingRows || [],
+      },
+    ],
+    [repRankingRows]
+  );
+  const generalCountExportSections = useMemo(
+    () => [buildModuleExportSection("Module Utilization - All Products Count", generalCountRows)],
+    [generalCountRows]
+  );
+  const generalTimeExportSections = useMemo(
+    () => [buildModuleExportSection("Module Utilization - All Products Time Spent", generalTimeRows)],
+    [generalTimeRows]
+  );
+  const brandTotalExportSections = useMemo(
+    () => [buildModuleExportSection("Module Utilization - Brand Total", brandTotalRows)],
+    [brandTotalRows]
+  );
+  const movingMonthlyExportSections = useMemo(
+    () => [buildMovingMonthlyExportSection(reportData?.movingMonthly)],
+    [reportData?.movingMonthly]
+  );
+  const allPerTeamExportSections = useMemo(
+    () => [buildTeamMatrixExportSection("Module Utilization - All Products per Team", reportData?.allPerTeam)],
+    [reportData?.allPerTeam]
+  );
+  const divisionPerTeamExportSections = useMemo(
+    () => [buildTeamMatrixExportSection("Module Utilization per Division / Team", reportData?.divisionPerTeam)],
+    [reportData?.divisionPerTeam]
+  );
+  const slideActivityExportSections = useMemo(
+    () =>
+      buildSlideActivityExportSections({
+        slideActivityBrand,
+        slideActivityProduct,
+        slideActivityAttachment,
+        slideActivityBrandRows,
+        slideActivityProductRows,
+        slideActivityAttachmentRows,
+        isAttachmentDrilldown,
+      }),
+    [
+      slideActivityBrand,
+      slideActivityProduct,
+      slideActivityAttachment,
+      slideActivityBrandRows,
+      slideActivityProductRows,
+      slideActivityAttachmentRows,
+      isAttachmentDrilldown,
+    ]
+  );
+
+  const getExportConfig = (reportName, sections, hasRows) => ({
+    disabled: isExportDisabled || !hasRows,
+    filenameBase: buildFilenameBase(filters, reportName),
+    sections,
+  });
 
   return (
     <div className="max-w-full space-y-5 sm:space-y-8">
@@ -953,7 +1366,15 @@ export default function ReportsPage() {
 
       <div className="space-y-5 sm:space-y-6">
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Share of Voice (Brand)" subtitle={countScopeLabel}>
+          <ReportCard
+            title="Share of Voice (Brand)"
+            subtitle={countScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("share-of-voice-brand", brandShareExportSections, hasBrandShareData)}
+              />
+            }
+          >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
               {isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
@@ -972,7 +1393,15 @@ export default function ReportsPage() {
             </div>
           </ReportCard>
 
-          <ReportCard title="Share of Voice (ONE App Detailer)" subtitle={timeScopeLabel}>
+          <ReportCard
+            title="Share of Voice (ONE App Detailer)"
+            subtitle={timeScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("share-of-voice-one-app-detailer", appShareExportSections, hasAppShareData)}
+              />
+            }
+          >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
               {isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
@@ -999,6 +1428,7 @@ export default function ReportsPage() {
             rows={visibleTeamRankingRows}
             columns={TEAM_TABLE_COLUMNS}
             emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
+            exportConfig={getExportConfig("team-rankings", teamRankingExportSections, teamRankingRows.length > 0)}
           />
 
           <div className="grid gap-3">
@@ -1008,6 +1438,7 @@ export default function ReportsPage() {
               rows={visibleRepRankingRows}
               columns={REP_TABLE_COLUMNS}
               emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
+              exportConfig={getExportConfig("rep-rankings", repRankingExportSections, repRankingRows.length > 0)}
             />
             <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
               <p>* Ranking can extend to show all teams from highest to lowest, then Top 10 or 20 reps.</p>
@@ -1023,7 +1454,15 @@ export default function ReportsPage() {
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization (All) - Based on Count" subtitle={countScopeLabel}>
+          <ReportCard
+            title="Module Utilization (All) - Based on Count"
+            subtitle={countScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("module-utilization-all-count", generalCountExportSections, hasGeneralCountData)}
+              />
+            }
+          >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralCountData ? (
@@ -1035,7 +1474,15 @@ export default function ReportsPage() {
             )}
           </ReportCard>
 
-          <ReportCard title="Module Utilization (All) - Based on Time Spent" subtitle={timeScopeLabel}>
+          <ReportCard
+            title="Module Utilization (All) - Based on Time Spent"
+            subtitle={timeScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("module-utilization-all-time-spent", generalTimeExportSections, hasGeneralTimeData)}
+              />
+            }
+          >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralTimeData ? (
@@ -1056,7 +1503,15 @@ export default function ReportsPage() {
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization by Brand Total" subtitle={brandTotalScopeLabel}>
+          <ReportCard
+            title="Module Utilization by Brand Total"
+            subtitle={brandTotalScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("module-utilization-brand-total", brandTotalExportSections, hasBrandTotalData)}
+              />
+            }
+          >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasBrandTotalData ? (
@@ -1071,6 +1526,11 @@ export default function ReportsPage() {
           <ReportCard
             title="Moving Monthly per Module"
             subtitle={movingMonthlyScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("moving-monthly-per-module", movingMonthlyExportSections, hasMovingMonthlyData)}
+              />
+            }
           >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
@@ -1103,7 +1563,15 @@ export default function ReportsPage() {
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization (All) per Team" subtitle={teamScopeLabel}>
+          <ReportCard
+            title="Module Utilization (All) per Team"
+            subtitle={teamScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("module-utilization-all-per-team", allPerTeamExportSections, hasAllPerTeamData)}
+              />
+            }
+          >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasAllPerTeamData ? (
@@ -1118,7 +1586,15 @@ export default function ReportsPage() {
             )}
           </ReportCard>
 
-          <ReportCard title="Module Utilization per Division / Team" subtitle={divisionScopeLabel}>
+          <ReportCard
+            title="Module Utilization per Division / Team"
+            subtitle={divisionScopeLabel}
+            actions={
+              <ExportButtons
+                {...getExportConfig("module-utilization-division-team", divisionPerTeamExportSections, hasDivisionPerTeamData)}
+              />
+            }
+          >
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasDivisionPerTeamData ? (
@@ -1154,7 +1630,20 @@ export default function ReportsPage() {
             </ReportCard>
           ) : (
             specialtyCharts.map((chart) => (
-              <ReportCard key={chart.title} title={chart.title} subtitle={specialtyScopeLabel}>
+              <ReportCard
+                key={chart.title}
+                title={chart.title}
+                subtitle={specialtyScopeLabel}
+                actions={
+                  <ExportButtons
+                    {...getExportConfig(
+                      `specialty-breakdown-${chart.title}`,
+                      [buildModuleExportSection(`Specialty Breakdown - ${chart.title}`, chart.modules)],
+                      chart.modules.length > 0
+                    )}
+                  />
+                }
+              >
                 {chart.modules.length === 0 ? (
                   <ChartEmpty />
                 ) : (
@@ -1169,11 +1658,20 @@ export default function ReportsPage() {
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <div>
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Retention</div>
-          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-            Tracks how long the logged-in rep stayed on each slide before moving to another one.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Retention</div>
+            <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+              Tracks how long the logged-in rep stayed on each slide before moving to another one.
+            </p>
+          </div>
+          <ExportButtons
+            {...getExportConfig(
+              "slide-retention-activity",
+              slideActivityExportSections,
+              hasSlideActivityBrandData || hasSlideActivityAttachmentData
+            )}
+          />
         </div>
 
         <ReportCard
