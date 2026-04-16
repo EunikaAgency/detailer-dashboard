@@ -188,14 +188,14 @@ const SLIDE_ACTIVITY_SLIDE_EXPORT_COLUMNS = [
 ];
 
 const UNIFIED_EXPORT_COLUMNS = [
-  { key: "year", label: "Year" },
+  { key: "date", label: "Date" },
   { key: "month", label: "Month" },
   { key: "team", label: "Team" },
   { key: "psr", label: "PSR" },
   { key: "brand", label: "Brand" },
   { key: "slide", label: "Slide" },
   { key: "detailingCount", label: "Detailing Count" },
-  { key: "minutesViewed", label: "Minutes viewed" },
+  { key: "secondsViewed", label: "Seconds viewed" },
 ];
 
 function rgba(color, alpha) {
@@ -243,6 +243,38 @@ function toExportNumber(value, fractionDigits = 2) {
   const numericValue = Number(value || 0);
   if (!Number.isFinite(numericValue)) return 0;
   return Number(numericValue.toFixed(fractionDigits));
+}
+
+function toHumanReadableDate(value, fallbackMonth = "", fallbackYear = "") {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    const month = String(fallbackMonth || "").trim();
+    const year = String(fallbackYear || "").trim();
+    return [month, year].filter(Boolean).join(" ").trim();
+  }
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const parsed = new Date(`${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}T00:00:00.000Z`);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  return raw;
 }
 
 function downloadFile(filename, content, mimeType) {
@@ -369,7 +401,7 @@ function buildSlideActivityExportSections({
           brand: row.brand || slideActivityBrand,
           product: row.product || slideActivityProduct,
           attachment: row.attachment || slideActivityAttachment,
-          slide: row.label,
+          slide: row.exportName || row.slide || row.label,
           slideNumber: row.slideNumber,
           minutes: toExportNumber(row.value),
         })),
@@ -1152,10 +1184,12 @@ export default function ReportsPage() {
         .filter((row) => slideActivityAttachment === "All Attachments" || row.attachment === slideActivityAttachment)
         .forEach((row) => {
           const slideLabel = String(row?.slide || row?.label || "").trim() || "Unknown Slide";
+          const slideExportName = String(row?.exportName || row?.slide || row?.label || "").trim() || slideLabel;
           const slideOrder = Number(row?.slideNumber || 0) || null;
           const groupKey = slideOrder ? `slide-${slideOrder}` : slideLabel;
           const current = grouped.get(groupKey) || {
             label: slideLabel,
+            exportName: slideExportName,
             value: 0,
             slideNumber: slideOrder,
             brand: row.brand,
@@ -1248,14 +1282,16 @@ export default function ReportsPage() {
     (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).forEach((row) => {
       const year = String(row?.year || filters.year || "").trim() || "All";
       const month = String(row?.month || filters.month || "").trim() || "All";
+      const date = String(row?.date || "").trim() || `${year}-${month}`;
       const team = String(row?.team || "").trim() || "Unassigned Team";
       const psr = String(row?.psr || "").trim() || "Unknown Rep";
       const brand = String(row?.brand || "").trim() || "Unknown Brand";
-      const slide = String(row?.label || row?.slide || "").trim() || "Unknown Slide";
+      const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
       const detailingCount = Math.max(1, Number(row?.views || 1));
-      const minutesViewed = Number(row?.totalMinutes || 0);
-      const key = `${year}||${month}||${team}||${psr}||${brand}||${slide}`;
+      const secondsViewed = Number(row?.totalMinutes || 0) * 60;
+      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${slide}`;
       const current = grouped.get(key) || {
+        date,
         year,
         month,
         team,
@@ -1263,17 +1299,17 @@ export default function ReportsPage() {
         brand,
         slide,
         detailingCount: 0,
-        minutesViewed: 0,
+        secondsViewed: 0,
       };
       current.detailingCount += detailingCount;
-      current.minutesViewed += minutesViewed;
+      current.secondsViewed += secondsViewed;
       grouped.set(key, current);
     });
 
     return Array.from(grouped.values()).map((row) => ({
       ...row,
       detailingCount: Math.round(row.detailingCount),
-      minutesViewed: Number(row.minutesViewed.toFixed(2)),
+      secondsViewed: Math.round(row.secondsViewed),
     }));
   }, [reportData?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
   const unifiedExportSections = useMemo(
@@ -1282,14 +1318,14 @@ export default function ReportsPage() {
         title: "Dashboard Report Export",
         columns: UNIFIED_EXPORT_COLUMNS,
         rows: unifiedExportRows.map((row) => ({
-          year: row?.year || "",
+          date: toHumanReadableDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
           psr: row?.psr || "",
           brand: row?.brand || "",
           slide: row?.slide || "",
           detailingCount: Number(row?.detailingCount || 0),
-          minutesViewed: toExportNumber(row?.minutesViewed || 0),
+          secondsViewed: Number(row?.secondsViewed || 0),
         })),
       },
     ],
@@ -1580,7 +1616,7 @@ export default function ReportsPage() {
           </div>
           <div className="flex flex-col items-start gap-2 sm:items-end">
             <div className="text-xs text-slate-600 sm:text-sm">
-              Export data columns: Year, Month, Team, PSR, Brand, Slide, Detailing Count, Minutes viewed.
+              Export data columns: Date, Month, Team, PSR, Brand, Slide, Detailing Count, Seconds viewed.
             </div>
             <ExportButtons
               disabled={unifiedExportDisabled}
