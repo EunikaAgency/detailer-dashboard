@@ -193,6 +193,8 @@ const UNIFIED_EXPORT_COLUMNS = [
   { key: "team", label: "Team" },
   { key: "psr", label: "PSR" },
   { key: "brand", label: "Brand" },
+  { key: "productName", label: "Product Name" },
+  { key: "material", label: "Material" },
   { key: "slide", label: "Slide" },
   { key: "detailingCount", label: "Detailing Count" },
   { key: "secondsViewed", label: "Seconds viewed" },
@@ -243,6 +245,41 @@ function toExportNumber(value, fractionDigits = 2) {
   const numericValue = Number(value || 0);
   if (!Number.isFinite(numericValue)) return 0;
   return Number(numericValue.toFixed(fractionDigits));
+}
+
+function toMaterialName({ attachment, slide, brand }) {
+  const attachmentValue = String(attachment || "").trim();
+  const slideValue = String(slide || "").trim();
+  const brandValue = String(brand || "").trim();
+  const source = attachmentValue || slideValue;
+  if (!source) return "UNKNOWN MATERIAL";
+
+  const withoutExtension = source.replace(/\.[a-z0-9]{2,5}$/i, "");
+  const withoutSlideSuffix = withoutExtension.replace(/(?:^|[\s_-])(slide|page)[\s_-]*\d+$/i, "");
+  const tokens = withoutSlideSuffix
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+
+  const dedupedTokens = [];
+  tokens.forEach((token) => {
+    const previous = dedupedTokens[dedupedTokens.length - 1];
+    if (previous && previous.toLowerCase() === token.toLowerCase()) return;
+    dedupedTokens.push(token);
+  });
+
+  if (!dedupedTokens.length) return "UNKNOWN MATERIAL";
+
+  if (brandValue && dedupedTokens.length >= 2) {
+    const brandLower = brandValue.toLowerCase();
+    if (dedupedTokens[0].toLowerCase() === brandLower && dedupedTokens[1].toLowerCase() === brandLower) {
+      dedupedTokens.splice(1, 1);
+    }
+  }
+
+  return dedupedTokens.join(" ").toUpperCase();
 }
 
 function toHumanReadableDate(value, fallbackMonth = "", fallbackYear = "") {
@@ -1286,10 +1323,16 @@ export default function ReportsPage() {
       const team = String(row?.team || "").trim() || "Unassigned Team";
       const psr = String(row?.psr || "").trim() || "Unknown Rep";
       const brand = String(row?.brand || "").trim() || "Unknown Brand";
+      const productName = String(row?.product || "").trim() || "Unknown Product";
+      const material = toMaterialName({
+        attachment: row?.attachment,
+        slide: row?.exportName || row?.label || row?.slide || "",
+        brand,
+      });
       const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
       const detailingCount = Math.max(1, Number(row?.views || 1));
       const secondsViewed = Number(row?.totalMinutes || 0) * 60;
-      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${slide}`;
+      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}||${slide}`;
       const current = grouped.get(key) || {
         date,
         year,
@@ -1297,6 +1340,8 @@ export default function ReportsPage() {
         team,
         psr,
         brand,
+        productName,
+        material,
         slide,
         detailingCount: 0,
         secondsViewed: 0,
@@ -1323,6 +1368,8 @@ export default function ReportsPage() {
           team: row?.team || "",
           psr: row?.psr || "",
           brand: row?.brand || "",
+          productName: row?.productName || row?.product || "Unknown Product",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
           detailingCount: Number(row?.detailingCount || 0),
           secondsViewed: Number(row?.secondsViewed || 0),
@@ -1359,6 +1406,19 @@ export default function ReportsPage() {
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-600 sm:px-4 sm:py-3 sm:text-sm">
         Active sample context: <span className="font-semibold text-slate-800">{activeFilterText}</span>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-xs text-slate-600 sm:text-sm">
+            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Detailing Count, Seconds viewed.
+          </div>
+          <ExportButtons
+            disabled={unifiedExportDisabled}
+            filenameBase={unifiedExportFilenameBase}
+            sections={unifiedExportSections}
+          />
+        </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
@@ -1607,22 +1667,12 @@ export default function ReportsPage() {
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3">
           <div>
             <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Retention</div>
             <p className="mt-1 text-xs text-slate-600 sm:text-sm">
               Tracks how long the logged-in rep stayed on each slide before moving to another one.
             </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 sm:items-end">
-            <div className="text-xs text-slate-600 sm:text-sm">
-              Export data columns: Date, Month, Team, PSR, Brand, Slide, Detailing Count, Seconds viewed.
-            </div>
-            <ExportButtons
-              disabled={unifiedExportDisabled}
-              filenameBase={unifiedExportFilenameBase}
-              sections={unifiedExportSections}
-            />
           </div>
         </div>
 
