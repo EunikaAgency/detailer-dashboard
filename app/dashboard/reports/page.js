@@ -198,6 +198,9 @@ const UNIFIED_EXPORT_COLUMNS = [
   { key: "slide", label: "Slide" },
   { key: "detailingCount", label: "Detailing Count" },
   { key: "secondsViewed", label: "Seconds viewed" },
+  { key: "timeOpened", label: "Time opened" },
+  { key: "timeClosed", label: "Time closed" },
+  { key: "elapsedTime", label: "Elapsed time" },
 ];
 
 function rgba(color, alpha) {
@@ -312,6 +315,29 @@ function toHumanReadableDate(value, fallbackMonth = "", fallbackYear = "") {
   }
 
   return raw;
+}
+
+function toHumanReadableTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return raw;
+
+  return parsed.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function toElapsedTime(value) {
+  const totalSeconds = Math.max(0, Math.round(Number(value || 0)));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
 }
 
 function downloadFile(filename, content, mimeType) {
@@ -469,9 +495,30 @@ function buildSlideActivityExportSections({
 }
 
 function sectionsToCsv(sections) {
+  const normalizedSections = Array.isArray(sections) ? sections : [];
+  if (normalizedSections.length === 1) {
+    const section = normalizedSections[0] || {};
+    const columns = Array.isArray(section.columns) ? section.columns : [];
+    const rows = Array.isArray(section.rows) ? section.rows : [];
+
+    if (columns.length === 0) return "\ufeffNo data";
+
+    const lines = [columns.map((column) => escapeCsvCell(column.label)).join(",")];
+    if (rows.length === 0) {
+      lines.push("No data");
+      return `\ufeff${lines.join("\n")}`;
+    }
+
+    rows.forEach((row) => {
+      lines.push(columns.map((column) => escapeCsvCell(row?.[column.key] ?? "")).join(","));
+    });
+
+    return `\ufeff${lines.join("\n")}`;
+  }
+
   const lines = [];
 
-  sections.forEach((section, sectionIndex) => {
+  normalizedSections.forEach((section, sectionIndex) => {
     if (sectionIndex > 0) lines.push("");
     lines.push(escapeCsvCell(section.title));
 
@@ -1315,6 +1362,7 @@ export default function ReportsPage() {
     }
 
     // Fallback for environments that still serve older API payloads without unifiedExportRows.
+    const materialWindows = new Map();
     const grouped = new Map();
     (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).forEach((row) => {
       const year = String(row?.year || filters.year || "").trim() || "All";
@@ -1332,7 +1380,27 @@ export default function ReportsPage() {
       const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
       const detailingCount = Math.max(1, Number(row?.views || 1));
       const secondsViewed = Number(row?.totalMinutes || 0) * 60;
+      const materialWindowKey = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}`;
       const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}||${slide}`;
+
+      const currentWindow = materialWindows.get(materialWindowKey) || {
+        timeOpenedAt: "",
+        timeClosedAt: "",
+      };
+      if (row?.timeOpenedAt) {
+        currentWindow.timeOpenedAt =
+          currentWindow.timeOpenedAt && currentWindow.timeOpenedAt < row.timeOpenedAt
+            ? currentWindow.timeOpenedAt
+            : row.timeOpenedAt;
+      }
+      if (row?.timeClosedAt) {
+        currentWindow.timeClosedAt =
+          currentWindow.timeClosedAt && currentWindow.timeClosedAt > row.timeClosedAt
+            ? currentWindow.timeClosedAt
+            : row.timeClosedAt;
+      }
+      materialWindows.set(materialWindowKey, currentWindow);
+
       const current = grouped.get(key) || {
         date,
         year,
@@ -1344,6 +1412,7 @@ export default function ReportsPage() {
         material,
         slide,
         detailingCount: 0,
+        materialWindowKey,
         secondsViewed: 0,
       };
       current.detailingCount += detailingCount;
@@ -1351,11 +1420,24 @@ export default function ReportsPage() {
       grouped.set(key, current);
     });
 
-    return Array.from(grouped.values()).map((row) => ({
-      ...row,
-      detailingCount: Math.round(row.detailingCount),
-      secondsViewed: Math.round(row.secondsViewed),
-    }));
+    return Array.from(grouped.values()).map(({ materialWindowKey, ...row }) => {
+      const window = materialWindows.get(materialWindowKey) || {};
+      const openedAt = window?.timeOpenedAt ? new Date(window.timeOpenedAt) : null;
+      const closedAt = window?.timeClosedAt ? new Date(window.timeClosedAt) : null;
+      const elapsedTimeSeconds =
+        openedAt && closedAt && !Number.isNaN(openedAt.getTime()) && !Number.isNaN(closedAt.getTime())
+          ? Math.max(0, Math.round((closedAt.getTime() - openedAt.getTime()) / 1000))
+          : 0;
+
+      return {
+        ...row,
+        detailingCount: Math.round(row.detailingCount),
+        secondsViewed: Math.round(row.secondsViewed),
+        timeOpenedAt: window?.timeOpenedAt || "",
+        timeClosedAt: window?.timeClosedAt || "",
+        elapsedTimeSeconds,
+      };
+    });
   }, [reportData?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
   const unifiedExportSections = useMemo(
     () => [
@@ -1373,6 +1455,9 @@ export default function ReportsPage() {
           slide: row?.slide || "",
           detailingCount: Number(row?.detailingCount || 0),
           secondsViewed: Number(row?.secondsViewed || 0),
+          timeOpened: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
+          timeClosed: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
+          elapsedTime: toElapsedTime(row?.elapsedTimeSeconds ?? row?.elapsedSeconds ?? row?.secondsViewed),
         })),
       },
     ],
@@ -1411,7 +1496,7 @@ export default function ReportsPage() {
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-600 sm:text-sm">
-            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Detailing Count, Seconds viewed.
+            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Detailing Count, Seconds viewed, Time opened, Time closed, Elapsed time.
           </div>
           <ExportButtons
             disabled={unifiedExportDisabled}
