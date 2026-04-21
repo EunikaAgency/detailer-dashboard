@@ -195,6 +195,7 @@ const UNIFIED_EXPORT_COLUMNS = [
   { key: "brand", label: "Brand" },
   { key: "productName", label: "Product Name" },
   { key: "material", label: "Material" },
+  { key: "slide", label: "Slide" },
   { key: "detailingCount", label: "Detailing Count" },
   { key: "secondsViewed", label: "Seconds viewed" },
   { key: "timeOpened", label: "Time opened" },
@@ -1376,12 +1377,11 @@ export default function ReportsPage() {
         slide: row?.exportName || row?.label || row?.slide || "",
         brand,
       });
-      const materialUseKey =
-        String(row?.materialUseKey || "").trim() ||
-        `${date}||${psr}||${productName}||${material}`;
+      const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
+      const detailingCount = Math.max(1, Number(row?.views || 1));
       const secondsViewed = Number(row?.totalMinutes || 0) * 60;
       const materialWindowKey = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}`;
-      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}`;
+      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}||${slide}`;
 
       const currentWindow = materialWindows.get(materialWindowKey) || {
         timeOpenedAt: "",
@@ -1400,6 +1400,7 @@ export default function ReportsPage() {
             : row.timeClosedAt;
       }
       materialWindows.set(materialWindowKey, currentWindow);
+
       const current = grouped.get(key) || {
         date,
         year,
@@ -1409,17 +1410,17 @@ export default function ReportsPage() {
         brand,
         productName,
         material,
-        materialUseKeys: new Set(),
+        slide,
         detailingCount: 0,
         materialWindowKey,
         secondsViewed: 0,
       };
-      current.materialUseKeys.add(materialUseKey);
+      current.detailingCount += detailingCount;
       current.secondsViewed += secondsViewed;
       grouped.set(key, current);
     });
 
-    return Array.from(grouped.values()).map(({ materialWindowKey, materialUseKeys, ...row }) => {
+    return Array.from(grouped.values()).map(({ materialWindowKey, ...row }) => {
       const window = materialWindows.get(materialWindowKey) || {};
       const openedAt = window?.timeOpenedAt ? new Date(window.timeOpenedAt) : null;
       const closedAt = window?.timeClosedAt ? new Date(window.timeClosedAt) : null;
@@ -1430,7 +1431,7 @@ export default function ReportsPage() {
 
       return {
         ...row,
-        detailingCount: materialUseKeys.size,
+        detailingCount: Math.round(row.detailingCount),
         secondsViewed: Math.round(row.secondsViewed),
         timeOpenedAt: window?.timeOpenedAt || "",
         timeClosedAt: window?.timeClosedAt || "",
@@ -1451,6 +1452,7 @@ export default function ReportsPage() {
           brand: row?.brand || "",
           productName: row?.productName || row?.product || "Unknown Product",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          slide: row?.slide || "",
           detailingCount: Number(row?.detailingCount || 0),
           secondsViewed: Number(row?.secondsViewed || 0),
           timeOpened: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
