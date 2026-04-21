@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useEffectEvent } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen, WifiOff } from "lucide-react";
 import { normalizeSlides, resolveProductById, type NormalizedSlide } from "../lib/products";
@@ -22,9 +22,18 @@ type ActiveSlideSegment = {
   startedAt: number | null;
 };
 
+type ActiveMaterialSession = {
+  materialUseKey: string;
+  startedAt: number | null;
+};
+
 const NAVIGATION_FADE_DELAY_MS = 1800;
 const SWIPE_THRESHOLD_PX = 48;
 const SWIPE_VERTICAL_TOLERANCE_PX = 72;
+
+function createMaterialUseKey() {
+  return `mat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export default function Viewer() {
   const navigate = useNavigate();
@@ -45,11 +54,11 @@ export default function Viewer() {
   const hideNavButtonsTimeoutRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const slideTransitionDirectionRef = useRef<'forward' | 'backward'>('forward');
-  const previousFullscreenRef = useRef(false);
   const slideContentRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRailRef = useRef<HTMLDivElement | null>(null);
   const viewerRootRef = useRef<HTMLDivElement | null>(null);
   const activeSlideSegmentRef = useRef<ActiveSlideSegment | null>(null);
+  const activeMaterialSessionRef = useRef<ActiveMaterialSession | null>(null);
   const viewerTrackingContextRef = useRef({
     presentationId: presentationId || "",
     caseId: caseId || "",
@@ -60,12 +69,72 @@ export default function Viewer() {
   // Get settings
   const dynamicBackdrop = settings.dynamicSlideBackdrop;
 
-  viewerTrackingContextRef.current = {
-    presentationId: presentationId || "",
-    caseId: caseId || "",
-    deckTitle,
-    presentationTitle,
-  };
+  useEffect(() => {
+    viewerTrackingContextRef.current = {
+      presentationId: presentationId || "",
+      caseId: caseId || "",
+      deckTitle,
+      presentationTitle,
+    };
+  }, [presentationId, caseId, deckTitle, presentationTitle]);
+
+  const startMaterialSession = useEffectEvent(() => {
+    if (!viewerTrackingContextRef.current.presentationId || !viewerTrackingContextRef.current.caseId || slides.length === 0) {
+      return;
+    }
+
+    if (activeMaterialSessionRef.current?.startedAt) {
+      return;
+    }
+
+    const startedAt = Date.now();
+    const materialUseKey = createMaterialUseKey();
+    activeMaterialSessionRef.current = {
+      materialUseKey,
+      startedAt,
+    };
+
+    trackEvent("activity", "material_opened", "presentation", {
+      presentationId: viewerTrackingContextRef.current.presentationId,
+      productId: viewerTrackingContextRef.current.presentationId,
+      productName: viewerTrackingContextRef.current.presentationTitle,
+      caseId: viewerTrackingContextRef.current.caseId,
+      deckId: viewerTrackingContextRef.current.caseId,
+      presentationTitle: viewerTrackingContextRef.current.presentationTitle,
+      deckTitle: viewerTrackingContextRef.current.deckTitle,
+      materialUseKey,
+      timeOpenedAt: new Date(startedAt).toISOString(),
+      slideCount: slides.length,
+    });
+  });
+
+  const flushMaterialSession = useEffectEvent((flushReason: string) => {
+    const activeMaterialSession = activeMaterialSessionRef.current;
+    if (!activeMaterialSession?.startedAt) {
+      return;
+    }
+
+    const endedAt = Date.now();
+    const startedAt = activeMaterialSession.startedAt;
+    activeMaterialSession.startedAt = null;
+
+    trackEvent("activity", "material_closed", "presentation", {
+      presentationId: viewerTrackingContextRef.current.presentationId,
+      productId: viewerTrackingContextRef.current.presentationId,
+      productName: viewerTrackingContextRef.current.presentationTitle,
+      caseId: viewerTrackingContextRef.current.caseId,
+      deckId: viewerTrackingContextRef.current.caseId,
+      presentationTitle: viewerTrackingContextRef.current.presentationTitle,
+      deckTitle: viewerTrackingContextRef.current.deckTitle,
+      materialUseKey: activeMaterialSession.materialUseKey,
+      timeOpenedAt: new Date(startedAt).toISOString(),
+      timeClosedAt: new Date(endedAt).toISOString(),
+      durationMs: Math.max(0, endedAt - startedAt),
+      durationSeconds: Number(((endedAt - startedAt) / 1000).toFixed(2)),
+      flushReason,
+      slideCount: slides.length,
+    });
+  });
 
   // Load slides from product data
   useEffect(() => {
@@ -246,6 +315,14 @@ export default function Viewer() {
   }, [slides, currentSlide]);
 
   useEffect(() => {
+    if (isLoading || slides.length === 0) {
+      return;
+    }
+
+    startMaterialSession();
+  }, [isLoading, slides.length, presentationId, caseId, deckTitle, presentationTitle]);
+
+  useEffect(() => {
     const flushActiveSlideSegment = (flushReason: string) => {
       const activeSegment = activeSlideSegmentRef.current;
       if (!activeSegment?.startedAt) {
@@ -287,16 +364,19 @@ export default function Viewer() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
+        flushMaterialSession("viewer_hidden");
         flushActiveSlideSegment("viewer_hidden");
         return;
       }
 
       if (document.visibilityState === "visible") {
         restartActiveSegment();
+        startMaterialSession();
       }
     };
 
     const handlePageHide = () => {
+      flushMaterialSession("viewer_exit");
       flushActiveSlideSegment("viewer_exit");
     };
 
@@ -306,6 +386,7 @@ export default function Viewer() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
+      flushMaterialSession("viewer_unmount");
       flushActiveSlideSegment("viewer_unmount");
     };
   }, []);
@@ -336,7 +417,11 @@ export default function Viewer() {
         (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement ||
         null;
 
-      setIsFullscreen(Boolean(fullscreenElement));
+      const nextFullscreenState = Boolean(fullscreenElement);
+      setIsFullscreen(nextFullscreenState);
+      if (nextFullscreenState && isLandscapeViewport) {
+        setShowThumbnails(false);
+      }
     };
 
     document.addEventListener("fullscreenchange", syncFullscreenState);
@@ -346,16 +431,7 @@ export default function Viewer() {
       document.removeEventListener("fullscreenchange", syncFullscreenState);
       document.removeEventListener("webkitfullscreenchange", syncFullscreenState as EventListener);
     };
-  }, []);
-
-  useEffect(() => {
-    const enteringFullscreen = isFullscreen && !previousFullscreenRef.current;
-    previousFullscreenRef.current = isFullscreen;
-
-    if (enteringFullscreen && isLandscapeViewport && showThumbnails) {
-      setShowThumbnails(false);
-    }
-  }, [isFullscreen, isLandscapeViewport, showThumbnails]);
+  }, [isLandscapeViewport]);
 
   const totalSlides = slides.length;
   const viewerId = "viewer";

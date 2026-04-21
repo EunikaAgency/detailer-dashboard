@@ -751,9 +751,9 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
   );
 }
 
-function ExportButtons({ disabled, filenameBase, sections }) {
+function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
   const handleExportCsv = () => {
-    downloadFile(`${filenameBase}.csv`, sectionsToCsv(sections), "text/csv;charset=utf-8;");
+    downloadFile(`${filenameBase}.csv`, sectionsToCsv(csvSections || sections), "text/csv;charset=utf-8;");
   };
 
   const handleExportExcel = () => {
@@ -784,6 +784,28 @@ function ExportButtons({ disabled, filenameBase, sections }) {
       </button>
     </div>
   );
+}
+
+function toCsvDate(value, fallbackMonth = "", fallbackYear = "") {
+  const raw = String(value || "").trim();
+  if (raw) return raw;
+
+  const month = String(fallbackMonth || "").trim();
+  const year = String(fallbackYear || "").trim();
+  return [year, month].filter(Boolean).join("-");
+}
+
+function toCsvTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return raw;
+
+  const hours = String(parsed.getHours()).padStart(2, "0");
+  const minutes = String(parsed.getMinutes()).padStart(2, "0");
+  const seconds = String(parsed.getSeconds()).padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 function buildPieData(items, selectedBrand) {
@@ -1363,6 +1385,7 @@ export default function ReportsPage() {
 
     // Fallback for environments that still serve older API payloads without unifiedExportRows.
     const materialWindows = new Map();
+    const materialUseKeysByMaterial = new Map();
     const grouped = new Map();
     (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).forEach((row) => {
       const year = String(row?.year || filters.year || "").trim() || "All";
@@ -1378,7 +1401,17 @@ export default function ReportsPage() {
         brand,
       });
       const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
-      const detailingCount = Math.max(1, Number(row?.views || 1));
+      const materialUseKey =
+        String(row?.materialUseKey || "").trim() ||
+        [
+          date,
+          String(row?.userId || row?.psr || psr || "").trim(),
+          String(row?.sessionId || row?.caseId || row?.deckId || material).trim(),
+          productName,
+          material,
+        ]
+          .filter(Boolean)
+          .join("||");
       const secondsViewed = Number(row?.totalMinutes || 0) * 60;
       const materialWindowKey = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}`;
       const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}||${slide}`;
@@ -1401,6 +1434,10 @@ export default function ReportsPage() {
       }
       materialWindows.set(materialWindowKey, currentWindow);
 
+      const materialUseKeys = materialUseKeysByMaterial.get(materialWindowKey) || new Set();
+      materialUseKeys.add(materialUseKey);
+      materialUseKeysByMaterial.set(materialWindowKey, materialUseKeys);
+
       const current = grouped.get(key) || {
         date,
         year,
@@ -1411,11 +1448,9 @@ export default function ReportsPage() {
         productName,
         material,
         slide,
-        detailingCount: 0,
         materialWindowKey,
         secondsViewed: 0,
       };
-      current.detailingCount += detailingCount;
       current.secondsViewed += secondsViewed;
       grouped.set(key, current);
     });
@@ -1431,7 +1466,7 @@ export default function ReportsPage() {
 
       return {
         ...row,
-        detailingCount: Math.round(row.detailingCount),
+        detailingCount: materialUseKeysByMaterial.get(materialWindowKey)?.size || 0,
         secondsViewed: Math.round(row.secondsViewed),
         timeOpenedAt: window?.timeOpenedAt || "",
         timeClosedAt: window?.timeClosedAt || "",
@@ -1457,6 +1492,30 @@ export default function ReportsPage() {
           secondsViewed: Number(row?.secondsViewed || 0),
           timeOpened: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
           timeClosed: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
+          elapsedTime: toElapsedTime(row?.elapsedTimeSeconds ?? row?.elapsedSeconds ?? row?.secondsViewed),
+        })),
+      },
+    ],
+    [unifiedExportRows]
+  );
+  const unifiedExportCsvSections = useMemo(
+    () => [
+      {
+        title: "Dashboard Report Export",
+        columns: UNIFIED_EXPORT_COLUMNS,
+        rows: unifiedExportRows.map((row) => ({
+          date: toCsvDate(row?.date, row?.month, row?.year),
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "Unknown Product",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          slide: row?.slide || "",
+          detailingCount: Number(row?.detailingCount || 0),
+          secondsViewed: Number(row?.secondsViewed || 0),
+          timeOpened: toCsvTime(row?.timeOpenedAt || row?.startedAt),
+          timeClosed: toCsvTime(row?.timeClosedAt || row?.endedAt),
           elapsedTime: toElapsedTime(row?.elapsedTimeSeconds ?? row?.elapsedSeconds ?? row?.secondsViewed),
         })),
       },
@@ -1502,6 +1561,7 @@ export default function ReportsPage() {
             disabled={unifiedExportDisabled}
             filenameBase={unifiedExportFilenameBase}
             sections={unifiedExportSections}
+            csvSections={unifiedExportCsvSections}
           />
         </div>
       </div>
