@@ -305,7 +305,7 @@ export default function ReportsPageV2() {
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(payload?.error || "Failed to load dashboard v2 reports.");
+          throw new Error(payload?.error || "Failed to load dashboard reports.");
         }
 
         setReportData({ ...EMPTY_REPORT, ...payload });
@@ -324,9 +324,9 @@ export default function ReportsPageV2() {
         });
       } catch (loadError) {
         if (controller.signal.aborted) return;
-        console.error("Failed to load dashboard v2 reports:", loadError);
+        console.error("Failed to load dashboard reports:", loadError);
         setReportData(EMPTY_REPORT);
-        setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard v2 reports.");
+        setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard reports.");
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
@@ -379,10 +379,10 @@ export default function ReportsPageV2() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c]">Dashboard Reports</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports V2</h1>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports</h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
-              Monthly-only dashboard graphs based on the latest requested layout: national utilization share of voice,
-              then team, PSR, product, and slide utilization views.
+              Monthly dashboard graphs for national utilization share of voice, then team, PSR, product, and slide
+              utilization views.
             </p>
           </div>
           <Link

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useEffectEvent } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Menu, Home, ArrowLeft, Maximize2, ChevronLeft, ChevronRight, Smartphone, Monitor, Maximize, PanelRightClose, PanelRightOpen, WifiOff } from "lucide-react";
 import { normalizeSlides, resolveProductById, type NormalizedSlide } from "../lib/products";
@@ -59,6 +59,7 @@ export default function Viewer() {
   const viewerRootRef = useRef<HTMLDivElement | null>(null);
   const activeSlideSegmentRef = useRef<ActiveSlideSegment | null>(null);
   const activeMaterialSessionRef = useRef<ActiveMaterialSession | null>(null);
+  const slideCountRef = useRef(0);
   const viewerTrackingContextRef = useRef({
     presentationId: presentationId || "",
     caseId: caseId || "",
@@ -78,8 +79,12 @@ export default function Viewer() {
     };
   }, [presentationId, caseId, deckTitle, presentationTitle]);
 
-  const startMaterialSession = useEffectEvent(() => {
-    if (!viewerTrackingContextRef.current.presentationId || !viewerTrackingContextRef.current.caseId || slides.length === 0) {
+  useEffect(() => {
+    slideCountRef.current = slides.length;
+  }, [slides.length]);
+
+  const startMaterialSession = useCallback(() => {
+    if (!viewerTrackingContextRef.current.presentationId || !viewerTrackingContextRef.current.caseId || slideCountRef.current === 0) {
       return;
     }
 
@@ -104,11 +109,11 @@ export default function Viewer() {
       deckTitle: viewerTrackingContextRef.current.deckTitle,
       materialUseKey,
       timeOpenedAt: new Date(startedAt).toISOString(),
-      slideCount: slides.length,
+      slideCount: slideCountRef.current,
     });
-  });
+  }, []);
 
-  const flushMaterialSession = useEffectEvent((flushReason: string) => {
+  const flushMaterialSession = useCallback((flushReason: string) => {
     const activeMaterialSession = activeMaterialSessionRef.current;
     if (!activeMaterialSession?.startedAt) {
       return;
@@ -132,9 +137,9 @@ export default function Viewer() {
       durationMs: Math.max(0, endedAt - startedAt),
       durationSeconds: Number(((endedAt - startedAt) / 1000).toFixed(2)),
       flushReason,
-      slideCount: slides.length,
+      slideCount: slideCountRef.current,
     });
-  });
+  }, []);
 
   // Load slides from product data
   useEffect(() => {
@@ -320,7 +325,7 @@ export default function Viewer() {
     }
 
     startMaterialSession();
-  }, [isLoading, slides.length, presentationId, caseId, deckTitle, presentationTitle]);
+  }, [isLoading, slides.length, presentationId, caseId, deckTitle, presentationTitle, startMaterialSession]);
 
   useEffect(() => {
     const flushActiveSlideSegment = (flushReason: string) => {
@@ -389,7 +394,7 @@ export default function Viewer() {
       flushMaterialSession("viewer_unmount");
       flushActiveSlideSegment("viewer_unmount");
     };
-  }, []);
+  }, [flushMaterialSession, startMaterialSession]);
 
   useEffect(() => {
     if (!showThumbnails) {
