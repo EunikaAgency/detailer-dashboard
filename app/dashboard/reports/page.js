@@ -196,11 +196,9 @@ const UNIFIED_EXPORT_COLUMNS = [
   { key: "productName", label: "Product Name" },
   { key: "material", label: "Material" },
   { key: "slide", label: "Slide" },
-  { key: "detailingCount", label: "Material Open Count" },
   { key: "secondsViewed", label: "Seconds viewed" },
   { key: "timeOpened", label: "Time opened" },
   { key: "timeClosed", label: "Time closed" },
-  { key: "elapsedTime", label: "Elapsed time" },
 ];
 
 function rgba(color, alpha) {
@@ -1488,11 +1486,9 @@ export default function ReportsPage() {
           productName: row?.productName || row?.product || "Unknown Product",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
-          detailingCount: Number(row?.detailingCount || 0),
           secondsViewed: Number(row?.secondsViewed || 0),
           timeOpened: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
           timeClosed: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
-          elapsedTime: toElapsedTime(row?.elapsedTimeSeconds ?? row?.elapsedSeconds ?? row?.secondsViewed),
         })),
       },
     ],
@@ -1512,11 +1508,9 @@ export default function ReportsPage() {
           productName: row?.productName || row?.product || "Unknown Product",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
-          detailingCount: Number(row?.detailingCount || 0),
           secondsViewed: Number(row?.secondsViewed || 0),
           timeOpened: toCsvTime(row?.timeOpenedAt || row?.startedAt),
           timeClosed: toCsvTime(row?.timeClosedAt || row?.endedAt),
-          elapsedTime: toElapsedTime(row?.elapsedTimeSeconds ?? row?.elapsedSeconds ?? row?.secondsViewed),
         })),
       },
     ],
@@ -1555,7 +1549,7 @@ export default function ReportsPage() {
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-600 sm:text-sm">
-            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Material Open Count, Seconds viewed, Time opened, Time closed, Elapsed time.
+            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed.
           </div>
           <ExportButtons
             disabled={unifiedExportDisabled}

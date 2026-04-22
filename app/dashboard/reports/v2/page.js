@@ -8,12 +8,11 @@ import {
   BarElement,
   CategoryScale,
   Chart as ChartJS,
-  Legend,
   LinearScale,
   Tooltip,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const Bar = dynamic(() => import("react-chartjs-2").then((mod) => mod.Bar), {
   ssr: false,
@@ -21,12 +20,12 @@ const Bar = dynamic(() => import("react-chartjs-2").then((mod) => mod.Bar), {
 });
 
 const FILTERS = [
-  { key: "year", label: "Year", hint: "" },
-  { key: "month", label: "Month", hint: "" },
-  { key: "division", label: "Division", hint: "" },
-  { key: "team", label: "Team", hint: "" },
-  { key: "psr", label: "Person", hint: "" },
-  { key: "brand", label: "Brand", hint: "" },
+  { key: "year", label: "Year" },
+  { key: "month", label: "Month" },
+  { key: "division", label: "Division" },
+  { key: "team", label: "Team" },
+  { key: "psr", label: "PSR" },
+  { key: "brand", label: "Brand" },
 ];
 
 const FILTER_OPTIONS = {
@@ -38,14 +37,15 @@ const FILTER_OPTIONS = {
   brand: ["All"],
 };
 
-const SERIES_COLORS = [
-  "16, 94, 118",
-  "2, 132, 199",
-  "217, 119, 6",
-  "21, 128, 61",
-  "190, 24, 93",
-  "79, 70, 229",
-];
+const CHART_COLORS = {
+  td: "196, 85, 8",
+  cns: "22, 101, 52",
+  team: "14, 116, 144",
+  psr: "2, 132, 199",
+  product: "124, 58, 237",
+  slide: "220, 38, 38",
+  average: "5, 150, 105",
+};
 
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
 const EMPTY_CHART_MESSAGE = "No data available for the selected filters.";
@@ -67,19 +67,21 @@ const EMPTY_REPORT = {
       brand: "All",
     },
   },
-  monthly: {
-    product: [],
-    person: [],
-    team: [],
+  nationalUtilization: {
+    tdShareOfVoice: [],
+    cnsShareOfVoice: [],
   },
-  yearly: {
-    product: [],
-    person: [],
-    team: [],
+  teamUtilization: {
+    perTeam: [],
+    perPsr: [],
+    perProduct: [],
+    perSlide: [],
+    averageTimePerSlide: [],
   },
   meta: {
     monthlyTotalInteractions: 0,
-    yearlyTotalInteractions: 0,
+    monthlyTotalSlideViews: 0,
+    monthlyTotalSlideMinutes: 0,
   },
 };
 
@@ -106,22 +108,23 @@ function toMultilineLabel(value, maxLineLength = 24) {
   return lines.length > 1 ? lines : String(value || "");
 }
 
-function buildHorizontalBarData(items, color) {
+function buildHorizontalBarData(items, { color, datasetLabel }) {
   return {
     labels: items.map((item) => toMultilineLabel(item.label)),
     datasets: [
       {
-        label: "Interactions",
+        label: datasetLabel,
         data: items.map((item) => Number(item.value || 0)),
         backgroundColor: rgba(color, 0.92),
         borderRadius: 8,
-        maxBarThickness: 26,
+        maxBarThickness: 24,
+        rawValues: items.map((item) => Number(item.rawValue || 0)),
       },
     ],
   };
 }
 
-function buildHorizontalBarOptions() {
+function buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix = "" }) {
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -132,7 +135,12 @@ function buildHorizontalBarOptions() {
       tooltip: {
         callbacks: {
           label(context) {
-            return `Interactions: ${Number(context.parsed.x || 0).toLocaleString()}`;
+            const value = Number(context.parsed.x || 0);
+            const rawValue = context.dataset.rawValues?.[context.dataIndex];
+            if (rawValue) {
+              return `${datasetLabel}: ${value.toLocaleString()}${valueSuffix} (${rawValue.toLocaleString()} interactions)`;
+            }
+            return `${datasetLabel}: ${value.toLocaleString()}${valueSuffix}`;
           },
         },
       },
@@ -148,7 +156,7 @@ function buildHorizontalBarOptions() {
         },
         title: {
           display: true,
-          text: "Total Interactions",
+          text: xTitle,
           color: "#64748b",
           font: { size: 12, weight: "600" },
         },
@@ -175,7 +183,7 @@ function ChartLoading() {
 
 function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
   return (
-    <div className="flex min-h-[320px] w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
+    <div className="flex min-h-[320px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
       {message}
     </div>
   );
@@ -183,8 +191,8 @@ function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
 
 function FilterTile({ filterKey, label, value, options, onChange }) {
   return (
-    <label className="flex min-h-[74px] flex-col justify-between rounded-2xl border border-sky-900/20 bg-sky-800 px-3 py-2.5 text-white md:min-h-[82px] md:px-4 md:py-3">
-      <div className="text-[1.2rem] font-semibold leading-none md:text-[1.35rem]">{label}</div>
+    <label className="flex min-h-[76px] flex-col justify-between rounded-2xl border border-[#0f4c5c]/20 bg-[#0f4c5c] px-3 py-2.5 text-white md:min-h-[84px] md:px-4 md:py-3">
+      <div className="text-[1.15rem] font-semibold leading-none md:text-[1.3rem]">{label}</div>
       <select
         value={value}
         onChange={(event) => onChange(filterKey, event.target.value)}
@@ -200,23 +208,35 @@ function FilterTile({ filterKey, label, value, options, onChange }) {
   );
 }
 
-function StatCard({ label, value, tone = "slate" }) {
+function StatCard({ label, value, helper, tone = "neutral" }) {
   const tones = {
-    slate: "border-slate-200 bg-white text-slate-900",
-    sky: "border-sky-200 bg-sky-50 text-sky-950",
+    neutral: "border-slate-200 bg-white",
+    warm: "border-amber-200 bg-amber-50",
+    green: "border-emerald-200 bg-emerald-50",
   };
 
   return (
-    <div className={`rounded-2xl border px-4 py-3 shadow-sm ${tones[tone] || tones.slate}`}>
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold">{Number(value || 0).toLocaleString()}</div>
+    <div className={`rounded-2xl border px-4 py-3 shadow-sm ${tones[tone] || tones.neutral}`}>
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-900">{Number(value || 0).toLocaleString()}</div>
+      {helper ? <div className="mt-1 text-xs text-slate-600">{helper}</div> : null}
     </div>
   );
 }
 
-function ReportCard({ title, subtitle, children }) {
+function SectionHeader({ eyebrow, title, subtitle }) {
   return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div>
+      {eyebrow ? <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0f4c5c]">{eyebrow}</div> : null}
+      <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{title}</h2>
+      {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
+    </div>
+  );
+}
+
+function ReportCard({ title, subtitle, children, className = "" }) {
+  return (
+    <section className={`min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-900 sm:text-lg">{title}</h3>
         {subtitle ? <p className="mt-1 text-xs text-slate-600 sm:text-sm">{subtitle}</p> : null}
@@ -226,18 +246,32 @@ function ReportCard({ title, subtitle, children }) {
   );
 }
 
-function ChartCard({ title, subtitle, items, color, isLoading }) {
+function MetricChartCard({
+  title,
+  subtitle,
+  items,
+  color,
+  datasetLabel,
+  xTitle,
+  valueSuffix = "",
+  isLoading,
+  className = "",
+  chartHeight = "h-[320px]",
+}) {
   const hasData = Array.isArray(items) && items.length > 0;
 
   return (
-    <ReportCard title={title} subtitle={subtitle}>
+    <ReportCard title={title} subtitle={subtitle} className={className}>
       {isLoading ? (
         <ChartLoading />
       ) : !hasData ? (
         <ChartEmpty />
       ) : (
-        <div className="h-[320px]">
-          <Bar data={buildHorizontalBarData(items, color)} options={buildHorizontalBarOptions()} />
+        <div className={chartHeight}>
+          <Bar
+            data={buildHorizontalBarData(items, { color, datasetLabel })}
+            options={buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix })}
+          />
         </div>
       )}
     </ReportCard>
@@ -317,46 +351,43 @@ export default function ReportsPageV2() {
     brand: reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand,
   };
 
-  const monthlyProduct = reportData?.monthly?.product || [];
-  const monthlyPerson = reportData?.monthly?.person || [];
-  const monthlyTeam = reportData?.monthly?.team || [];
-  const yearlyProduct = reportData?.yearly?.product || [];
-  const yearlyPerson = reportData?.yearly?.person || [];
-  const yearlyTeam = reportData?.yearly?.team || [];
-
   const scopeDetail = useMemo(() => {
     const detailParts = [];
     if (filters.division && filters.division !== "All") detailParts.push(filters.division);
     if (filters.team && filters.team !== "All") detailParts.push(filters.team);
     if (filters.psr && filters.psr !== "All") detailParts.push(filters.psr);
     if (filters.brand && filters.brand !== "All") detailParts.push(filters.brand);
-    return detailParts.length > 0 ? detailParts.join(" / ") : "All divisions, teams, people, and brands";
+    return detailParts.length > 0 ? detailParts.join(" / ") : "All divisions, teams, PSRs, and brands";
   }, [filters.brand, filters.division, filters.psr, filters.team]);
 
   const monthlyScopeLabel = useMemo(() => {
     const monthLabel = filters.month === "All" ? "all months in scope" : `${filters.month} ${filters.year || ""}`.trim();
-    return `Totals by selected month scope: ${monthLabel}. Filters: ${scopeDetail}.`;
+    return `Monthly dashboard view for ${monthLabel}. Filters: ${scopeDetail}.`;
   }, [filters.month, filters.year, scopeDetail]);
 
-  const yearlyScopeLabel = useMemo(() => {
-    const yearLabel = filters.year === "All" ? "all available years" : filters.year || "selected year";
-    return `Totals across ${yearLabel}. Filters: ${scopeDetail}.`;
-  }, [filters.year, scopeDetail]);
+  const tdShareOfVoice = reportData?.nationalUtilization?.tdShareOfVoice || [];
+  const cnsShareOfVoice = reportData?.nationalUtilization?.cnsShareOfVoice || [];
+  const perTeam = reportData?.teamUtilization?.perTeam || [];
+  const perPsr = reportData?.teamUtilization?.perPsr || [];
+  const perProduct = reportData?.teamUtilization?.perProduct || [];
+  const perSlide = reportData?.teamUtilization?.perSlide || [];
+  const averageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide || [];
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-950 via-sky-900 to-cyan-800 px-4 py-5 text-white shadow-sm sm:px-6 sm:py-6">
+      <div className="rounded-[2rem] border border-[#0f4c5c]/10 bg-[radial-gradient(circle_at_top_left,_rgba(255,247,237,0.95),_rgba(255,255,255,1)_38%,_rgba(240,253,250,0.95)_100%)] px-4 py-5 shadow-sm sm:px-6 sm:py-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Dashboard Reports</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Reports V2</h1>
-            <p className="mt-2 max-w-3xl text-sm text-sky-100 sm:text-base">
-              Focused on the six summary graphics requested: monthly and yearly totals per product, person, and team.
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c]">Dashboard Reports</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports V2</h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
+              Monthly-only dashboard graphs based on the latest requested layout: national utilization share of voice,
+              then team, PSR, product, and slide utilization views.
             </p>
           </div>
           <Link
             href="/dashboard/reports"
-            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15"
+            className="inline-flex items-center justify-center rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-2 text-sm font-medium text-[#0f4c5c] transition hover:bg-slate-50"
           >
             Open current reports
           </Link>
@@ -377,77 +408,125 @@ export default function ReportsPageV2() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <StatCard label="Monthly Total Interactions" value={reportData?.meta?.monthlyTotalInteractions || 0} tone="sky" />
-        <StatCard label="Yearly Total Interactions" value={reportData?.meta?.yearlyTotalInteractions || 0} />
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-          {isLoading ? (
-            <span>{LOADING_PLACEHOLDER_TEXT}</span>
-          ) : error ? (
-            <span className="text-red-600">{error}</span>
-          ) : (
-            <span>Totals are based on tracked dashboard interactions within the selected filters.</span>
-          )}
+        <StatCard
+          label="Total National Utilization"
+          value={reportData?.meta?.monthlyTotalInteractions || 0}
+          helper="Monthly tracked interactions"
+          tone="warm"
+        />
+        <StatCard
+          label="Per Slide Views"
+          value={reportData?.meta?.monthlyTotalSlideViews || 0}
+          helper="Monthly slide view records"
+        />
+        <StatCard
+          label="Slide Minutes"
+          value={reportData?.meta?.monthlyTotalSlideMinutes || 0}
+          helper="Monthly total minutes viewed"
+          tone="green"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+        {isLoading ? (
+          <span>{LOADING_PLACEHOLDER_TEXT}</span>
+        ) : error ? (
+          <span className="text-red-600">{error}</span>
+        ) : (
+          <span>{monthlyScopeLabel}</span>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <SectionHeader
+          eyebrow="Monthly"
+          title="Total National Utilization"
+          subtitle="Share of voice per product for the TD and CNS product groups requested for the dashboard."
+        />
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <MetricChartCard
+            title="TD Share of Voice per Product"
+            subtitle="Pletaa, Mucosta, Meptin, and Aminoleban."
+            items={tdShareOfVoice}
+            color={CHART_COLORS.td}
+            datasetLabel="Share of Voice"
+            xTitle="Percent Share"
+            valueSuffix="%"
+            isLoading={isLoading}
+          />
+          <MetricChartCard
+            title="CNS Share of Voice per Product"
+            subtitle="Abilify, Maintena, and Rexulti."
+            items={cnsShareOfVoice}
+            color={CHART_COLORS.cns}
+            datasetLabel="Share of Voice"
+            xTitle="Percent Share"
+            valueSuffix="%"
+            isLoading={isLoading}
+          />
         </div>
       </div>
 
       <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Monthly Total</h2>
-          <p className="mt-1 text-sm text-slate-600">{monthlyScopeLabel}</p>
-        </div>
+        <SectionHeader
+          eyebrow="Monthly"
+          title="Total Per Team Utilization"
+          subtitle="Additional dashboard graphs for team, PSR, product, and slide activity."
+        />
 
         <div className="grid gap-4 xl:grid-cols-3">
-          <ChartCard
-            title="Monthly Total per Product"
-            subtitle="Top 10 products by interaction count."
-            items={monthlyProduct}
-            color={SERIES_COLORS[0]}
+          <MetricChartCard
+            title="Per Team"
+            subtitle="Top 20 teams by monthly utilization."
+            items={perTeam}
+            color={CHART_COLORS.team}
+            datasetLabel="Utilization"
+            xTitle="Total Interactions"
             isLoading={isLoading}
           />
-          <ChartCard
-            title="Monthly Total per Person"
-            subtitle="Top 10 people by interaction count."
-            items={monthlyPerson}
-            color={SERIES_COLORS[1]}
+          <MetricChartCard
+            title="Per PSR"
+            subtitle="Top 20 PSRs by monthly utilization."
+            items={perPsr}
+            color={CHART_COLORS.psr}
+            datasetLabel="Utilization"
+            xTitle="Total Interactions"
             isLoading={isLoading}
           />
-          <ChartCard
-            title="Monthly Total per Team"
-            subtitle="Top 10 teams by interaction count."
-            items={monthlyTeam}
-            color={SERIES_COLORS[2]}
+          <MetricChartCard
+            title="Per Product"
+            subtitle="Top 20 products by monthly utilization."
+            items={perProduct}
+            color={CHART_COLORS.product}
+            datasetLabel="Utilization"
+            xTitle="Total Interactions"
             isLoading={isLoading}
           />
         </div>
-      </div>
 
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Yearly Total</h2>
-          <p className="mt-1 text-sm text-slate-600">{yearlyScopeLabel}</p>
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-3">
-          <ChartCard
-            title="Yearly Total per Product"
-            subtitle="Top 10 products by interaction count."
-            items={yearlyProduct}
-            color={SERIES_COLORS[3]}
+        <div className="grid gap-4">
+          <MetricChartCard
+            title="Per Slide"
+            subtitle="Top 20 slides by total minutes viewed."
+            items={perSlide}
+            color={CHART_COLORS.slide}
+            datasetLabel="Minutes Viewed"
+            xTitle="Minutes Viewed"
             isLoading={isLoading}
+            className="w-full"
+            chartHeight="h-[420px] xl:h-[500px]"
           />
-          <ChartCard
-            title="Yearly Total per Person"
-            subtitle="Top 10 people by interaction count."
-            items={yearlyPerson}
-            color={SERIES_COLORS[4]}
+          <MetricChartCard
+            title="Average Time per Slide"
+            subtitle="Top 20 slides by average minutes viewed per slide view."
+            items={averageTimePerSlide}
+            color={CHART_COLORS.average}
+            datasetLabel="Average Minutes"
+            xTitle="Average Minutes"
             isLoading={isLoading}
-          />
-          <ChartCard
-            title="Yearly Total per Team"
-            subtitle="Top 10 teams by interaction count."
-            items={yearlyTeam}
-            color={SERIES_COLORS[5]}
-            isLoading={isLoading}
+            className="w-full"
+            chartHeight="h-[420px] xl:h-[500px]"
           />
         </div>
       </div>
