@@ -253,7 +253,7 @@ function ReportCard({ title, subtitle, children, className = "" }) {
   );
 }
 
-function ChartItemLegend({ items, color, valueSuffix = "" }) {
+function ChartItemLegend({ items, color, valueSuffix = "", variant = "default" }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
@@ -265,8 +265,21 @@ function ChartItemLegend({ items, color, valueSuffix = "" }) {
         >
           <span className="shrink-0 text-[11px] font-semibold text-slate-500">#{index + 1}</span>
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(color, 0.92) }} />
-          <span className="min-w-0 flex-1 break-words font-medium leading-snug" title={item.label}>
-            {item.label}
+          <span className="min-w-0 flex-1">
+            {variant === "slide-detail" ? (
+              <span className="flex min-w-0 flex-col leading-snug">
+                <span className="break-words font-semibold text-slate-800" title={item.materialName || item.label}>
+                  {item.materialName || item.label}
+                </span>
+                <span className="break-all font-medium text-slate-500" title={item.slideFilename || item.label}>
+                  {item.slideFilename || item.label}
+                </span>
+              </span>
+            ) : (
+              <span className="break-words font-medium leading-snug" title={item.label}>
+                {item.label}
+              </span>
+            )}
           </span>
           <span className="shrink-0 font-semibold text-slate-900">
             {Number(item.value || 0).toLocaleString()}
@@ -292,6 +305,7 @@ function MetricChartCard({
   labelMaxLineLength = 24,
   useRankLabels = false,
   showItemLegend = false,
+  legendVariant = "default",
 }) {
   const hasData = Array.isArray(items) && items.length > 0;
 
@@ -309,7 +323,9 @@ function MetricChartCard({
               options={buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix })}
             />
           </div>
-          {showItemLegend ? <ChartItemLegend items={items} color={color} valueSuffix={valueSuffix} /> : null}
+          {showItemLegend ? (
+            <ChartItemLegend items={items} color={color} valueSuffix={valueSuffix} variant={legendVariant} />
+          ) : null}
         </>
       )}
     </ReportCard>
@@ -561,6 +577,7 @@ export default function ReportsPageV2({
             chartHeight="h-[420px] xl:h-[500px]"
             useRankLabels
             showItemLegend
+            legendVariant="slide-detail"
           />
           <MetricChartCard
             title="Average Time per Slide"
@@ -574,6 +591,7 @@ export default function ReportsPageV2({
             chartHeight="h-[420px] xl:h-[500px]"
             useRankLabels
             showItemLegend
+            legendVariant="slide-detail"
           />
         </div>
       </div>
