@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
 import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
+import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import {
   ArcElement,
   BarElement,
@@ -1094,94 +1095,103 @@ function buildPieOptions() {
 
 export default function ReportsPage({ filters: controlledFilters, onFiltersChange } = {}) {
   const [localFilters, setLocalFilters] = useState(EMPTY_REPORT.filters.selected);
-  const [reportData, setReportData] = useState(EMPTY_REPORT);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [slideActivityBrand, setSlideActivityBrand] = useState("All Brands");
   const [slideActivityProduct, setSlideActivityProduct] = useState("All Products");
   const [slideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
   const filters = controlledFilters || localFilters;
   const setSelectedFilters = onFiltersChange || setLocalFilters;
 
+  const filtersResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
+    filters,
+    section: "filters",
+    fallbackData: { filters: EMPTY_REPORT.filters },
+  });
+  const overviewResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
+    filters,
+    section: "overview",
+    fallbackData: {
+      filters: EMPTY_REPORT.filters,
+      shareOfVoiceBrand: EMPTY_REPORT.shareOfVoiceBrand,
+      shareOfVoiceApp: EMPTY_REPORT.shareOfVoiceApp,
+      teamRankings: EMPTY_REPORT.teamRankings,
+      repRankings: EMPTY_REPORT.repRankings,
+      meta: EMPTY_REPORT.meta,
+    },
+  });
+  const modulesResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
+    filters,
+    section: "modules",
+    fallbackData: {
+      filters: EMPTY_REPORT.filters,
+      generalCountModules: EMPTY_REPORT.generalCountModules,
+      generalTimeModules: EMPTY_REPORT.generalTimeModules,
+      brandTotalModules: EMPTY_REPORT.brandTotalModules,
+      movingMonthly: EMPTY_REPORT.movingMonthly,
+    },
+  });
+  const teamSectionResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
+    filters,
+    section: "team",
+    fallbackData: {
+      filters: EMPTY_REPORT.filters,
+      allPerTeam: EMPTY_REPORT.allPerTeam,
+      divisionPerTeam: EMPTY_REPORT.divisionPerTeam,
+      specialtyCharts: EMPTY_REPORT.specialtyCharts,
+    },
+  });
+  const slidesResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
+    filters,
+    section: "slides",
+    fallbackData: {
+      filters: EMPTY_REPORT.filters,
+      slideRetentionSlides: EMPTY_REPORT.slideRetentionSlides,
+      unifiedExportRows: EMPTY_REPORT.unifiedExportRows,
+    },
+  });
+
   useEffect(() => {
-    const controller = new AbortController();
+    if (filtersResult.isLoading || filtersResult.error) return;
 
-    const loadReport = async () => {
-      setIsLoading(true);
-      setError("");
+    const nextSelected = filtersResult.data?.filters?.selected;
+    if (!nextSelected) return;
 
-      try {
-        const searchParams = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) searchParams.set(key, value);
-        });
-
-        const response = await fetch(`/api/reports/dashboard?${searchParams.toString()}`, {
-          signal: controller.signal,
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to load dashboard reports.");
-        }
-
-        setReportData({ ...EMPTY_REPORT, ...payload });
-
-        const nextSelected = payload?.filters?.selected || EMPTY_REPORT.filters.selected;
-        setSelectedFilters((current) => {
-          const isSame =
-            current.year === nextSelected.year &&
-            current.month === nextSelected.month &&
-            current.division === nextSelected.division &&
-            current.team === nextSelected.team &&
-            current.psr === nextSelected.psr &&
-            current.brand === nextSelected.brand;
-
-          return isSame ? current : nextSelected;
-        });
-      } catch (loadError) {
-        if (controller.signal.aborted) return;
-        console.error("Failed to load dashboard reports:", loadError);
-        setReportData(EMPTY_REPORT);
-        setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard reports.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadReport();
-    return () => controller.abort();
-  }, [filters, setSelectedFilters]);
+    setSelectedFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
+  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading, setSelectedFilters]);
 
   const handleFilterChange = (key, value) => {
     setSelectedFilters((current) => ({ ...current, [key]: value }));
   };
 
   const filterOptions = {
-    year: reportData?.filters?.yearOptions?.length ? reportData.filters.yearOptions : FILTER_OPTIONS.year,
-    month: reportData?.filters?.monthOptions?.length ? reportData.filters.monthOptions : FILTER_OPTIONS.month,
-    division: reportData?.filters?.divisionOptions?.length ? reportData.filters.divisionOptions : FILTER_OPTIONS.division,
-    team: reportData?.filters?.teamOptions?.length ? reportData.filters.teamOptions : FILTER_OPTIONS.team,
-    psr: reportData?.filters?.psrOptions?.length ? reportData.filters.psrOptions : FILTER_OPTIONS.psr,
-    brand: (reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand).filter(
+    year: filtersResult.data?.filters?.yearOptions?.length ? filtersResult.data.filters.yearOptions : FILTER_OPTIONS.year,
+    month: filtersResult.data?.filters?.monthOptions?.length ? filtersResult.data.filters.monthOptions : FILTER_OPTIONS.month,
+    division: filtersResult.data?.filters?.divisionOptions?.length
+      ? filtersResult.data.filters.divisionOptions
+      : FILTER_OPTIONS.division,
+    team: filtersResult.data?.filters?.teamOptions?.length ? filtersResult.data.filters.teamOptions : FILTER_OPTIONS.team,
+    psr: filtersResult.data?.filters?.psrOptions?.length ? filtersResult.data.filters.psrOptions : FILTER_OPTIONS.psr,
+    brand: (
+      filtersResult.data?.filters?.brandOptions?.length ? filtersResult.data.filters.brandOptions : FILTER_OPTIONS.brand
+    ).filter(
       (brand) => !shouldHideBrandOption(brand)
     ),
   };
 
-  const teamRankingRows = reportData.teamRankings;
-  const repRankingRows = reportData.repRankings;
+  const teamRankingRows = overviewResult.data?.teamRankings || EMPTY_REPORT.teamRankings;
+  const repRankingRows = overviewResult.data?.repRankings || EMPTY_REPORT.repRankings;
 
-  const brandShareRows = reportData.shareOfVoiceBrand;
-  const appShareRows = reportData.shareOfVoiceApp;
-  const generalCountRows = reportData.generalCountModules;
-  const generalTimeRows = reportData.generalTimeModules;
-  const brandTotalRows = reportData.brandTotalModules;
-  const specialtyCharts = reportData.specialtyCharts;
-  const slideRetentionRows = reportData.slideRetentionSlides;
+  const brandShareRows = overviewResult.data?.shareOfVoiceBrand || EMPTY_REPORT.shareOfVoiceBrand;
+  const appShareRows = overviewResult.data?.shareOfVoiceApp || EMPTY_REPORT.shareOfVoiceApp;
+  const generalCountRows = modulesResult.data?.generalCountModules || EMPTY_REPORT.generalCountModules;
+  const generalTimeRows = modulesResult.data?.generalTimeModules || EMPTY_REPORT.generalTimeModules;
+  const brandTotalRows = modulesResult.data?.brandTotalModules || EMPTY_REPORT.brandTotalModules;
+  const specialtyCharts = teamSectionResult.data?.specialtyCharts || EMPTY_REPORT.specialtyCharts;
+  const slideRetentionRows = slidesResult.data?.slideRetentionSlides || EMPTY_REPORT.slideRetentionSlides;
 
   const slideRetentionBrandOptions = useMemo(() => {
     const brands = Array.from(
@@ -1330,9 +1340,18 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   const generalCountChart = useMemo(() => buildSingleBarData(generalCountRows), [generalCountRows]);
   const generalTimeChart = useMemo(() => buildSingleBarData(generalTimeRows), [generalTimeRows]);
   const brandTotalChart = useMemo(() => buildSingleBarData(brandTotalRows), [brandTotalRows]);
-  const movingMonthlyChart = useMemo(() => buildMonthGroupedData(reportData?.movingMonthly), [reportData?.movingMonthly]);
-  const allPerTeamChart = useMemo(() => buildTeamGroupedData(reportData?.allPerTeam), [reportData?.allPerTeam]);
-  const divisionPerTeamChart = useMemo(() => buildTeamGroupedData(reportData?.divisionPerTeam), [reportData?.divisionPerTeam]);
+  const movingMonthlyChart = useMemo(
+    () => buildMonthGroupedData(modulesResult.data?.movingMonthly),
+    [modulesResult.data?.movingMonthly]
+  );
+  const allPerTeamChart = useMemo(
+    () => buildTeamGroupedData(teamSectionResult.data?.allPerTeam),
+    [teamSectionResult.data?.allPerTeam]
+  );
+  const divisionPerTeamChart = useMemo(
+    () => buildTeamGroupedData(teamSectionResult.data?.divisionPerTeam),
+    [teamSectionResult.data?.divisionPerTeam]
+  );
   const slideActivityBrandChart = useMemo(
     () => buildSingleBarData(slideActivityBrandRows, { datasetLabel: "Minutes", color: SERIES_COLORS[5], maxBarThickness: 28 }),
     [slideActivityBrandRows]
@@ -1374,24 +1393,30 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   const divisionScopeLabel = `Grouped by division and team for ${periodScopeLabel}.`;
   const specialtyScopeLabel = `Top module totals for ${periodScopeLabel}.`;
 
+  const overviewError = overviewResult.error;
+  const modulesError = modulesResult.error;
+  const teamError = teamSectionResult.error;
+  const slidesError = slidesResult.error;
+  const firstSectionError =
+    filtersResult.error || overviewError || modulesError || teamError || slidesError;
   const activeFilterText = `${filters.year} / ${filters.month} / ${filters.division} / ${filters.team} / ${filters.psr} / ${filters.brand}`;
-  const visibleTeamRankingRows = isLoading ? [] : teamRankingRows;
-  const visibleRepRankingRows = isLoading ? [] : repRankingRows;
+  const visibleTeamRankingRows = overviewResult.isLoading ? [] : teamRankingRows;
+  const visibleRepRankingRows = overviewResult.isLoading ? [] : repRankingRows;
   const hasBrandShareData = brandShareRows.length > 0;
   const hasAppShareData = appShareRows.length > 0;
   const hasGeneralCountData = generalCountRows.length > 0;
   const hasGeneralTimeData = generalTimeRows.length > 0;
   const hasBrandTotalData = brandTotalRows.length > 0;
-  const hasMovingMonthlyData = Boolean(reportData?.movingMonthly?.rows?.length);
-  const hasAllPerTeamData = Boolean(reportData?.allPerTeam?.labels?.length);
-  const hasDivisionPerTeamData = Boolean(reportData?.divisionPerTeam?.labels?.length);
+  const hasMovingMonthlyData = Boolean(modulesResult.data?.movingMonthly?.rows?.length);
+  const hasAllPerTeamData = Boolean(teamSectionResult.data?.allPerTeam?.labels?.length);
+  const hasDivisionPerTeamData = Boolean(teamSectionResult.data?.divisionPerTeam?.labels?.length);
   const hasSpecialtyData = specialtyCharts.length > 0;
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
   const hasSlideActivityProductData = slideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
   const unifiedExportRows = useMemo(() => {
-    if (Array.isArray(reportData?.unifiedExportRows) && reportData.unifiedExportRows.length > 0) {
-      return reportData.unifiedExportRows;
+    if (Array.isArray(slidesResult.data?.unifiedExportRows) && slidesResult.data.unifiedExportRows.length > 0) {
+      return slidesResult.data.unifiedExportRows;
     }
 
     // Fallback for environments that still serve older API payloads without unifiedExportRows.
@@ -1484,7 +1509,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         elapsedTimeSeconds,
       };
     });
-  }, [reportData?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
+  }, [slidesResult.data?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
   const unifiedExportSections = useMemo(
     () => [
       {
@@ -1529,7 +1554,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     ],
     [unifiedExportRows]
   );
-  const unifiedExportDisabled = isLoading || Boolean(error) || unifiedExportRows.length === 0;
+  const unifiedExportDisabled = slidesResult.isLoading || Boolean(slidesError) || unifiedExportRows.length === 0;
   const unifiedExportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
 
   return (
@@ -1574,28 +1599,28 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
-        {isLoading ? (
+        {overviewResult.isLoading ? (
           <span>Loading dashboard metrics from the database...</span>
-        ) : error ? (
-          <span className="text-red-600">{error}</span>
+        ) : firstSectionError ? (
+          <span className="text-red-600">{firstSectionError}</span>
         ) : (
           <span>
-            {reportData?.meta?.totalInteractionsInMonth || 0} tracked interactions for{" "}
+            {overviewResult.data?.meta?.totalInteractionsInMonth || 0} tracked interactions for{" "}
             <span className="font-semibold text-slate-800">{filters.month || "selected month"}</span> across{" "}
-            <span className="font-semibold text-slate-800">{reportData?.meta?.totalSessionsInYear || 0}</span> session
-            {(reportData?.meta?.totalSessionsInYear || 0) === 1 ? "" : "s"} in {filters.year || "selected year"}.
+            <span className="font-semibold text-slate-800">{overviewResult.data?.meta?.totalSessionsInYear || 0}</span> session
+            {(overviewResult.data?.meta?.totalSessionsInYear || 0) === 1 ? "" : "s"} in {filters.year || "selected year"}.
             {" "}Slide retention captured{" "}
             <span className="font-semibold text-slate-800">
-              {(reportData?.meta?.totalSlideMinutesInMonth || 0).toLocaleString(undefined, {
+              {(overviewResult.data?.meta?.totalSlideMinutesInMonth || 0).toLocaleString(undefined, {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2,
               })}
             </span>{" "}
             minutes across{" "}
             <span className="font-semibold text-slate-800">
-              {(reportData?.meta?.totalSlideViewsInMonth || 0).toLocaleString()}
+              {(overviewResult.data?.meta?.totalSlideViewsInMonth || 0).toLocaleString()}
             </span>{" "}
-            slide view{(reportData?.meta?.totalSlideViewsInMonth || 0) === 1 ? "" : "s"}.
+            slide view{(overviewResult.data?.meta?.totalSlideViewsInMonth || 0) === 1 ? "" : "s"}.
           </span>
         )}
       </div>
@@ -1606,7 +1631,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Brand Share by Interactions" subtitle={countScopeLabel}>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
-              {isLoading ? (
+              {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasBrandShareData ? (
@@ -1625,7 +1650,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
           <ReportCard title="Brand Share by Time Spent" subtitle={timeScopeLabel}>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
-              {isLoading ? (
+              {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasAppShareData ? (
@@ -1651,7 +1676,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             subtitle={rankingScopeLabel}
             rows={visibleTeamRankingRows}
             columns={TEAM_TABLE_COLUMNS}
-            emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
+            emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
           />
 
           <div className="grid gap-3">
@@ -1660,7 +1685,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
               subtitle={rankingScopeLabel}
               rows={visibleRepRankingRows}
               columns={REP_TABLE_COLUMNS}
-              emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : EMPTY_TABLE_MESSAGE}
+              emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
             />
             <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
               <p>* Ranking can extend to show all teams from highest to lowest, then Top 10 or 20 reps.</p>
@@ -1679,7 +1704,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization (All) - Based on Count" subtitle={countScopeLabel}>
-            {isLoading ? (
+            {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralCountData ? (
               <ChartEmpty />
@@ -1691,7 +1716,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="Module Utilization (All) - Based on Time Spent" subtitle={timeScopeLabel}>
-            {isLoading ? (
+            {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralTimeData ? (
               <ChartEmpty />
@@ -1712,7 +1737,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization by Brand Total" subtitle={brandTotalScopeLabel}>
-            {isLoading ? (
+            {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasBrandTotalData ? (
               <ChartEmpty />
@@ -1724,7 +1749,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="Moving Monthly per Module" subtitle={movingMonthlyScopeLabel}>
-            {isLoading ? (
+            {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasMovingMonthlyData ? (
               <ChartEmpty />
@@ -1758,7 +1783,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Module Utilization (All) per Team" subtitle={teamScopeLabel}>
-            {isLoading ? (
+            {teamSectionResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasAllPerTeamData ? (
               <ChartEmpty />
@@ -1773,7 +1798,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="Module Utilization per Division / Team" subtitle={divisionScopeLabel}>
-            {isLoading ? (
+            {teamSectionResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasDivisionPerTeamData ? (
               <ChartEmpty />
@@ -1800,7 +1825,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          {isLoading ? (
+          {teamSectionResult.isLoading ? (
             <ReportCard title="Specialty Breakdown" subtitle={specialtyScopeLabel}>
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             </ReportCard>
@@ -1853,7 +1878,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             />
           </div>
 
-          {isLoading ? (
+          {slidesResult.isLoading ? (
             <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
           ) : !hasSlideActivityBrandData ? (
             <ChartEmpty
@@ -1887,7 +1912,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             />
           </div>
 
-          {isLoading ? (
+          {slidesResult.isLoading ? (
             <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
           ) : !hasSlideActivityAttachmentData ? (
             <ChartEmpty

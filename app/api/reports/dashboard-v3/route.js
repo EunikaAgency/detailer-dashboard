@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { getDashboardReportV3 } from "@/lib/dashboardReports";
+import { getDashboardReportV3Section } from "@/lib/dashboardReports";
 
 export const runtime = "nodejs";
 
@@ -12,14 +12,17 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const report = await getDashboardReportV3({
+    const report = await getDashboardReportV3Section(
+      {
       year: searchParams.get("year") || "",
       month: searchParams.get("month") || "",
       division: searchParams.get("division") || "",
       team: searchParams.get("team") || "",
       psr: searchParams.get("psr") || "",
       brand: searchParams.get("brand") || "",
-    });
+      },
+      searchParams.get("section") || "full"
+    );
 
     return NextResponse.json(report);
   } catch (error) {

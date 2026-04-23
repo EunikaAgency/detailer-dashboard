@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import ReportsPage from "./ReportsPageLegacy";
 import ReportsPageV2 from "./v2/page";
 import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
+import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import {
   BarElement,
   CategoryScale,
@@ -61,6 +62,12 @@ const EMPTY_REPORT = {
       person: [],
       team: [],
     },
+  },
+  meta: {
+    monthlyTotalInteractions: 0,
+    yearlyTotalInteractions: 0,
+    monthlyTotalSlideViews: 0,
+    monthlyTotalSlideMinutes: 0,
   },
 };
 
@@ -234,67 +241,31 @@ function MetricChartCard({ title, subtitle, items, color, isLoading }) {
 
 export default function ReportsPageV3() {
   const [filters, setFilters] = useState(EMPTY_REPORT.filters.selected);
-  const [reportData, setReportData] = useState(EMPTY_REPORT);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const filtersResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v3",
+    filters,
+    section: "filters",
+    fallbackData: { filters: EMPTY_REPORT.filters },
+  });
+  const summaryResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v3",
+    filters,
+    section: "summary",
+    fallbackData: { filters: EMPTY_REPORT.filters, legacyOverview: EMPTY_REPORT.legacyOverview, meta: EMPTY_REPORT.meta },
+  });
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (filtersResult.isLoading || filtersResult.error) return;
 
-    const loadReport = async () => {
-      setIsLoading(true);
-      setError("");
+    const nextSelected = filtersResult.data?.filters?.selected;
+    if (!nextSelected) return;
 
-      try {
-        const searchParams = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) searchParams.set(key, value);
-        });
+    setFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
+  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading]);
 
-        const response = await fetch(`/api/reports/dashboard-v3?${searchParams.toString()}`, {
-          signal: controller.signal,
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to load dashboard reports.");
-        }
-
-        setReportData({ ...EMPTY_REPORT, ...payload });
-
-        const nextSelected = payload?.filters?.selected || EMPTY_REPORT.filters.selected;
-        setFilters((current) => {
-          const isSame =
-            current.year === nextSelected.year &&
-            current.month === nextSelected.month &&
-            current.division === nextSelected.division &&
-            current.team === nextSelected.team &&
-            current.psr === nextSelected.psr &&
-            current.brand === nextSelected.brand;
-
-          return isSame ? current : nextSelected;
-        });
-      } catch (loadError) {
-        if (controller.signal.aborted) return;
-        console.error("Failed to load dashboard reports:", loadError);
-        setReportData(EMPTY_REPORT);
-        setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard reports.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadReport();
-    return () => controller.abort();
-  }, [filters]);
-
-  const monthlyProduct = reportData?.legacyOverview?.monthly?.product || [];
-  const monthlyPerson = reportData?.legacyOverview?.monthly?.person || [];
-  const monthlyTeam = reportData?.legacyOverview?.monthly?.team || [];
+  const monthlyProduct = summaryResult.data?.legacyOverview?.monthly?.product || [];
+  const monthlyPerson = summaryResult.data?.legacyOverview?.monthly?.person || [];
+  const monthlyTeam = summaryResult.data?.legacyOverview?.monthly?.team || [];
 
   return (
     <div className="space-y-6 pb-6">
@@ -314,9 +285,9 @@ export default function ReportsPageV3() {
           subtitle="Top products, PSRs, and teams by interaction count for the selected month."
         />
 
-        {error ? (
+        {summaryResult.error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
-            {error}
+            {summaryResult.error}
           </div>
         ) : null}
 
@@ -326,21 +297,21 @@ export default function ReportsPageV3() {
             subtitle="Top 20 products by interaction count."
             items={monthlyProduct}
             color={SERIES_COLORS[0]}
-            isLoading={isLoading}
+            isLoading={summaryResult.isLoading}
           />
           <MetricChartCard
             title="Top PSRs by Monthly Interactions"
             subtitle="Top 20 PSRs by interaction count."
             items={monthlyPerson}
             color={SERIES_COLORS[1]}
-            isLoading={isLoading}
+            isLoading={summaryResult.isLoading}
           />
           <MetricChartCard
             title="Top Teams by Monthly Interactions"
             subtitle="Top 20 teams by interaction count."
             items={monthlyTeam}
             color={SERIES_COLORS[2]}
-            isLoading={isLoading}
+            isLoading={summaryResult.isLoading}
           />
         </div>
       </div>

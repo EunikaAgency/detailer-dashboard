@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
+import { areReportFiltersEqual, useReportSection } from "../reportClient";
 import {
   BarElement,
   CategoryScale,
@@ -108,9 +109,9 @@ function toMultilineLabel(value, maxLineLength = 24) {
   return lines.length > 1 ? lines : String(value || "");
 }
 
-function buildHorizontalBarData(items, { color, datasetLabel }) {
+function buildHorizontalBarData(items, { color, datasetLabel, labelMaxLineLength = 24, useRankLabels = false }) {
   return {
-    labels: items.map((item) => toMultilineLabel(item.label)),
+    labels: items.map((item, index) => (useRankLabels ? `#${index + 1}` : toMultilineLabel(item.label, labelMaxLineLength))),
     datasets: [
       {
         label: datasetLabel,
@@ -119,6 +120,7 @@ function buildHorizontalBarData(items, { color, datasetLabel }) {
         borderRadius: 8,
         maxBarThickness: 24,
         rawValues: items.map((item) => Number(item.rawValue || 0)),
+        fullLabels: items.map((item) => item.label),
       },
     ],
   };
@@ -134,6 +136,10 @@ function buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix = "" }) {
       legend: { display: false },
       tooltip: {
         callbacks: {
+          title(context) {
+            const firstItem = context?.[0];
+            return firstItem?.dataset?.fullLabels?.[firstItem.dataIndex] || firstItem?.label || "";
+          },
           label(context) {
             const value = Number(context.parsed.x || 0);
             const rawValue = context.dataset.rawValues?.[context.dataIndex];
@@ -165,6 +171,7 @@ function buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix = "" }) {
         grid: { display: false },
         border: { display: false },
         ticks: {
+          autoSkip: false,
           color: "#334155",
           font: { size: 11, weight: "600" },
         },
@@ -246,6 +253,31 @@ function ReportCard({ title, subtitle, children, className = "" }) {
   );
 }
 
+function ChartItemLegend({ items, color, valueSuffix = "" }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  return (
+    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      {items.map((item, index) => (
+        <div
+          key={`${item.label}-${index}`}
+          className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700"
+        >
+          <span className="shrink-0 text-[11px] font-semibold text-slate-500">#{index + 1}</span>
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(color, 0.92) }} />
+          <span className="min-w-0 flex-1 break-words font-medium leading-snug" title={item.label}>
+            {item.label}
+          </span>
+          <span className="shrink-0 font-semibold text-slate-900">
+            {Number(item.value || 0).toLocaleString()}
+            {valueSuffix}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MetricChartCard({
   title,
   subtitle,
@@ -257,6 +289,9 @@ function MetricChartCard({
   isLoading,
   className = "",
   chartHeight = "h-[320px]",
+  labelMaxLineLength = 24,
+  useRankLabels = false,
+  showItemLegend = false,
 }) {
   const hasData = Array.isArray(items) && items.length > 0;
 
@@ -267,88 +302,77 @@ function MetricChartCard({
       ) : !hasData ? (
         <ChartEmpty />
       ) : (
-        <div className={chartHeight}>
-          <Bar
-            data={buildHorizontalBarData(items, { color, datasetLabel })}
-            options={buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix })}
-          />
-        </div>
+        <>
+          <div className={chartHeight}>
+            <Bar
+              data={buildHorizontalBarData(items, { color, datasetLabel, labelMaxLineLength, useRankLabels })}
+              options={buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix })}
+            />
+          </div>
+          {showItemLegend ? <ChartItemLegend items={items} color={color} valueSuffix={valueSuffix} /> : null}
+        </>
       )}
     </ReportCard>
   );
 }
 
-export default function ReportsPageV2() {
-  const [filters, setFilters] = useState(EMPTY_REPORT.filters.selected);
-  const [reportData, setReportData] = useState(EMPTY_REPORT);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+export default function ReportsPageV2({
+  filters: controlledFilters,
+  onFiltersChange,
+  hideHeader = false,
+  hideFilters = false,
+} = {}) {
+  const [localFilters, setLocalFilters] = useState(EMPTY_REPORT.filters.selected);
+  const filters = controlledFilters || localFilters;
+  const setSelectedFilters = onFiltersChange || setLocalFilters;
+
+  const filtersResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v2",
+    filters,
+    section: "filters",
+    fallbackData: { filters: EMPTY_REPORT.filters },
+  });
+  const summaryResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v2",
+    filters,
+    section: "summary",
+    fallbackData: { filters: EMPTY_REPORT.filters, meta: EMPTY_REPORT.meta },
+  });
+  const nationalResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v2",
+    filters,
+    section: "national",
+    fallbackData: { filters: EMPTY_REPORT.filters, nationalUtilization: EMPTY_REPORT.nationalUtilization },
+  });
+  const teamResult = useReportSection({
+    endpoint: "/api/reports/dashboard-v2",
+    filters,
+    section: "team",
+    fallbackData: { filters: EMPTY_REPORT.filters, teamUtilization: EMPTY_REPORT.teamUtilization },
+  });
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (filtersResult.isLoading || filtersResult.error) return;
 
-    const loadReport = async () => {
-      setIsLoading(true);
-      setError("");
+    const nextSelected = filtersResult.data?.filters?.selected;
+    if (!nextSelected) return;
 
-      try {
-        const searchParams = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) searchParams.set(key, value);
-        });
-
-        const response = await fetch(`/api/reports/dashboard-v2?${searchParams.toString()}`, {
-          signal: controller.signal,
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to load dashboard reports.");
-        }
-
-        setReportData({ ...EMPTY_REPORT, ...payload });
-
-        const nextSelected = payload?.filters?.selected || EMPTY_REPORT.filters.selected;
-        setFilters((current) => {
-          const isSame =
-            current.year === nextSelected.year &&
-            current.month === nextSelected.month &&
-            current.division === nextSelected.division &&
-            current.team === nextSelected.team &&
-            current.psr === nextSelected.psr &&
-            current.brand === nextSelected.brand;
-
-          return isSame ? current : nextSelected;
-        });
-      } catch (loadError) {
-        if (controller.signal.aborted) return;
-        console.error("Failed to load dashboard reports:", loadError);
-        setReportData(EMPTY_REPORT);
-        setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard reports.");
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadReport();
-    return () => controller.abort();
-  }, [filters]);
+    setSelectedFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
+  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading, setSelectedFilters]);
 
   const handleFilterChange = (key, value) => {
-    setFilters((current) => ({ ...current, [key]: value }));
+    setSelectedFilters((current) => ({ ...current, [key]: value }));
   };
 
   const filterOptions = {
-    year: reportData?.filters?.yearOptions?.length ? reportData.filters.yearOptions : FILTER_OPTIONS.year,
-    month: reportData?.filters?.monthOptions?.length ? reportData.filters.monthOptions : FILTER_OPTIONS.month,
-    division: reportData?.filters?.divisionOptions?.length ? reportData.filters.divisionOptions : FILTER_OPTIONS.division,
-    team: reportData?.filters?.teamOptions?.length ? reportData.filters.teamOptions : FILTER_OPTIONS.team,
-    psr: reportData?.filters?.psrOptions?.length ? reportData.filters.psrOptions : FILTER_OPTIONS.psr,
-    brand: reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand,
+    year: filtersResult.data?.filters?.yearOptions?.length ? filtersResult.data.filters.yearOptions : FILTER_OPTIONS.year,
+    month: filtersResult.data?.filters?.monthOptions?.length ? filtersResult.data.filters.monthOptions : FILTER_OPTIONS.month,
+    division: filtersResult.data?.filters?.divisionOptions?.length
+      ? filtersResult.data.filters.divisionOptions
+      : FILTER_OPTIONS.division,
+    team: filtersResult.data?.filters?.teamOptions?.length ? filtersResult.data.filters.teamOptions : FILTER_OPTIONS.team,
+    psr: filtersResult.data?.filters?.psrOptions?.length ? filtersResult.data.filters.psrOptions : FILTER_OPTIONS.psr,
+    brand: filtersResult.data?.filters?.brandOptions?.length ? filtersResult.data.filters.brandOptions : FILTER_OPTIONS.brand,
   };
 
   const scopeDetail = useMemo(() => {
@@ -365,73 +389,80 @@ export default function ReportsPageV2() {
     return `Monthly dashboard view for ${monthLabel}. Filters: ${scopeDetail}.`;
   }, [filters.month, filters.year, scopeDetail]);
 
-  const tdShareOfVoice = reportData?.nationalUtilization?.tdShareOfVoice || [];
-  const cnsShareOfVoice = reportData?.nationalUtilization?.cnsShareOfVoice || [];
-  const perTeam = reportData?.teamUtilization?.perTeam || [];
-  const perPsr = reportData?.teamUtilization?.perPsr || [];
-  const perProduct = reportData?.teamUtilization?.perProduct || [];
-  const perSlide = reportData?.teamUtilization?.perSlide || [];
-  const averageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide || [];
+  const tdShareOfVoice = nationalResult.data?.nationalUtilization?.tdShareOfVoice || [];
+  const cnsShareOfVoice = nationalResult.data?.nationalUtilization?.cnsShareOfVoice || [];
+  const perTeam = teamResult.data?.teamUtilization?.perTeam || [];
+  const perPsr = teamResult.data?.teamUtilization?.perPsr || [];
+  const perProduct = teamResult.data?.teamUtilization?.perProduct || [];
+  const perSlide = teamResult.data?.teamUtilization?.perSlide || [];
+  const averageTimePerSlide = teamResult.data?.teamUtilization?.averageTimePerSlide || [];
+  const isSummaryLoading = filtersResult.isLoading || summaryResult.isLoading;
+  const summaryError = filtersResult.error || summaryResult.error;
+  const sectionError = summaryError || nationalResult.error || teamResult.error;
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="rounded-[2rem] border border-[#0f4c5c]/10 bg-[radial-gradient(circle_at_top_left,_rgba(255,247,237,0.95),_rgba(255,255,255,1)_38%,_rgba(240,253,250,0.95)_100%)] px-4 py-5 shadow-sm sm:px-6 sm:py-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c]">Dashboard Reports</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
-              Monthly dashboard graphs for national utilization share of voice, then team, PSR, product, and slide
-              utilization views.
-            </p>
+      {!hideHeader ? (
+        <div className="rounded-[2rem] border border-[#0f4c5c]/10 bg-[radial-gradient(circle_at_top_left,_rgba(255,247,237,0.95),_rgba(255,255,255,1)_38%,_rgba(240,253,250,0.95)_100%)] px-4 py-5 shadow-sm sm:px-6 sm:py-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c]">Dashboard Reports</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports</h1>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
+                Monthly dashboard graphs for national utilization share of voice, then team, PSR, product, and slide
+                utilization views.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/reports"
+              className="inline-flex items-center justify-center rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-2 text-sm font-medium text-[#0f4c5c] transition hover:bg-slate-50"
+            >
+              Open current reports
+            </Link>
           </div>
-          <Link
-            href="/dashboard/reports"
-            className="inline-flex items-center justify-center rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-2 text-sm font-medium text-[#0f4c5c] transition hover:bg-slate-50"
-          >
-            Open current reports
-          </Link>
         </div>
-      </div>
+      ) : null}
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {FILTERS.map((filter) => (
-          <FilterTile
-            key={filter.key}
-            filterKey={filter.key}
-            label={filter.label}
-            value={filters[filter.key]}
-            options={filterOptions[filter.key] || []}
-            onChange={handleFilterChange}
-          />
-        ))}
-      </div>
+      {!hideFilters ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {FILTERS.map((filter) => (
+            <FilterTile
+              key={filter.key}
+              filterKey={filter.key}
+              label={filter.label}
+              value={filters[filter.key]}
+              options={filterOptions[filter.key] || []}
+              onChange={handleFilterChange}
+            />
+          ))}
+        </div>
+      ) : null}
 
       <div className="grid gap-3 lg:grid-cols-3">
         <StatCard
           label="Total National Utilization"
-          value={reportData?.meta?.monthlyTotalInteractions || 0}
+          value={summaryResult.data?.meta?.monthlyTotalInteractions || 0}
           helper="Monthly tracked interactions"
           tone="warm"
         />
         <StatCard
           label="Per Slide Views"
-          value={reportData?.meta?.monthlyTotalSlideViews || 0}
+          value={summaryResult.data?.meta?.monthlyTotalSlideViews || 0}
           helper="Monthly slide view records"
         />
         <StatCard
           label="Slide Minutes"
-          value={reportData?.meta?.monthlyTotalSlideMinutes || 0}
+          value={summaryResult.data?.meta?.monthlyTotalSlideMinutes || 0}
           helper="Monthly total minutes viewed"
           tone="green"
         />
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-        {isLoading ? (
+        {isSummaryLoading ? (
           <span>{LOADING_PLACEHOLDER_TEXT}</span>
-        ) : error ? (
-          <span className="text-red-600">{error}</span>
+        ) : sectionError ? (
+          <span className="text-red-600">{sectionError}</span>
         ) : (
           <span>{monthlyScopeLabel}</span>
         )}
@@ -440,30 +471,30 @@ export default function ReportsPageV2() {
       <div className="space-y-4">
         <SectionHeader
           eyebrow="Monthly"
-          title="Total National Utilization"
-          subtitle="Share of voice per product for the TD and CNS product groups requested for the dashboard."
+          title="Product Utilization Share"
+          subtitle="Percent share per product within the TD and CNS product groups."
         />
 
         <div className="grid gap-4 xl:grid-cols-2">
           <MetricChartCard
-            title="TD Share of Voice per Product"
+            title="TD Product Share by Interactions"
             subtitle="Pletaa, Mucosta, Meptin, and Aminoleban."
             items={tdShareOfVoice}
             color={CHART_COLORS.td}
-            datasetLabel="Share of Voice"
+            datasetLabel="Percent Share"
             xTitle="Percent Share"
             valueSuffix="%"
-            isLoading={isLoading}
+            isLoading={nationalResult.isLoading}
           />
           <MetricChartCard
-            title="CNS Share of Voice per Product"
+            title="CNS Product Share by Interactions"
             subtitle="Abilify, Maintena, and Rexulti."
             items={cnsShareOfVoice}
             color={CHART_COLORS.cns}
-            datasetLabel="Share of Voice"
+            datasetLabel="Percent Share"
             xTitle="Percent Share"
             valueSuffix="%"
-            isLoading={isLoading}
+            isLoading={nationalResult.isLoading}
           />
         </div>
       </div>
@@ -475,7 +506,7 @@ export default function ReportsPageV2() {
           subtitle="Additional dashboard graphs for team, PSR, product, and slide activity."
         />
 
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid gap-4">
           <MetricChartCard
             title="Per Team"
             subtitle="Top 20 teams by monthly utilization."
@@ -483,7 +514,11 @@ export default function ReportsPageV2() {
             color={CHART_COLORS.team}
             datasetLabel="Utilization"
             xTitle="Total Interactions"
-            isLoading={isLoading}
+            isLoading={teamResult.isLoading}
+            className="w-full"
+            chartHeight="h-[420px]"
+            useRankLabels
+            showItemLegend
           />
           <MetricChartCard
             title="Per PSR"
@@ -492,7 +527,11 @@ export default function ReportsPageV2() {
             color={CHART_COLORS.psr}
             datasetLabel="Utilization"
             xTitle="Total Interactions"
-            isLoading={isLoading}
+            isLoading={teamResult.isLoading}
+            className="w-full"
+            chartHeight="h-[420px]"
+            useRankLabels
+            showItemLegend
           />
           <MetricChartCard
             title="Per Product"
@@ -501,7 +540,11 @@ export default function ReportsPageV2() {
             color={CHART_COLORS.product}
             datasetLabel="Utilization"
             xTitle="Total Interactions"
-            isLoading={isLoading}
+            isLoading={teamResult.isLoading}
+            className="w-full"
+            chartHeight="h-[420px]"
+            useRankLabels
+            showItemLegend
           />
         </div>
 
@@ -513,9 +556,11 @@ export default function ReportsPageV2() {
             color={CHART_COLORS.slide}
             datasetLabel="Minutes Viewed"
             xTitle="Minutes Viewed"
-            isLoading={isLoading}
+            isLoading={teamResult.isLoading}
             className="w-full"
             chartHeight="h-[420px] xl:h-[500px]"
+            useRankLabels
+            showItemLegend
           />
           <MetricChartCard
             title="Average Time per Slide"
@@ -524,9 +569,11 @@ export default function ReportsPageV2() {
             color={CHART_COLORS.average}
             datasetLabel="Average Minutes"
             xTitle="Average Minutes"
-            isLoading={isLoading}
+            isLoading={teamResult.isLoading}
             className="w-full"
             chartHeight="h-[420px] xl:h-[500px]"
+            useRankLabels
+            showItemLegend
           />
         </div>
       </div>
