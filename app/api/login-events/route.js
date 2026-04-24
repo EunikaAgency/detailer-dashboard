@@ -114,6 +114,79 @@ const toStoredEvent = (event) => ({
 });
 
 const buildSessionKey = (event) => event.sessionId || `event-${event.eventId}`;
+const MAX_ACTIVITY_LOG_WRITE_ATTEMPTS = 3;
+
+const isRetryableActivityLogWriteError = (error) =>
+  error instanceof mongoose.Error.VersionError || error?.code === 11000;
+
+async function saveActivityLogGroup(resolvedUserId, group) {
+  for (let attempt = 1; attempt <= MAX_ACTIVITY_LOG_WRITE_ATTEMPTS; attempt += 1) {
+    try {
+      const existing = await ActivityLog.findOne({
+        userId: resolvedUserId,
+        sessionId: group.sessionId,
+      });
+
+      if (!existing) {
+        const initialEvents = group.events.map(toStoredEvent);
+        if (!initialEvents.length) return { inserted: 0, updatedLogs: 0 };
+        const startedAt = initialEvents[0].occurredAt;
+        const endedAt = initialEvents[initialEvents.length - 1].occurredAt;
+        await ActivityLog.create({
+          userId: resolvedUserId,
+          sessionId: group.sessionId,
+          method: group.method,
+          source: group.source,
+          userAgent: group.userAgent || null,
+          browser: group.browser || null,
+          browserName: group.browserName || null,
+          browserVersion: group.browserVersion || null,
+          platform: group.platform || null,
+          os: group.os || null,
+          device: group.device || null,
+          startedAt,
+          endedAt,
+          lastOccurredAt: endedAt,
+          eventCount: initialEvents.length,
+          events: initialEvents,
+        });
+        return { inserted: initialEvents.length, updatedLogs: 1 };
+      }
+
+      const existingIds = new Set(existing.events.map((item) => item.eventId));
+      const uniqueIncoming = group.events
+        .filter((item) => !existingIds.has(item.eventId))
+        .map(toStoredEvent);
+
+      if (!uniqueIncoming.length) return { inserted: 0, updatedLogs: 0 };
+
+      existing.events.push(...uniqueIncoming);
+      existing.events.sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+      existing.eventCount = existing.events.length;
+      existing.startedAt = existing.events[0].occurredAt;
+      existing.endedAt = existing.events[existing.events.length - 1].occurredAt;
+      existing.lastOccurredAt = existing.endedAt;
+      if (!existing.method) existing.method = group.method;
+      if (!existing.source) existing.source = group.source;
+      if (!existing.userAgent && group.userAgent) existing.userAgent = group.userAgent;
+      if (!existing.browser && group.browser) existing.browser = group.browser;
+      if (!existing.browserName && group.browserName) existing.browserName = group.browserName;
+      if (!existing.browserVersion && group.browserVersion) existing.browserVersion = group.browserVersion;
+      if (!existing.platform && group.platform) existing.platform = group.platform;
+      if (!existing.os && group.os) existing.os = group.os;
+      if (!existing.device && group.device) existing.device = group.device;
+      await existing.save();
+
+      return { inserted: uniqueIncoming.length, updatedLogs: 1 };
+    } catch (error) {
+      if (attempt >= MAX_ACTIVITY_LOG_WRITE_ATTEMPTS || !isRetryableActivityLogWriteError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  return { inserted: 0, updatedLogs: 0 };
+}
 
 const groupBySession = (events) => {
   const grouped = new Map();
@@ -271,65 +344,9 @@ export async function POST(request) {
     let updatedLogs = 0;
 
     for (const group of sessionGroups) {
-      const existing = await ActivityLog.findOne({
-        userId: resolvedUserId,
-        sessionId: group.sessionId,
-      });
-
-      if (!existing) {
-        const initialEvents = group.events.map(toStoredEvent);
-        if (!initialEvents.length) continue;
-        const startedAt = initialEvents[0].occurredAt;
-        const endedAt = initialEvents[initialEvents.length - 1].occurredAt;
-        await ActivityLog.create({
-          userId: resolvedUserId,
-          sessionId: group.sessionId,
-          method: group.method,
-          source: group.source,
-          userAgent: group.userAgent || null,
-          browser: group.browser || null,
-          browserName: group.browserName || null,
-          browserVersion: group.browserVersion || null,
-          platform: group.platform || null,
-          os: group.os || null,
-          device: group.device || null,
-          startedAt,
-          endedAt,
-          lastOccurredAt: endedAt,
-          eventCount: initialEvents.length,
-          events: initialEvents,
-        });
-        inserted += initialEvents.length;
-        updatedLogs += 1;
-        continue;
-      }
-
-      const existingIds = new Set(existing.events.map((item) => item.eventId));
-      const uniqueIncoming = group.events
-        .filter((item) => !existingIds.has(item.eventId))
-        .map(toStoredEvent);
-
-      if (!uniqueIncoming.length) continue;
-
-      existing.events.push(...uniqueIncoming);
-      existing.events.sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
-      existing.eventCount = existing.events.length;
-      existing.startedAt = existing.events[0].occurredAt;
-      existing.endedAt = existing.events[existing.events.length - 1].occurredAt;
-      existing.lastOccurredAt = existing.endedAt;
-      if (!existing.method) existing.method = group.method;
-      if (!existing.source) existing.source = group.source;
-      if (!existing.userAgent && group.userAgent) existing.userAgent = group.userAgent;
-      if (!existing.browser && group.browser) existing.browser = group.browser;
-      if (!existing.browserName && group.browserName) existing.browserName = group.browserName;
-      if (!existing.browserVersion && group.browserVersion) existing.browserVersion = group.browserVersion;
-      if (!existing.platform && group.platform) existing.platform = group.platform;
-      if (!existing.os && group.os) existing.os = group.os;
-      if (!existing.device && group.device) existing.device = group.device;
-      await existing.save();
-
-      inserted += uniqueIncoming.length;
-      updatedLogs += 1;
+      const result = await saveActivityLogGroup(resolvedUserId, group);
+      inserted += result.inserted;
+      updatedLogs += result.updatedLogs;
     }
 
     return NextResponse.json({

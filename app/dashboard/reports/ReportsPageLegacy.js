@@ -806,12 +806,12 @@ function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <button
         type="button"
         onClick={handleExportCsv}
         disabled={disabled}
-        className="rounded-md border border-sky-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-sky-800 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs"
+        className="rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Export CSV
       </button>
@@ -819,7 +819,7 @@ function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
         type="button"
         onClick={handleExportExcel}
         disabled={disabled}
-        className="rounded-md border border-sky-700 bg-sky-700 px-2.5 py-1.5 text-[11px] font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs"
+        className="rounded-lg border border-sky-700 bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Export Excel
       </button>
@@ -1390,10 +1390,6 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     () => buildTeamGroupedData(teamSectionResult.data?.allPerTeam),
     [teamSectionResult.data?.allPerTeam]
   );
-  const divisionPerTeamChart = useMemo(
-    () => buildTeamGroupedData(teamSectionResult.data?.divisionPerTeam),
-    [teamSectionResult.data?.divisionPerTeam]
-  );
   const slideActivityBrandChart = useMemo(
     () =>
       buildSingleBarData(slideActivityBrandRows, {
@@ -1463,10 +1459,6 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     isAllMonths || isAllYears
       ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a team.`
       : `Shows the Material Open Count for each material in ${periodScopeLabel}. Each color in the legend is a team.`;
-  const divisionScopeLabel =
-    isAllMonths || isAllYears
-      ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a division.`
-      : `Shows the Material Open Count for each material in ${periodScopeLabel}. Each color in the legend is a division.`;
   const slideBrandScopeLabel =
     isAllMonths || isAllYears
       ? `Shows the total minutes viewed for each product during ${periodScopeLabel}.`
@@ -1504,13 +1496,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   const hasBrandTotalData = brandTotalRows.length > 0;
   const hasMovingMonthlyData = Boolean(modulesResult.data?.movingMonthly?.rows?.length);
   const hasAllPerTeamData = Boolean(teamSectionResult.data?.allPerTeam?.labels?.length);
-  const hasDivisionPerTeamData = Boolean(
-    teamSectionResult.data?.divisionPerTeam?.labels?.length && teamSectionResult.data?.divisionPerTeam?.series?.length
-  );
   const hasSpecialtyData = specialtyCharts.length > 0;
-  const showDivisionPerTeamCard = teamSectionResult.isLoading || hasDivisionPerTeamData;
-  const teamModulesHeadingClass = showDivisionPerTeamCard ? "grid gap-2 xl:grid-cols-2" : "grid gap-2";
-  const teamModulesGridClass = showDivisionPerTeamCard ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
   const specialtyGridClass =
     teamSectionResult.isLoading || specialtyCharts.length > 1 ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
@@ -1848,18 +1834,13 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       <div className="space-y-3 sm:space-y-4">
         <SectionDivider label="Material Activity by Team" />
 
-        <div className={teamModulesHeadingClass}>
+        <div className="grid gap-2">
           <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
             Shows the Top Materials by Team
           </div>
-          {showDivisionPerTeamCard ? (
-            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
-              Shows the Top Materials by Division
-            </div>
-          ) : null}
         </div>
 
-        <div className={teamModulesGridClass}>
+        <div className="grid gap-4 sm:gap-6">
           <ReportCard title="Materials With the Highest Material Open Count by Team" subtitle={teamScopeLabel}>
             {teamSectionResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
@@ -1872,25 +1853,8 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
                   options={buildBarOptions({ yTitle: "Material Open Count", legend: true, legendPosition: "bottom" })}
                 />
               </div>
-            )}
-          </ReportCard>
-
-          {showDivisionPerTeamCard ? (
-            <ReportCard title="Materials With the Highest Material Open Count by Division" subtitle={divisionScopeLabel}>
-              {teamSectionResult.isLoading ? (
-                <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-              ) : !hasDivisionPerTeamData ? (
-                <ChartEmpty />
-              ) : (
-                <div className="h-[220px] sm:h-[320px]">
-                  <Bar
-                    data={divisionPerTeamChart}
-                    options={buildBarOptions({ yTitle: "Material Open Count", legend: true, legendPosition: "bottom" })}
-                  />
-                </div>
               )}
-            </ReportCard>
-          ) : null}
+          </ReportCard>
         </div>
 
       </div>

@@ -1,8 +1,12 @@
+const path = require('path');
+
+const appRoot = __dirname;
+
 module.exports = {
   apps: [
     {
       name: 'detailer-web-prod',
-      cwd: '/var/public/otsukadetailer/detailer/web',
+      cwd: appRoot,
       script: 'npm',
       args: 'start',
       env: {
@@ -21,7 +25,7 @@ module.exports = {
     },
     {
       name: 'detailer-web-dev',
-      cwd: '/var/public/otsukadetailer/detailer/web',
+      cwd: appRoot,
       script: 'npm',
       args: 'run dev',
       env: {
@@ -40,7 +44,7 @@ module.exports = {
     },
     {
       name: 'detailer-conversion-cron',
-      cwd: '/var/public/otsukadetailer/detailer/web',
+      cwd: appRoot,
       script: 'node',
       args: 'scripts/conversion-cron.js',
       env: {
@@ -60,14 +64,14 @@ module.exports = {
     },
     {
       name: 'detailer-products-api-backup',
-      cwd: '/var/public/otsukadetailer/detailer/web',
+      cwd: appRoot,
       script: 'node',
       args: 'scripts/products-api-backup-cron.js',
       env: {
         NODE_ENV: 'production',
         PRODUCTS_API_BACKUP_URL: 'http://127.0.0.1:7001/api/products',
         PRODUCTS_API_BACKUP_INTERVAL_MS: '3600000',
-        PRODUCTS_API_BACKUP_DIR: '/var/public/otsukadetailer/detailer/web/backups/api-products'
+        PRODUCTS_API_BACKUP_DIR: path.join(appRoot, 'backups', 'api-products')
       },
       instances: 1,
       exec_mode: 'fork',
