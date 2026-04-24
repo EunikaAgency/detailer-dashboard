@@ -1,3 +1,3 @@
 "use client";
 
-export { default } from "./ReportsPageV3";
+export { default } from "./ReportsPage";

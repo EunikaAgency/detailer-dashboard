@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import ReportsPage from "./ReportsPageLegacy";
-import ReportsPageV2 from "./v2/page";
-import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
+import ReportsUtilizationSection from "./ReportsUtilizationSection";
+import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import {
   BarElement,
@@ -24,7 +24,7 @@ const Bar = dynamic(() => import("react-chartjs-2").then((mod) => mod.Bar), {
 const FILTER_OPTIONS = {
   year: [],
   month: [],
-  division: REPORT_DIVISION_FILTER_OPTIONS,
+  division: REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS,
   team: ["All"],
   psr: ["All"],
   brand: ["All"],
@@ -99,11 +99,11 @@ function buildHorizontalBarData(items, color) {
     labels: items.map((item, index) => `#${index + 1}`),
     datasets: [
       {
-        label: "Interactions",
+        label: "Material Open Count",
         data: items.map((item) => Number(item.value || 0)),
         backgroundColor: rgba(color, 0.92),
         borderRadius: 8,
-        maxBarThickness: 24,
+        maxBarThickness: 28,
         fullLabels: items.map((item) => item.label),
       },
     ],
@@ -114,7 +114,6 @@ function buildHorizontalBarOptions() {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    indexAxis: "y",
     interaction: { mode: "index", intersect: false },
     plugins: {
       legend: { display: false },
@@ -125,33 +124,36 @@ function buildHorizontalBarOptions() {
             return firstItem?.dataset?.fullLabels?.[firstItem.dataIndex] || firstItem?.label || "";
           },
           label(context) {
-            return `Interactions: ${Number(context.parsed.x || 0).toLocaleString()}`;
+            return `Material Open Count: ${Number(context.parsed.y || 0).toLocaleString()}`;
           },
         },
       },
     },
     scales: {
       x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          autoSkip: false,
+          color: "#475569",
+          font: { size: 11 },
+          maxRotation: 0,
+          minRotation: 0,
+        },
+      },
+      y: {
         beginAtZero: true,
         grid: { color: "rgba(148, 163, 184, 0.18)" },
         border: { display: false },
         ticks: {
-          color: "#475569",
-          font: { size: 11 },
+          color: "#334155",
+          font: { size: 11, weight: "600" },
         },
         title: {
           display: true,
-          text: "Total Interactions",
+          text: "Material Open Count",
           color: "#64748b",
           font: { size: 12, weight: "600" },
-        },
-      },
-      y: {
-        grid: { display: false },
-        border: { display: false },
-        ticks: {
-          color: "#334155",
-          font: { size: 11, weight: "600" },
         },
       },
     },
@@ -239,7 +241,7 @@ function MetricChartCard({ title, subtitle, items, color, isLoading }) {
   );
 }
 
-export default function ReportsPageV3() {
+export default function ReportsPageDashboard() {
   const [filters, setFilters] = useState(EMPTY_REPORT.filters.selected);
   const filtersResult = useReportSection({
     endpoint: "/api/reports/dashboard-v3",
@@ -269,20 +271,22 @@ export default function ReportsPageV3() {
 
   return (
     <div className="space-y-6 pb-6">
+      
+
       <ReportsPage filters={filters} onFiltersChange={setFilters} />
 
       <div className="relative py-4">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#0f4c5c]/25 to-transparent" />
         <div className="relative mx-auto w-fit rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c] shadow-sm">
-          Monthly Interaction Summary
+          Monthly Material Open Count Summary
         </div>
       </div>
 
       <div className="space-y-4">
         <SectionHeader
-          eyebrow="Monthly Interactions"
-          title="Monthly Interaction Summary"
-          subtitle="Top products, PSRs, and teams by interaction count for the selected month."
+          eyebrow="Material Open Count"
+          title="Monthly Material Open Count Summary"
+          subtitle="Ranks the top products, representatives, and teams by Material Open Count for the selected month."
         />
 
         {summaryResult.error ? (
@@ -293,22 +297,22 @@ export default function ReportsPageV3() {
 
         <div className="grid gap-4">
           <MetricChartCard
-            title="Top Products by Monthly Interactions"
-            subtitle="Top 20 products by interaction count."
+            title="Products With the Highest Material Open Count"
+            subtitle="Shows the top 20 products based on Material Open Count for the selected month."
             items={monthlyProduct}
             color={SERIES_COLORS[0]}
             isLoading={summaryResult.isLoading}
           />
           <MetricChartCard
-            title="Top PSRs by Monthly Interactions"
-            subtitle="Top 20 PSRs by interaction count."
+            title="Representatives With the Highest Material Open Count"
+            subtitle="Shows the top 20 representatives based on Material Open Count for the selected month."
             items={monthlyPerson}
             color={SERIES_COLORS[1]}
             isLoading={summaryResult.isLoading}
           />
           <MetricChartCard
-            title="Top Teams by Monthly Interactions"
-            subtitle="Top 20 teams by interaction count."
+            title="Teams With the Highest Material Open Count"
+            subtitle="Shows the top 20 teams based on Material Open Count for the selected month."
             items={monthlyTeam}
             color={SERIES_COLORS[2]}
             isLoading={summaryResult.isLoading}
@@ -319,11 +323,11 @@ export default function ReportsPageV3() {
       <div className="relative py-4">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#0f4c5c]/25 to-transparent" />
         <div className="relative mx-auto w-fit rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c] shadow-sm">
-          Utilization Charts
+          Material Open Count and Slide Viewing
         </div>
       </div>
 
-      <ReportsPageV2 filters={filters} onFiltersChange={setFilters} hideHeader hideFilters />
+      <ReportsUtilizationSection filters={filters} onFiltersChange={setFilters} hideHeader hideFilters />
     </div>
   );
 }

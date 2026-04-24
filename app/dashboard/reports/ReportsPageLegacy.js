@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
-import { REPORT_DIVISION_FILTER_OPTIONS } from "@/lib/reportDivision";
+import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import {
   ArcElement,
@@ -30,16 +30,16 @@ const Pie = dynamic(() => import("react-chartjs-2").then((mod) => mod.Pie), {
 const FILTERS = [
   { key: "year", label: "Year", hint: "" },
   { key: "month", label: "Month", hint: "(multiple selection)" },
-  { key: "division", label: "Division", hint: "(All, Carry-All GMA, Carry-All Prov, CNS, Unassigned Division)" },
+  { key: "division", label: "Division", hint: "(All, Carry-All GMA, Carry-All Prov, CNS)" },
   { key: "team", label: "Team", hint: "" },
-  { key: "psr", label: "PSR", hint: "" },
+  { key: "psr", label: "Representative", hint: "" },
   { key: "brand", label: "Brand", hint: "" },
 ];
 
 const FILTER_OPTIONS = {
   year: [],
   month: [],
-  division: REPORT_DIVISION_FILTER_OPTIONS,
+  division: REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS,
   team: ["All"],
   psr: ["All"],
   brand: ["All"],
@@ -131,34 +131,65 @@ const EMPTY_REPORT = {
   },
 };
 
-const TEAM_TABLE_COLUMNS = [
+const TEAM_TABLE_DATE_COLUMNS = [
   { key: "year", label: "Year" },
   { key: "month", label: "Month" },
+];
+
+const TEAM_TABLE_BASE_COLUMNS = [
   { key: "rank", label: "Rank", align: "right" },
-  { key: "division", label: "Division" },
   { key: "team", label: "Team" },
   { key: "brand", label: "Brand" },
   { key: "detailingCount", label: "Material Open Count", align: "right", format: (value) => value.toLocaleString() },
 ];
 
-const REP_TABLE_COLUMNS = [
+const REP_TABLE_DATE_COLUMNS = [
   { key: "year", label: "Year" },
   { key: "month", label: "Month" },
+];
+
+const REP_TABLE_BASE_COLUMNS = [
   { key: "rank", label: "Rank", align: "right" },
-  { key: "division", label: "Division" },
   { key: "team", label: "Team" },
-  { key: "psr", label: "Rep" },
+  { key: "psr", label: "Representative" },
   { key: "brand", label: "Brand" },
   { key: "detailingCount", label: "Material Open Count", align: "right", format: (value) => value.toLocaleString() },
 ];
+
+const getVisibleDateColumns = (filters = {}) => {
+  const columns = [];
+  if (filters?.year === "All") {
+    columns.push("year");
+  }
+  if (filters?.month === "All") {
+    columns.push("month");
+  }
+  return columns;
+};
+
+const getTeamTableColumns = (filters = {}) => [
+  ...TEAM_TABLE_DATE_COLUMNS.filter((column) => getVisibleDateColumns(filters).includes(column.key)),
+  ...TEAM_TABLE_BASE_COLUMNS,
+];
+
+const getRepTableColumns = (filters = {}) => [
+  ...REP_TABLE_DATE_COLUMNS.filter((column) => getVisibleDateColumns(filters).includes(column.key)),
+  ...REP_TABLE_BASE_COLUMNS,
+];
+
+const TEAM_RANKING_EXPORT_COLUMNS = [...TEAM_TABLE_DATE_COLUMNS, ...TEAM_TABLE_BASE_COLUMNS].map(({ key, label }) => ({
+  key,
+  label,
+}));
+const REP_RANKING_EXPORT_COLUMNS = [...REP_TABLE_DATE_COLUMNS, ...REP_TABLE_BASE_COLUMNS].map(({ key, label }) => ({
+  key,
+  label,
+}));
 
 const SHARE_EXPORT_COLUMNS = [
   { key: "brand", label: "Brand" },
   { key: "percent", label: "Percent" },
 ];
-
-const TEAM_RANKING_EXPORT_COLUMNS = TEAM_TABLE_COLUMNS.map(({ key, label }) => ({ key, label }));
-const REP_RANKING_EXPORT_COLUMNS = REP_TABLE_COLUMNS.map(({ key, label }) => ({ key, label }));
 
 const MODULE_EXPORT_COLUMNS = [
   { key: "module", label: "Module" },
@@ -192,7 +223,7 @@ const UNIFIED_EXPORT_COLUMNS = [
   { key: "date", label: "Date" },
   { key: "month", label: "Month" },
   { key: "team", label: "Team" },
-  { key: "psr", label: "PSR" },
+  { key: "psr", label: "Representative" },
   { key: "brand", label: "Brand" },
   { key: "productName", label: "Product Name" },
   { key: "material", label: "Material" },
@@ -682,7 +713,7 @@ function ReportCard({ title, subtitle, actions = null, children, className = "" 
 
 function PieLegend({ items, selectedBrand }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
       {items.map((item, index) => {
         const isSelected = selectedBrand !== "All" && item.label === selectedBrand;
         return (
@@ -733,7 +764,7 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={`${row.year}-${row.month}-${row.division}-${row.team}-${row.brand}-${row.rank}`} className="odd:bg-white even:bg-slate-50/70">
+                <tr key={`${row.year}-${row.month}-${row.team}-${row.psr || ""}-${row.brand}-${row.rank}`} className="odd:bg-white even:bg-slate-50/70">
                   {columns.map((column) => {
                     const rawValue = row[column.key];
                     const value = column.format ? column.format(rawValue, row) : rawValue;
@@ -838,7 +869,7 @@ function buildSingleBarData(items, options = {}) {
     labels: items.map((item) => toMultilineLabel(item.label)),
     datasets: [
       {
-        label: options.datasetLabel || "Utilization",
+        label: options.datasetLabel || "Material Open Count",
         data: items.map((item) => Number(item.value || 0)),
         backgroundColor: rgba(options.color || SERIES_COLORS[0], 0.95),
         borderRadius: 4,
@@ -915,7 +946,7 @@ function buildTeamGroupedData(chart) {
 }
 
 function buildBarOptions({
-  yTitle = "Utilization",
+  yTitle = "Material Open Count",
   legend = false,
   legendPosition = "bottom",
   stacked = false,
@@ -1257,7 +1288,9 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       (Array.isArray(slideRetentionRows) ? slideRetentionRows : [])
         .filter((row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand)
         .forEach((row) => {
-          const productLabel = String(row?.product || "").trim() || "Unknown Product";
+          const productLabel = String(row?.product || "").trim();
+          if (!productLabel) return;
+
           const current = grouped.get(productLabel) || {
             label: productLabel,
             value: 0,
@@ -1337,9 +1370,18 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
   const brandShareChart = useMemo(() => buildPieData(brandShareRows, filters.brand), [brandShareRows, filters.brand]);
   const appShareChart = useMemo(() => buildPieData(appShareRows, filters.brand), [appShareRows, filters.brand]);
-  const generalCountChart = useMemo(() => buildSingleBarData(generalCountRows), [generalCountRows]);
-  const generalTimeChart = useMemo(() => buildSingleBarData(generalTimeRows), [generalTimeRows]);
-  const brandTotalChart = useMemo(() => buildSingleBarData(brandTotalRows), [brandTotalRows]);
+  const generalCountChart = useMemo(
+    () => buildSingleBarData(generalCountRows, { datasetLabel: "Material Open Count" }),
+    [generalCountRows]
+  );
+  const generalTimeChart = useMemo(
+    () => buildSingleBarData(generalTimeRows, { datasetLabel: "Minutes Spent" }),
+    [generalTimeRows]
+  );
+  const brandTotalChart = useMemo(
+    () => buildSingleBarData(brandTotalRows, { datasetLabel: "Material Open Count" }),
+    [brandTotalRows]
+  );
   const movingMonthlyChart = useMemo(
     () => buildMonthGroupedData(modulesResult.data?.movingMonthly),
     [modulesResult.data?.movingMonthly]
@@ -1353,11 +1395,21 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     [teamSectionResult.data?.divisionPerTeam]
   );
   const slideActivityBrandChart = useMemo(
-    () => buildSingleBarData(slideActivityBrandRows, { datasetLabel: "Minutes", color: SERIES_COLORS[5], maxBarThickness: 28 }),
+    () =>
+      buildSingleBarData(slideActivityBrandRows, {
+        datasetLabel: "Minutes Viewed",
+        color: SERIES_COLORS[5],
+        maxBarThickness: 28,
+      }),
     [slideActivityBrandRows]
   );
   const slideActivityProductChart = useMemo(
-    () => buildSingleBarData(slideActivityProductRows, { datasetLabel: "Minutes", color: SERIES_COLORS[2], maxBarThickness: 28 }),
+    () =>
+      buildSingleBarData(slideActivityProductRows, {
+        datasetLabel: "Minutes Viewed",
+        color: SERIES_COLORS[2],
+        maxBarThickness: 28,
+      }),
     [slideActivityProductRows]
   );
   const slideActivityAttachmentChart = useMemo(
@@ -1382,16 +1434,59 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     ? `${selectedMonthText} across all years`
     : `${selectedMonthText} ${selectedYearText}`;
   const yearlyScopeLabel = isAllYears ? "all years combined" : selectedYearText;
-  const brandTotalScopeLabel = isAllMonths
-    ? `Based on selected year total: ${yearlyScopeLabel}.`
-    : `Based on selected month total: ${periodScopeLabel}.`;
-  const rankingScopeLabel = `Based on detailing count for ${periodScopeLabel}.`;
-  const countScopeLabel = `Based on interaction count for ${periodScopeLabel}.`;
-  const timeScopeLabel = `Based on time spent for ${periodScopeLabel}.`;
-  const movingMonthlyScopeLabel = `Monthly totals within ${yearlyScopeLabel}.`;
-  const teamScopeLabel = `Grouped by team for ${periodScopeLabel}.`;
-  const divisionScopeLabel = `Grouped by division and team for ${periodScopeLabel}.`;
-  const specialtyScopeLabel = `Top module totals for ${periodScopeLabel}.`;
+  const rankingScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows the Material Open Count used to rank each team or representative during ${periodScopeLabel}.`
+      : `Shows the Material Open Count used to rank each team or representative in ${periodScopeLabel}.`;
+  const countScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows each brand's share of the total Material Open Count during ${periodScopeLabel}.`
+      : `Shows each brand's share of the total Material Open Count in ${periodScopeLabel}.`;
+  const timeScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows each brand's share of total time spent during ${periodScopeLabel}. Time is measured in minutes.`
+      : `Shows each brand's share of total time spent in ${periodScopeLabel}. Time is measured in minutes.`;
+  const generalCountPlainLabel =
+    isAllMonths || isAllYears
+      ? `Shows the Material Open Count for each material during ${periodScopeLabel}.`
+      : `Shows the Material Open Count for each material in ${periodScopeLabel}.`;
+  const generalTimePlainLabel =
+    isAllMonths || isAllYears
+      ? `Shows how many minutes people spent on each material during ${periodScopeLabel}. Time is measured in minutes.`
+      : `Shows how many minutes people spent on each material in ${periodScopeLabel}. Time is measured in minutes.`;
+  const brandTotalPlainLabel =
+    isAllMonths
+      ? `Shows the total Material Open Count for ${yearlyScopeLabel}.`
+      : `Shows the total Material Open Count for ${periodScopeLabel}.`;
+  const movingMonthlyPlainLabel = `Shows the monthly Material Open Count in ${yearlyScopeLabel}.`;
+  const teamScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a team.`
+      : `Shows the Material Open Count for each material in ${periodScopeLabel}. Each color in the legend is a team.`;
+  const divisionScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a division.`
+      : `Shows the Material Open Count for each material in ${periodScopeLabel}. Each color in the legend is a division.`;
+  const slideBrandScopeLabel =
+    isAllMonths || isAllYears
+      ? `Shows the total minutes viewed for each product during ${periodScopeLabel}.`
+      : `Shows the total minutes viewed for each product in ${periodScopeLabel}.`;
+  const slideDetailTitle = isAttachmentDrilldown
+    ? "Slides With the Most Viewing Time"
+    : "Materials With the Most Slide Viewing Time";
+  const slideDetailScopeLabel = isAttachmentDrilldown
+    ? isAllMonths || isAllYears
+      ? `Shows the total minutes viewed for each slide in ${slideActivityAttachment || "the selected material"} during ${periodScopeLabel}.`
+      : `Shows the total minutes viewed for each slide in ${slideActivityAttachment || "the selected material"} in ${periodScopeLabel}.`
+    : isAllMonths || isAllYears
+    ? `Shows the total minutes viewed for each material during ${periodScopeLabel}. Pick one material below to switch to a slide-by-slide view.`
+    : `Shows the total minutes viewed for each material in ${periodScopeLabel}. Pick one material below to switch to a slide-by-slide view.`;
+  const slideDetailHelperText = isAttachmentDrilldown
+    ? "Each bar is one slide, shown in slide number order."
+    : "Each bar is one material. Pick one material below to switch to a slide-by-slide view.";
+  const specialtyScopeLabel = `Shows the top module totals for ${periodScopeLabel}.`;
+  const teamRankingColumns = getTeamTableColumns(filters);
+  const repRankingColumns = getRepTableColumns(filters);
 
   const overviewError = overviewResult.error;
   const modulesError = modulesResult.error;
@@ -1409,8 +1504,15 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   const hasBrandTotalData = brandTotalRows.length > 0;
   const hasMovingMonthlyData = Boolean(modulesResult.data?.movingMonthly?.rows?.length);
   const hasAllPerTeamData = Boolean(teamSectionResult.data?.allPerTeam?.labels?.length);
-  const hasDivisionPerTeamData = Boolean(teamSectionResult.data?.divisionPerTeam?.labels?.length);
+  const hasDivisionPerTeamData = Boolean(
+    teamSectionResult.data?.divisionPerTeam?.labels?.length && teamSectionResult.data?.divisionPerTeam?.series?.length
+  );
   const hasSpecialtyData = specialtyCharts.length > 0;
+  const showDivisionPerTeamCard = teamSectionResult.isLoading || hasDivisionPerTeamData;
+  const teamModulesHeadingClass = showDivisionPerTeamCard ? "grid gap-2 xl:grid-cols-2" : "grid gap-2";
+  const teamModulesGridClass = showDivisionPerTeamCard ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
+  const specialtyGridClass =
+    teamSectionResult.isLoading || specialtyCharts.length > 1 ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
   const hasSlideActivityProductData = slideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
@@ -1428,9 +1530,11 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       const month = String(row?.month || filters.month || "").trim() || "All";
       const date = String(row?.date || "").trim() || `${year}-${month}`;
       const team = String(row?.team || "").trim() || "Unassigned Team";
-      const psr = String(row?.psr || "").trim() || "Unknown Rep";
+      const psr = String(row?.psr || "").trim() || "Unknown Representative";
       const brand = String(row?.brand || "").trim() || "Unknown Brand";
-      const productName = String(row?.product || "").trim() || "Unknown Product";
+      const productName = String(row?.product || "").trim();
+      if (!productName) return;
+
       const material = toMaterialName({
         attachment: row?.attachment,
         slide: row?.exportName || row?.label || row?.slide || "",
@@ -1521,7 +1625,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           team: row?.team || "",
           psr: row?.psr || "",
           brand: row?.brand || "",
-          productName: row?.productName || row?.product || "Unknown Product",
+          productName: row?.productName || row?.product || "",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
           secondsViewed: Number(row?.secondsViewed || 0),
@@ -1543,7 +1647,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           team: row?.team || "",
           psr: row?.psr || "",
           brand: row?.brand || "",
-          productName: row?.productName || row?.product || "Unknown Product",
+          productName: row?.productName || row?.product || "",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
           secondsViewed: Number(row?.secondsViewed || 0),
@@ -1560,7 +1664,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   return (
     <div className="max-w-full space-y-5 sm:space-y-8">
       <SectionTitle
-        title="One Marketing App"
+        title="Reports Dashboard"
         subtitle="Live dashboard view derived from the current database activity and product records."
       />
 
@@ -1587,7 +1691,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-600 sm:text-sm">
-            Export data columns: Date, Month, Team, PSR, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed.
+            Export data columns: Date, Month, Team, Representative, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed.
           </div>
           <ExportButtons
             disabled={unifiedExportDisabled}
@@ -1598,39 +1702,13 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
-        {overviewResult.isLoading ? (
-          <span>Loading dashboard metrics from the database...</span>
-        ) : firstSectionError ? (
-          <span className="text-red-600">{firstSectionError}</span>
-        ) : (
-          <span>
-            {overviewResult.data?.meta?.totalInteractionsInMonth || 0} tracked interactions for{" "}
-            <span className="font-semibold text-slate-800">{filters.month || "selected month"}</span> across{" "}
-            <span className="font-semibold text-slate-800">{overviewResult.data?.meta?.totalSessionsInYear || 0}</span> session
-            {(overviewResult.data?.meta?.totalSessionsInYear || 0) === 1 ? "" : "s"} in {filters.year || "selected year"}.
-            {" "}Slide retention captured{" "}
-            <span className="font-semibold text-slate-800">
-              {(overviewResult.data?.meta?.totalSlideMinutesInMonth || 0).toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2,
-              })}
-            </span>{" "}
-            minutes across{" "}
-            <span className="font-semibold text-slate-800">
-              {(overviewResult.data?.meta?.totalSlideViewsInMonth || 0).toLocaleString()}
-            </span>{" "}
-            slide view{(overviewResult.data?.meta?.totalSlideViewsInMonth || 0) === 1 ? "" : "s"}.
-          </span>
-        )}
-      </div>
 
       <div className="space-y-5 sm:space-y-6">
-        <SectionDivider label="Utilization Share" />
+        <SectionDivider label="Brand Share" />
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Brand Share by Interactions" subtitle={countScopeLabel}>
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
+          <ReportCard title="Brand Share of Material Open Count" subtitle={countScopeLabel}>
+            <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(180px,220px)] lg:items-center">
               {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
@@ -1648,8 +1726,8 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             </div>
           </ReportCard>
 
-          <ReportCard title="Brand Share by Time Spent" subtitle={timeScopeLabel}>
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),220px]">
+          <ReportCard title="Brand Share of Total Time Spent" subtitle={timeScopeLabel}>
+            <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(180px,220px)] lg:items-center">
               {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
@@ -1668,54 +1746,50 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
         </div>
 
-        <SectionDivider label="Rankings" />
+        <SectionDivider label="Team and Representative Rankings" />
 
         <div className="grid gap-4 sm:gap-6">
           <RankingTable
-            title="Ranking of Teams based on Brand Material Open Count / Utilization per Month"
+            title="Teams With the Highest Material Open Count by Brand"
             subtitle={rankingScopeLabel}
             rows={visibleTeamRankingRows}
-            columns={TEAM_TABLE_COLUMNS}
+            columns={teamRankingColumns}
             emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
           />
 
           <div className="grid gap-3">
             <RankingTable
-              title="Ranking of Reps based on Brand Material Open Count / Utilization per Month"
+              title="Representatives With the Highest Material Open Count by Brand"
               subtitle={rankingScopeLabel}
               rows={visibleRepRankingRows}
-              columns={REP_TABLE_COLUMNS}
+              columns={repRankingColumns}
               emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
             />
-            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600 shadow-sm sm:px-4 sm:py-3 sm:text-sm">
-              <p>* Ranking can extend to show all teams from highest to lowest, then Top 10 or 20 reps.</p>
-              <p>* This can also be connected to calls, type of MDs, and type of calls.</p>
-            </div>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <SectionDivider label="General Modules" />
+        <SectionDivider label="Material Summary" />
 
         <div>
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">General (All Products)</div>
+          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">All Materials</div>
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization (All) - Based on Count" subtitle={countScopeLabel}>
+          <ReportCard title="Materials With the Highest Material Open Count" subtitle={generalCountPlainLabel}>
             {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralCountData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
-                <Bar data={generalCountChart} options={buildBarOptions({ yTitle: "Utilization" })} />
+                <Bar data={generalCountChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
               </div>
             )}
           </ReportCard>
 
-          <ReportCard title="Module Utilization (All) - Based on Time Spent" subtitle={timeScopeLabel}>
+          <ReportCard title="Materials With the Most Time Spent" subtitle={generalTimePlainLabel}>
             {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralTimeData ? (
@@ -1729,26 +1803,26 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         </div>
 
         <div className="pt-2">
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Per Brand (Total)</div>
+          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Brand Totals</div>
           <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-            Filter context can be used per brand module, highest per month, or year-to-date total.
+            Use the filters to look at one brand, compare months, or see the total for the whole year.
           </p>
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization by Brand Total" subtitle={brandTotalScopeLabel}>
+          <ReportCard title="Shows the Top Materials by Brand" subtitle={brandTotalPlainLabel}>
             {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasBrandTotalData ? (
               <ChartEmpty />
             ) : (
               <div className="h-[220px] sm:h-[320px]">
-                <Bar data={brandTotalChart} options={buildBarOptions({ yTitle: "Utilization" })} />
+                <Bar data={brandTotalChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
               </div>
             )}
           </ReportCard>
 
-          <ReportCard title="Moving Monthly per Module" subtitle={movingMonthlyScopeLabel}>
+          <ReportCard title="How Material Activity Changed Each Month" subtitle={movingMonthlyPlainLabel}>
             {modulesResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasMovingMonthlyData ? (
@@ -1758,7 +1832,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
                 <Bar
                   data={movingMonthlyChart}
                   options={buildBarOptions({
-                    yTitle: "No. of Modules Detailed",
+                    yTitle: "Material Open Count",
                     legend: true,
                     legendPosition: "top",
                   })}
@@ -1768,21 +1842,25 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
         </div>
 
-        <p className="text-xs text-slate-600 sm:text-sm">Module utilization can also be shown per Division, Team, and Rep.</p>
+        <p className="text-xs text-slate-600 sm:text-sm">You can also see these totals by Division, Team, and Representative.</p>
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <SectionDivider label="Team Modules" />
+        <SectionDivider label="Material Activity by Team" />
 
-        <div className="grid gap-2 xl:grid-cols-2">
+        <div className={teamModulesHeadingClass}>
           <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
-            General (All Products Modules) per Team
+            Shows the Top Materials by Team
           </div>
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Per Product Modules / Div / Team</div>
+          {showDivisionPerTeamCard ? (
+            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
+              Shows the Top Materials by Division
+            </div>
+          ) : null}
         </div>
 
-        <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Module Utilization (All) per Team" subtitle={teamScopeLabel}>
+        <div className={teamModulesGridClass}>
+          <ReportCard title="Materials With the Highest Material Open Count by Team" subtitle={teamScopeLabel}>
             {teamSectionResult.isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasAllPerTeamData ? (
@@ -1791,87 +1869,51 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
               <div className="h-[220px] sm:h-[320px]">
                 <Bar
                   data={allPerTeamChart}
-                  options={buildBarOptions({ yTitle: "", legend: true, legendPosition: "bottom" })}
+                  options={buildBarOptions({ yTitle: "Material Open Count", legend: true, legendPosition: "bottom" })}
                 />
               </div>
             )}
           </ReportCard>
 
-          <ReportCard title="Module Utilization per Division / Team" subtitle={divisionScopeLabel}>
-            {teamSectionResult.isLoading ? (
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-            ) : !hasDivisionPerTeamData ? (
-              <ChartEmpty />
-            ) : (
-              <div className="h-[220px] sm:h-[320px]">
-                <Bar
-                  data={divisionPerTeamChart}
-                  options={buildBarOptions({ yTitle: "", legend: true, legendPosition: "bottom" })}
-                />
-              </div>
-            )}
-          </ReportCard>
-        </div>
-
-        <SectionDivider label="Specialty Modules" />
-
-        <div>
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
-            Per Brand / Per Specialty
-          </div>
-          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-            Moving forward, this can also expand into MD type, class, time spent, and call-type breakdowns.
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          {teamSectionResult.isLoading ? (
-            <ReportCard title="Specialty Breakdown" subtitle={specialtyScopeLabel}>
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+          {showDivisionPerTeamCard ? (
+            <ReportCard title="Materials With the Highest Material Open Count by Division" subtitle={divisionScopeLabel}>
+              {teamSectionResult.isLoading ? (
+                <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+              ) : !hasDivisionPerTeamData ? (
+                <ChartEmpty />
+              ) : (
+                <div className="h-[220px] sm:h-[320px]">
+                  <Bar
+                    data={divisionPerTeamChart}
+                    options={buildBarOptions({ yTitle: "Material Open Count", legend: true, legendPosition: "bottom" })}
+                  />
+                </div>
+              )}
             </ReportCard>
-          ) : !hasSpecialtyData ? (
-            <ReportCard title="Specialty Breakdown" subtitle={specialtyScopeLabel}>
-              <ChartEmpty />
-            </ReportCard>
-          ) : (
-            specialtyCharts.map((chart) => (
-              <ReportCard
-                key={chart.title}
-                title={chart.title}
-                subtitle={specialtyScopeLabel}
-              >
-                {chart.modules.length === 0 ? (
-                  <ChartEmpty />
-                ) : (
-                  <div className="h-[220px] sm:h-[320px]">
-                    <Bar data={buildSingleBarData(chart.modules)} options={buildBarOptions({ yTitle: "" })} />
-                  </div>
-                )}
-              </ReportCard>
-            ))
-          )}
+          ) : null}
         </div>
+
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <SectionDivider label="Slide Retention" />
+        <SectionDivider label="Slide Viewing Time" />
 
         <div className="flex flex-col gap-3">
           <div>
-            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Retention</div>
+            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Viewing Time</div>
             <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-              Tracks how long the logged-in rep stayed on each slide before moving to another one.
+              Shows how long representatives stayed on slides before moving to another one. Time is measured in total minutes viewed.
             </p>
           </div>
         </div>
 
         <ReportCard
-          title="Per-Brand Slide Activity"
-          subtitle={`Choose a brand to view slide activity for ${periodScopeLabel}.`}
+          title="Products With the Most Slide Viewing Time"
+          subtitle={slideBrandScopeLabel}
         >
           <div className="mb-4 flex justify-end">
             <InlineSelect
-              label="Brand"
+              label="Brand Filter"
               value={slideActivityBrand}
               options={slideRetentionBrandOptions}
               onChange={setSlideActivityBrand}
@@ -1896,16 +1938,12 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         </ReportCard>
 
         <ReportCard
-          title="Per-Slides Slide Activity"
-          subtitle={
-            isAttachmentDrilldown
-              ? `${slideActivityAttachment} slide flow for ${periodScopeLabel}.`
-              : `Choose an attachment linked to ${slideActivityProduct} to drill into slide activity for ${periodScopeLabel}.`
-          }
+          title={slideDetailTitle}
+          subtitle={slideDetailScopeLabel}
         >
           <div className="mb-4 flex justify-end">
             <InlineSelect
-              label="Attachment"
+              label="Material Filter"
               value={slideActivityAttachment}
               options={slideRetentionAttachmentOptions}
               onChange={setSlideActivityAttachment}
@@ -1925,9 +1963,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-slate-500 sm:text-sm">
-                {isAttachmentDrilldown
-                  ? "Slide-by-slide bar view keeps long decks readable and preserves slide order."
-                  : "Attachment summary view keeps large result sets compact. Pick one attachment to switch to a slide-by-slide bar chart."}
+                {slideDetailHelperText}
               </p>
               {isAttachmentDrilldown ? (
                 <div className="h-[280px] sm:h-[340px]">
