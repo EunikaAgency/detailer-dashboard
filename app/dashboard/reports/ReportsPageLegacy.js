@@ -260,6 +260,19 @@ function formatPercent(value) {
   return `${value}%`;
 }
 
+function formatMinutes(value) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue)) return "0 min";
+  return `${numericValue.toLocaleString("en-US", { maximumFractionDigits: 2 })} min`;
+}
+
+function formatMaterialOpenCount(value) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue)) return "0 opens";
+  const formattedValue = numericValue.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return `${formattedValue} ${numericValue === 1 ? "open" : "opens"}`;
+}
+
 function escapeCsvCell(value) {
   const text = normalizeExportCell(value);
   if (!/[",\n]/.test(text)) return text;
@@ -711,11 +724,13 @@ function ReportCard({ title, subtitle, actions = null, children, className = "" 
   );
 }
 
-function PieLegend({ items, selectedBrand }) {
+function PieLegend({ items, selectedBrand, detailKey = null, detailFormatter = null }) {
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
       {items.map((item, index) => {
         const isSelected = selectedBrand !== "All" && item.label === selectedBrand;
+        const detailLabel =
+          detailKey && typeof detailFormatter === "function" ? detailFormatter(item?.[detailKey]) : "";
         return (
           <div
             key={item.label}
@@ -729,7 +744,10 @@ function PieLegend({ items, selectedBrand }) {
                 />
                 <span className="truncate text-sm font-medium text-slate-700">{item.label}</span>
               </div>
-              <span className="text-sm font-semibold text-slate-900">{formatPercent(item.value)}</span>
+              <div className="shrink-0 text-right">
+                <span className="block text-sm font-semibold text-slate-900">{formatPercent(item.value)}</span>
+                {detailLabel ? <span className="block text-[11px] font-medium text-slate-500">{detailLabel}</span> : null}
+              </div>
             </div>
           </div>
         );
@@ -849,12 +867,15 @@ function toCsvTime(value) {
   return `${hours}:${minutes}:${seconds}`;
 }
 
-function buildPieData(items, selectedBrand) {
+function buildPieData(items, selectedBrand, options = {}) {
+  const { detailKey = null, detailUnit = null } = options;
   return {
     labels: items.map((item) => item.label),
     datasets: [
       {
         data: items.map((item) => item.value),
+        detailValues: detailKey ? items.map((item) => item?.[detailKey]) : undefined,
+        detailUnit,
         backgroundColor: items.map((_, index) => rgba(PIE_COLORS[index % PIE_COLORS.length], 0.95)),
         borderColor: "#ffffff",
         borderWidth: 2,
@@ -1116,6 +1137,10 @@ function buildPieOptions() {
       tooltip: {
         callbacks: {
           label(context) {
+            const detailValue = context.dataset.detailValues?.[context.dataIndex];
+            if (context.dataset.detailUnit === "minutes" && detailValue !== undefined) {
+              return `${context.label}: ${context.raw}% (${formatMinutes(detailValue)})`;
+            }
             return `${context.label}: ${context.raw}%`;
           },
         },
@@ -1369,7 +1394,10 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   );
 
   const brandShareChart = useMemo(() => buildPieData(brandShareRows, filters.brand), [brandShareRows, filters.brand]);
-  const appShareChart = useMemo(() => buildPieData(appShareRows, filters.brand), [appShareRows, filters.brand]);
+  const appShareChart = useMemo(
+    () => buildPieData(appShareRows, filters.brand, { detailKey: "minutes", detailUnit: "minutes" }),
+    [appShareRows, filters.brand]
+  );
   const generalCountChart = useMemo(
     () => buildSingleBarData(generalCountRows, { datasetLabel: "Material Open Count" }),
     [generalCountRows]
@@ -1703,7 +1731,12 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
                     <div className="h-[240px] sm:h-[320px]">
                       <Pie data={brandShareChart} options={buildPieOptions()} />
                     </div>
-                    <PieLegend items={brandShareRows} selectedBrand={filters.brand} />
+                    <PieLegend
+                      items={brandShareRows}
+                      selectedBrand={filters.brand}
+                      detailKey="rawValue"
+                      detailFormatter={formatMaterialOpenCount}
+                    />
                   </>
                 ) : (
                   <ChartEmpty />
@@ -1722,7 +1755,12 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
                     <div className="h-[240px] sm:h-[320px]">
                       <Pie data={appShareChart} options={buildPieOptions()} />
                     </div>
-                    <PieLegend items={appShareRows} selectedBrand={filters.brand} />
+                    <PieLegend
+                      items={appShareRows}
+                      selectedBrand={filters.brand}
+                      detailKey="minutes"
+                      detailFormatter={formatMinutes}
+                    />
                   </>
                 ) : (
                   <ChartEmpty />
@@ -1758,10 +1796,6 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
       <div className="space-y-3 sm:space-y-4">
         <SectionDivider label="Material Summary" />
 
-        <div>
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">All Materials</div>
-        </div>
-
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Materials With the Highest Material Open Count" subtitle={generalCountPlainLabel}>
             {modulesResult.isLoading ? (
@@ -1786,13 +1820,6 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
               </div>
             )}
           </ReportCard>
-        </div>
-
-        <div className="pt-2">
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Brand Totals</div>
-          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-            Use the filters to look at one brand, compare months, or see the total for the whole year.
-          </p>
         </div>
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
@@ -1827,18 +1854,10 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             )}
           </ReportCard>
         </div>
-
-        <p className="text-xs text-slate-600 sm:text-sm">You can also see these totals by Division, Team, and Representative.</p>
       </div>
 
       <div className="space-y-3 sm:space-y-4">
         <SectionDivider label="Material Activity by Team" />
-
-        <div className="grid gap-2">
-          <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">
-            Shows the Top Materials by Team
-          </div>
-        </div>
 
         <div className="grid gap-4 sm:gap-6">
           <ReportCard title="Materials With the Highest Material Open Count by Team" subtitle={teamScopeLabel}>
@@ -1861,15 +1880,6 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
       <div className="space-y-3 sm:space-y-4">
         <SectionDivider label="Slide Viewing Time" />
-
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="text-base font-semibold uppercase tracking-wide text-slate-900 sm:text-lg">Slide Viewing Time</div>
-            <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-              Shows how long representatives stayed on slides before moving to another one. Time is measured in total minutes viewed.
-            </p>
-          </div>
-        </div>
 
         <ReportCard
           title="Products With the Most Slide Viewing Time"

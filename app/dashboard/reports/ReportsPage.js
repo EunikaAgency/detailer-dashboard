@@ -283,12 +283,6 @@ export default function ReportsPageDashboard() {
       </div>
 
       <div className="space-y-4">
-        <SectionHeader
-          eyebrow="Material Open Count"
-          title="Monthly Material Open Count Summary"
-          subtitle="Ranks the top products, representatives, and teams by Material Open Count for the selected month."
-        />
-
         {summaryResult.error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
             {summaryResult.error}

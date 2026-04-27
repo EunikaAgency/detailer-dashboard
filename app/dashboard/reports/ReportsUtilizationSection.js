@@ -221,6 +221,17 @@ function SectionHeader({ eyebrow, title, subtitle }) {
   );
 }
 
+function SectionDivider({ label }) {
+  return (
+    <div className="relative py-4">
+      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#0f4c5c]/25 to-transparent" />
+      <div className="relative mx-auto w-fit rounded-full border border-[#0f4c5c]/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#0f4c5c] shadow-sm">
+        {label}
+      </div>
+    </div>
+  );
+}
+
 function ReportCard({ title, subtitle, children, className = "" }) {
   return (
     <section className={`min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
@@ -456,12 +467,6 @@ export default function ReportsUtilizationSection({
       ) : null}
 
       <div className="space-y-4">
-        <SectionHeader
-          eyebrow="Monthly"
-          title="Material Open Count Share"
-          subtitle="The TD chart shows product share. The CNS chart breaks out all Abilify Maintena and Rexulti materials by interaction share."
-        />
-
         <div className="grid gap-4 xl:grid-cols-2">
           <MetricChartCard
             title="TD Product Share of Material Open Count"
@@ -492,12 +497,6 @@ export default function ReportsUtilizationSection({
       </div>
 
       <div className="space-y-4">
-        <SectionHeader
-          eyebrow="Monthly"
-          title="Material Open Count by Team, Representative, Product, and Slide"
-          subtitle="These charts rank the highest Material Open Count or slide viewing times for the selected month."
-        />
-
         <div className="grid gap-4">
           <MetricChartCard
             title="Teams With the Highest Material Open Count"
@@ -539,6 +538,8 @@ export default function ReportsUtilizationSection({
             showItemLegend
           />
         </div>
+
+        <SectionDivider label="Slide Viewing Time" />
 
         <div className="grid gap-4">
           <MetricChartCard
