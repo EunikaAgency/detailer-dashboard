@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
+import ReportFilterSelect from "./ReportFilterSelect";
 import {
   BarElement,
   CategoryScale,
@@ -196,17 +197,14 @@ function FilterTile({ filterKey, label, value, options, onChange }) {
   return (
     <label className="flex min-h-[76px] flex-col justify-between rounded-2xl border border-[#0f4c5c]/20 bg-[#0f4c5c] px-3 py-2.5 text-white md:min-h-[84px] md:px-4 md:py-3">
       <div className="text-[1.15rem] font-semibold leading-none md:text-[1.3rem]">{label}</div>
-      <select
+      <ReportFilterSelect
+        label={label}
         value={value}
-        onChange={(event) => onChange(filterKey, event.target.value)}
-        className="mt-3 w-full rounded-md border border-white/30 bg-white/95 px-3 py-2 text-sm font-medium text-slate-800 outline-none"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        options={options}
+        onChange={(nextValue) => onChange(filterKey, nextValue)}
+        buttonClassName="border-white/30"
+        searchPlaceholder={`Search ${label.toLowerCase()}`}
+      />
     </label>
   );
 }

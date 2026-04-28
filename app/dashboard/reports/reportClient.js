@@ -29,6 +29,7 @@ export function useReportSection({ endpoint, filters, section, fallbackData, ena
   const [isLoading, setIsLoading] = useState(Boolean(enabled));
   const [error, setError] = useState("");
   const fallbackDataRef = useRef(fallbackData);
+  const latestRequestKeyRef = useRef("");
 
   useEffect(() => {
     fallbackDataRef.current = fallbackData;
@@ -51,6 +52,8 @@ export function useReportSection({ endpoint, filters, section, fallbackData, ena
   );
 
   useEffect(() => {
+    latestRequestKeyRef.current = requestKey;
+
     if (!enabled) {
       setIsLoading(false);
       setError("");
@@ -59,6 +62,7 @@ export function useReportSection({ endpoint, filters, section, fallbackData, ena
     }
 
     const controller = new AbortController();
+    const activeRequestKey = requestKey;
 
     const loadSection = async () => {
       setIsLoading(true);
@@ -76,14 +80,15 @@ export function useReportSection({ endpoint, filters, section, fallbackData, ena
           throw new Error(payload?.error || "Failed to load dashboard reports.");
         }
 
+        if (controller.signal.aborted || latestRequestKeyRef.current !== activeRequestKey) return;
         setData(payload);
       } catch (loadError) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || latestRequestKeyRef.current !== activeRequestKey) return;
         console.error(`Failed to load dashboard reports section "${section}":`, loadError);
         setData(fallbackDataRef.current);
         setError(loadError instanceof Error ? loadError.message : "Failed to load dashboard reports.");
       } finally {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && latestRequestKeyRef.current === activeRequestKey) {
           setIsLoading(false);
         }
       }

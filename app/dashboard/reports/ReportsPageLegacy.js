@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
+import ReportFilterSelect from "./ReportFilterSelect";
 import {
   ArcElement,
   BarElement,
@@ -30,7 +31,7 @@ const Pie = dynamic(() => import("react-chartjs-2").then((mod) => mod.Pie), {
 const FILTERS = [
   { key: "year", label: "Year", hint: "" },
   { key: "month", label: "Month", hint: "(multiple selection)" },
-  { key: "division", label: "Division", hint: "(All, Carry-All GMA, Carry-All Prov, CNS)" },
+  { key: "division", label: "Division", hint: "(All divisions)" },
   { key: "team", label: "Team", hint: "" },
   { key: "psr", label: "Representative", hint: "" },
   { key: "brand", label: "Brand", hint: "" },
@@ -52,6 +53,17 @@ const PIE_COLORS = [
   "40, 157, 200",
   "160, 46, 157",
   "78, 171, 44",
+];
+
+const BRAND_COLOR_RULES = [
+  { keys: ["mucosta"], color: "244, 114, 182" },
+  { keys: ["aminoleban oral", "aminoleban"], color: "249, 115, 22" },
+  { keys: ["pletaal"], color: "190, 24, 93" },
+  { keys: ["samsca"], color: "231, 238, 246", borderColor: "#94a3b8" },
+  { keys: ["jinarc"], color: "250, 204, 21" },
+  { keys: ["rexulti"], color: "34, 197, 94" },
+  { keys: ["abilify"], color: "59, 130, 246" },
+  { keys: ["meptin"], color: "20, 184, 166" },
 ];
 
 const SERIES_COLORS = [
@@ -235,6 +247,37 @@ const UNIFIED_EXPORT_COLUMNS = [
 
 function rgba(color, alpha) {
   return `rgba(${color}, ${alpha})`;
+}
+
+function normalizeChartColorKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getBrandColorConfig(label, index) {
+  const normalizedLabel = normalizeChartColorKey(label);
+  const matchedRule = BRAND_COLOR_RULES.find((rule) =>
+    rule.keys.some((key) => {
+      const normalizedKey = normalizeChartColorKey(key);
+      return normalizedLabel === normalizedKey || normalizedLabel.includes(normalizedKey) || normalizedKey.includes(normalizedLabel);
+    })
+  );
+
+  if (matchedRule) {
+    return {
+      color: matchedRule.color,
+      borderColor: matchedRule.borderColor || "#ffffff",
+    };
+  }
+
+  return {
+    color: PIE_COLORS[index % PIE_COLORS.length],
+    borderColor: "#ffffff",
+  };
 }
 
 function toMultilineLabel(value, maxLineLength = 16) {
@@ -646,24 +689,26 @@ function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
   );
 }
 
-function FilterTile({ filterKey, label, hint, value, options, onChange }) {
+function FilterTile({ filterKey, label, hint, value, options, onChange, disabled = false }) {
   return (
-    <label className="flex min-h-[74px] flex-col justify-between rounded-none border border-white/25 bg-[#1f6889] px-3 py-2.5 text-white md:min-h-[82px] md:px-4 md:py-3">
+    <label
+      className={`flex min-h-[74px] flex-col justify-between rounded-none border border-white/25 bg-[#1f6889] px-3 py-2.5 text-white transition-opacity md:min-h-[82px] md:px-4 md:py-3 ${
+        disabled ? "opacity-85" : ""
+      }`}
+    >
       <div>
         <div className="text-[1.45rem] font-semibold leading-none md:text-[1.75rem] xl:text-[1.95rem]">{label}</div>
         {hint ? <div className="mt-1 text-[11px] italic text-white/85 md:text-xs">{hint}</div> : null}
       </div>
-      <select
+      <ReportFilterSelect
+        label={label}
         value={value}
-        onChange={(event) => onChange(filterKey, event.target.value)}
-        className="mt-2 w-full rounded-md border border-white/35 bg-white/95 px-3 py-1.5 text-sm font-medium text-slate-800 outline-none ring-0 md:mt-3 md:py-2"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        options={options}
+        disabled={disabled}
+        onChange={(nextValue) => onChange(filterKey, nextValue)}
+        buttonClassName="border-white/35"
+        searchPlaceholder={`Search ${label.toLowerCase()}`}
+      />
     </label>
   );
 }
@@ -725,12 +770,21 @@ function ReportCard({ title, subtitle, actions = null, children, className = "" 
 }
 
 function PieLegend({ items, selectedBrand, detailKey = null, detailFormatter = null }) {
+  const useTwoColumnLayout = items.length > 4;
+
   return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+    <div
+      className={
+        useTwoColumnLayout
+          ? "grid auto-cols-fr grid-flow-col grid-rows-4 gap-2"
+          : "grid gap-2"
+      }
+    >
       {items.map((item, index) => {
         const isSelected = selectedBrand !== "All" && item.label === selectedBrand;
         const detailLabel =
           detailKey && typeof detailFormatter === "function" ? detailFormatter(item?.[detailKey]) : "";
+        const colorConfig = getBrandColorConfig(item.label, index);
         return (
           <div
             key={item.label}
@@ -739,8 +793,11 @@ function PieLegend({ items, selectedBrand, detailKey = null, detailFormatter = n
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
                 <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ backgroundColor: rgba(PIE_COLORS[index % PIE_COLORS.length], 0.92) }}
+                  className="inline-block h-3 w-3 rounded-full border"
+                  style={{
+                    backgroundColor: rgba(colorConfig.color, 0.92),
+                    borderColor: colorConfig.borderColor,
+                  }}
                 />
                 <span className="truncate text-sm font-medium text-slate-700">{item.label}</span>
               </div>
@@ -869,6 +926,7 @@ function toCsvTime(value) {
 
 function buildPieData(items, selectedBrand, options = {}) {
   const { detailKey = null, detailUnit = null } = options;
+  const colorConfigs = items.map((item, index) => getBrandColorConfig(item.label, index));
   return {
     labels: items.map((item) => item.label),
     datasets: [
@@ -876,8 +934,8 @@ function buildPieData(items, selectedBrand, options = {}) {
         data: items.map((item) => item.value),
         detailValues: detailKey ? items.map((item) => item?.[detailKey]) : undefined,
         detailUnit,
-        backgroundColor: items.map((_, index) => rgba(PIE_COLORS[index % PIE_COLORS.length], 0.95)),
-        borderColor: "#ffffff",
+        backgroundColor: colorConfigs.map((config) => rgba(config.color, 0.95)),
+        borderColor: colorConfigs.map((config) => config.borderColor),
         borderWidth: 2,
         offset: items.map((item) => (selectedBrand !== "All" && item.label === selectedBrand ? 18 : 0)),
       },
@@ -1151,9 +1209,10 @@ function buildPieOptions() {
 
 export default function ReportsPage({ filters: controlledFilters, onFiltersChange } = {}) {
   const [localFilters, setLocalFilters] = useState(EMPTY_REPORT.filters.selected);
-  const [slideActivityBrand, setSlideActivityBrand] = useState("All Brands");
-  const [slideActivityProduct, setSlideActivityProduct] = useState("All Products");
-  const [slideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
+  const [isFilterChangePending, setIsFilterChangePending] = useState(false);
+  const [rawSlideActivityBrand, setSlideActivityBrand] = useState("All Brands");
+  const [rawSlideActivityProduct, setSlideActivityProduct] = useState("All Products");
+  const [rawSlideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
   const filters = controlledFilters || localFilters;
   const setSelectedFilters = onFiltersChange || setLocalFilters;
 
@@ -1219,7 +1278,22 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     setSelectedFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
   }, [filtersResult.data, filtersResult.error, filtersResult.isLoading, setSelectedFilters]);
 
+  useEffect(() => {
+    if (filtersResult.isLoading || !isFilterChangePending) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsFilterChangePending(false);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [filtersResult.isLoading, isFilterChangePending]);
+
+  const isFilterControlsDisabled = filtersResult.isLoading || isFilterChangePending;
+
   const handleFilterChange = (key, value) => {
+    if (isFilterControlsDisabled || filters?.[key] === value) return;
+
+    setIsFilterChangePending(true);
     setSelectedFilters((current) => ({ ...current, [key]: value }));
   };
 
@@ -1261,11 +1335,8 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     return ["All Brands", ...brands];
   }, [slideRetentionRows]);
 
-  useEffect(() => {
-    setSlideActivityBrand((current) =>
-      slideRetentionBrandOptions.includes(current) ? current : slideRetentionBrandOptions[0] || "All Brands"
-    );
-  }, [slideRetentionBrandOptions]);
+  const slideActivityBrand =
+    slideRetentionBrandOptions.includes(rawSlideActivityBrand) ? rawSlideActivityBrand : slideRetentionBrandOptions[0] || "All Brands";
 
   const slideRetentionProductOptions = useMemo(() => {
     const products = Array.from(
@@ -1280,11 +1351,10 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     return ["All Products", ...products];
   }, [slideRetentionRows, slideActivityBrand]);
 
-  useEffect(() => {
-    setSlideActivityProduct((current) =>
-      slideRetentionProductOptions.includes(current) ? current : slideRetentionProductOptions[0] || "All Products"
-    );
-  }, [slideRetentionProductOptions]);
+  const slideActivityProduct =
+    slideRetentionProductOptions.includes(rawSlideActivityProduct)
+      ? rawSlideActivityProduct
+      : slideRetentionProductOptions[0] || "All Products";
 
   const slideRetentionAttachmentOptions = useMemo(() => {
     const attachments = Array.from(
@@ -1300,11 +1370,10 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     return ["All Attachments", ...attachments];
   }, [slideRetentionRows, slideActivityBrand, slideActivityProduct]);
 
-  useEffect(() => {
-    setSlideActivityAttachment((current) =>
-      slideRetentionAttachmentOptions.includes(current) ? current : slideRetentionAttachmentOptions[0] || "All Attachments"
-    );
-  }, [slideRetentionAttachmentOptions]);
+  const slideActivityAttachment =
+    slideRetentionAttachmentOptions.includes(rawSlideActivityAttachment)
+      ? rawSlideActivityAttachment
+      : slideRetentionAttachmentOptions[0] || "All Attachments";
 
   const slideActivityBrandRows = useMemo(
     () => {
@@ -1692,6 +1761,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
               hint={filter.hint}
               value={filters[filter.key]}
               options={filterOptions[filter.key]}
+              disabled={isFilterControlsDisabled}
               onChange={handleFilterChange}
             />
           ))}
@@ -1722,13 +1792,13 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Brand Share of Material Open Count" subtitle={countScopeLabel}>
-            <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(180px,220px)] lg:items-center">
+            <div className="space-y-4">
               {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasBrandShareData ? (
                   <>
-                    <div className="h-[240px] sm:h-[320px]">
+                    <div className="mx-auto h-[240px] max-w-[420px] sm:h-[320px]">
                       <Pie data={brandShareChart} options={buildPieOptions()} />
                     </div>
                     <PieLegend
@@ -1746,13 +1816,13 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="Brand Share of Total Time Spent" subtitle={timeScopeLabel}>
-            <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(180px,220px)] lg:items-center">
+            <div className="space-y-4">
               {overviewResult.isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasAppShareData ? (
                   <>
-                    <div className="h-[240px] sm:h-[320px]">
+                    <div className="mx-auto h-[240px] max-w-[420px] sm:h-[320px]">
                       <Pie data={appShareChart} options={buildPieOptions()} />
                     </div>
                     <PieLegend
