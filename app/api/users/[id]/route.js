@@ -20,7 +20,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
-  division: user?.division || "",
+  division: normalizeReportDivision(user?.division),
   storedAccessType: normalizeAccessType(user?.accessType),
   accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
@@ -122,9 +122,11 @@ export async function PUT(request, { params }) {
       user.name = name;
     }
 
+    const nextName = hasName ? normalizeText(body.name) : normalizeText(user.name);
     const nextUsername = hasUsername ? normalizeText(body.username) : normalizeText(user.username);
     const nextRepId = hasRepId ? normalizeText(body.repId) : normalizeText(user.repId);
     const nextRole = hasRole ? normalizeText(body.role) : normalizeText(user.role);
+    const didNameChange = nextName !== normalizeText(user.name);
     const didUsernameChange = nextUsername !== normalizeText(user.username);
     const didRepIdChange = nextRepId !== normalizeText(user.repId);
     const didRoleChange = nextRole !== normalizeText(user.role);
@@ -186,7 +188,11 @@ export async function PUT(request, { params }) {
 
     let issuedCredential = null;
     const shouldReissue =
-      Boolean(body?.reissueKeygen) || didUsernameChange || didRepIdChange || didRoleChange;
+      Boolean(body?.reissueKeygen) ||
+      didNameChange ||
+      didUsernameChange ||
+      didRepIdChange ||
+      didRoleChange;
     const manualPasswordHash = hasManualPassword ? await bcrypt.hash(rawPassword, 10) : null;
 
     if (shouldReissue || !user.keygen) {

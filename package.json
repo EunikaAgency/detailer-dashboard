@@ -18,6 +18,8 @@
     "export-db:live": "node scripts/export-db.js live",
     "import-db:staging": "node scripts/import-db.js staging",
     "import-db:live": "node scripts/import-db.js live",
+    "migrate:office-division:staging": "node scripts/migrate-office-division.js staging",
+    "migrate:office-division:live": "node scripts/migrate-office-division.js live",
     "seed:slide-retention": "node scripts/seed-slide-retention-chart.js",
     "backup:products-api": "node scripts/products-api-backup-cron.js --once"
   },

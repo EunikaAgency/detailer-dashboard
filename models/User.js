@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { REPORT_DIVISION_VALUES } from "@/lib/reportDivision";
+import { OFFICE_DIVISION_LABEL, REPORT_DIVISION_ACCEPTED_VALUES } from "@/lib/reportDivision";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -11,8 +11,8 @@ const UserSchema = new mongoose.Schema(
     division: {
       type: String,
       trim: true,
-      enum: ["", ...REPORT_DIVISION_VALUES],
-      default: "",
+      enum: [...REPORT_DIVISION_ACCEPTED_VALUES, ""],
+      default: OFFICE_DIVISION_LABEL,
     },
     accessType: {
       type: String,

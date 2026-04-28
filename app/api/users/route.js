@@ -50,7 +50,7 @@ const mapUser = (user) => ({
   email: user?.email || "",
   repId: user?.repId || "",
   role: user?.role || "",
-  division: user?.division || "",
+  division: normalizeReportDivision(user?.division),
   accessType: getUserAccessType(user),
   keygen: user?.keygen || "",
   keygenIssuedAt: user?.keygenIssuedAt || null,

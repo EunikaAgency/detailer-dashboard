@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { REPORT_DIVISION_VALUES } from "@/lib/reportDivision";
+import { OFFICE_DIVISION_LABEL, REPORT_DIVISION_VALUES } from "@/lib/reportDivision";
 
 const Toast = ({ toast, onClose }) => {
   if (!toast) return null;
@@ -60,6 +60,23 @@ const getUserId = (user) => {
 
 const normalizeText = (value) => String(value || "").trim();
 
+const fetchUsers = async () => {
+  const response = await fetch("/api/users");
+  const body = await response.json().catch(() => []);
+
+  if (!response.ok) {
+    throw new Error(body?.error || "Failed to load users.");
+  }
+
+  return Array.isArray(body) ? body : [];
+};
+
+const getDownloadFilename = (response, fallback) => {
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename="?([^"]+)"?/i);
+  return match?.[1] || fallback;
+};
+
 const formatDate = (value) => {
   if (!value) return "-";
   const date = new Date(value);
@@ -71,8 +88,8 @@ const getDisplayUsername = (user) =>
   normalizeText(user?.username || user?.email || user?.name || "");
 
 const getDisplayRepId = (user) => normalizeText(user?.repId || "");
-const getDisplayRole = (user) => normalizeText(user?.role || "");
-const getDisplayDivision = (user) => normalizeText(user?.division || "");
+const getDisplayTeam = (user) => normalizeText(user?.role || "");
+const getDisplayDivision = (user) => normalizeText(user?.division || OFFICE_DIVISION_LABEL);
 const getAccessType = (user) =>
   normalizeText(user?.accessType || "").toLowerCase() === "admin" ? "admin" : "representative";
 
@@ -162,6 +179,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [exportFormat, setExportFormat] = useState("");
   const [toast, setToast] = useState(null);
   const [query, setQuery] = useState("");
   const [issuedCredential, setIssuedCredential] = useState(null);
@@ -172,7 +190,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
-    division: "",
+    division: OFFICE_DIVISION_LABEL,
     password: "",
   });
 
@@ -182,7 +200,7 @@ export default function UsersPage() {
     username: "",
     repId: "",
     role: "",
-    division: "",
+    division: OFFICE_DIVISION_LABEL,
     accessType: "representative",
     password: "",
     reissueKeygen: false,
@@ -201,14 +219,14 @@ export default function UsersPage() {
       const name = normalizeText(user?.name).toLowerCase();
       const username = getDisplayUsername(user).toLowerCase();
       const repId = getDisplayRepId(user).toLowerCase();
-      const role = getDisplayRole(user).toLowerCase();
+      const team = getDisplayTeam(user).toLowerCase();
       const division = getDisplayDivision(user).toLowerCase();
       const email = normalizeText(user?.email).toLowerCase();
       return (
         name.includes(term) ||
         username.includes(term) ||
         repId.includes(term) ||
-        role.includes(term) ||
+        team.includes(term) ||
         division.includes(term) ||
         email.includes(term)
       );
@@ -221,12 +239,7 @@ export default function UsersPage() {
     const loadUsers = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/users");
-        if (!response.ok) {
-          throw new Error("Failed to load users.");
-        }
-
-        const data = await response.json();
+        const data = await fetchUsers();
         if (!mounted) return;
 
         const mapped = Array.isArray(data) ? data : [];
@@ -258,6 +271,39 @@ export default function UsersPage() {
     }));
   };
 
+  const handleExport = async (format) => {
+    const nextFormat = format === "csv" ? "csv" : "xlsx";
+    setExportFormat(nextFormat);
+    try {
+      const response = await fetch(`/api/users/export?format=${encodeURIComponent(nextFormat)}`);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error || "Failed to export users.");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const filename = getDownloadFilename(response, `users.${nextFormat}`);
+
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+
+      showToast("success", `Users ${nextFormat.toUpperCase()} exported.`);
+    } catch (error) {
+      showToast("error", error.message || "Failed to export users.");
+    } finally {
+      setExportFormat("");
+    }
+  };
+
   const openEdit = (user) => {
     if (!user) return;
 
@@ -266,7 +312,7 @@ export default function UsersPage() {
       name: normalizeText(user.name),
       username: getDisplayUsername(user),
       repId: getDisplayRepId(user),
-      role: getDisplayRole(user),
+      role: getDisplayTeam(user),
       division: getDisplayDivision(user),
       accessType: getAccessType(user),
       password: "",
@@ -281,7 +327,7 @@ export default function UsersPage() {
       username: "",
       repId: "",
       role: "",
-      division: "",
+      division: OFFICE_DIVISION_LABEL,
       accessType: "representative",
       password: "",
       reissueKeygen: false,
@@ -352,7 +398,7 @@ export default function UsersPage() {
         username: "",
         repId: "",
         role: "",
-        division: "",
+        division: OFFICE_DIVISION_LABEL,
         password: "",
       });
       showToast("success", "User created and secret key issued.");
@@ -561,7 +607,6 @@ export default function UsersPage() {
                     onChange={handleEditChange}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   >
-                    <option value="">Unassigned</option>
                     {REPORT_DIVISION_VALUES.map((division) => (
                       <option key={division} value={division}>
                         {division}
@@ -728,7 +773,6 @@ export default function UsersPage() {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
-              <option value="">Unassigned</option>
               {REPORT_DIVISION_VALUES.map((division) => (
                 <option key={division} value={division}>
                   {division}
@@ -778,7 +822,7 @@ export default function UsersPage() {
       <IssuedCredentialCard credential={issuedCredential} onCopy={handleCopy} />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-5 space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Users</h2>
             <p className="text-sm text-gray-600 mt-1">
@@ -786,14 +830,35 @@ export default function UsersPage() {
             </p>
           </div>
 
-          <div className="w-full md:w-72">
-            <input
-              type="search"
-              placeholder="Search name, username, team, division"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => handleExport("xlsx")}
+                disabled={Boolean(exportFormat)}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {exportFormat === "xlsx" ? "Exporting..." : "Export Excel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExport("csv")}
+                disabled={Boolean(exportFormat)}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {exportFormat === "csv" ? "Exporting..." : "Export CSV"}
+              </button>
+            </div>
+
+            <div className="w-full md:w-72">
+              <input
+                type="search"
+                placeholder="Search name, username, team, division"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
           </div>
         </div>
 
@@ -808,6 +873,7 @@ export default function UsersPage() {
                 <tr>
                   <th className="w-56 px-4 py-3 text-left font-semibold">Name</th>
                   <th className="w-56 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-44 px-4 py-3 text-left font-semibold">Team</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Division</th>
                   <th className="w-40 px-4 py-3 text-left font-semibold">Access</th>
                   <th className="w-52 px-4 py-3 text-left font-semibold">Issued</th>
@@ -821,6 +887,7 @@ export default function UsersPage() {
                     <tr key={id} className="border-t border-gray-100">
                       <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
+                      <td className="px-4 py-3 truncate">{getDisplayTeam(user) || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayDivision(user) || "-"}</td>
                       <td className="px-4 py-3"><AccessBadge user={user} /></td>
                       <td className="px-4 py-3 text-xs text-gray-600">{formatDate(user?.keygenIssuedAt || user?.createdAt)}</td>
