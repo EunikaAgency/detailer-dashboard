@@ -1041,6 +1041,8 @@ export default function ProductDetailPage() {
     initialHotspotsByPage: {},
     initialPageId: "",
   });
+  const [isRenamingImage, setIsRenamingImage] = useState(false);
+  const [renameImageTargetUrl, setRenameImageTargetUrl] = useState("");
   const [mediaPreview, setMediaPreview] = useState({
     isOpen: false,
     url: "",
@@ -1372,6 +1374,60 @@ export default function ProductDetailPage() {
       if (replaceImageInputRef.current) {
         replaceImageInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleRenameImage = async (targetUrl) => {
+    if (!targetUrl) return;
+    if (!product?.id) {
+      showToast("error", "Product id is missing.");
+      return;
+    }
+
+    const currentFilename = getFilenameFromUrl(targetUrl);
+    const requestedName = window.prompt(
+      "Enter the new filename. The current image extension will be kept.",
+      currentFilename
+    );
+    if (requestedName === null) return;
+
+    const trimmedName = String(requestedName || "").trim();
+    if (!trimmedName) {
+      showToast("error", "Filename is required.");
+      return;
+    }
+
+    setIsRenamingImage(true);
+    setRenameImageTargetUrl(targetUrl);
+    try {
+      const payload = new FormData();
+      payload.append("oldUrl", targetUrl);
+      payload.append("newName", trimmedName);
+
+      const response = await fetch(
+        `/api/products/${encodeURIComponent(product.id)}/media/rename`,
+        { method: "POST", body: payload }
+      );
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          [errorPayload.error, errorPayload.details]
+            .filter(Boolean)
+            .join(" ") || "Failed to rename image.";
+        throw new Error(message);
+      }
+
+      const updated = await response.json();
+      const mapped = mapProduct(updated);
+      setProduct(mapped);
+      setExistingMedia(mapped.media || []);
+      showToast("success", "Image renamed.");
+    } catch (error) {
+      console.error(error);
+      showToast("error", error.message || "Failed to rename image.");
+    } finally {
+      setIsRenamingImage(false);
+      setRenameImageTargetUrl("");
     }
   };
 
@@ -1989,7 +2045,7 @@ export default function ProductDetailPage() {
                                             <button
                                               type="button"
                                               onClick={() => openHotspotEditor(group, item)}
-                                              className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+                                              className="cursor-pointer rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
                                             >
                                               Hotspot
                                             </button>
@@ -1998,7 +2054,7 @@ export default function ProductDetailPage() {
                                             <button
                                               type="button"
                                               disabled
-                                              className="rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-400"
+                                              className="cursor-not-allowed rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-400"
                                               title="Set a thumbnail first to place hotspots on this HTML slide."
                                             >
                                               Hotspot
@@ -2009,11 +2065,23 @@ export default function ProductDetailPage() {
                                               type="button"
                                               onClick={() => openReplaceImagePicker(item.url)}
                                               disabled={isReplacingImage}
-                                              className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 disabled:opacity-60"
+                                              className="cursor-pointer rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
                                             >
                                               {isReplacingImage && replaceImageTargetUrl === item.url
                                                 ? "Replacing..."
                                                 : "Replace image"}
+                                            </button>
+                                          )}
+                                          {isImage && (
+                                            <button
+                                              type="button"
+                                              onClick={() => handleRenameImage(item.url)}
+                                              disabled={isRenamingImage}
+                                              className="cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                              {isRenamingImage && renameImageTargetUrl === item.url
+                                                ? "Renaming..."
+                                                : "Rename"}
                                             </button>
                                           )}
                                           {supportsHotspots && (
@@ -2027,7 +2095,7 @@ export default function ProductDetailPage() {
                                               type="button"
                                               onClick={() => openMediaThumbnailPicker(item.url)}
                                               disabled={isSettingMediaThumbnail}
-                                              className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 disabled:opacity-60"
+                                              className="cursor-pointer rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                                             >
                                               {isSettingMediaThumbnail &&
                                               mediaThumbnailTargetUrl === item.url
@@ -2040,7 +2108,7 @@ export default function ProductDetailPage() {
                                           <button
                                             type="button"
                                             onClick={() => removeExistingMediaItem(item.url)}
-                                            className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100"
+                                            className="cursor-pointer rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100"
                                           >
                                             Delete file
                                           </button>
