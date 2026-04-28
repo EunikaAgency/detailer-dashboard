@@ -1,0 +1,231 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - button "Open sidebar" [ref=e6]:
+            - img [ref=e7]
+          - heading "Otsuka Admin Dashboard" [level=1] [ref=e9]
+        - generic [ref=e11]:
+          - img [ref=e13]
+          - generic [ref=e16]:
+            - generic [ref=e17]: Checking session
+            - generic [ref=e18]: Loading account...
+          - button "Logout" [ref=e19]:
+            - img [ref=e20]
+    - main [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - heading "Reports Dashboard" [level=2] [ref=e27]
+            - paragraph [ref=e28]: Live dashboard view derived from the current database activity and product records.
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - generic [ref=e33]: Year
+              - button "Year" [ref=e35]:
+                - generic [ref=e36]: Year
+                - img [ref=e37]
+            - generic [ref=e39]:
+              - generic [ref=e40]:
+                - generic [ref=e41]: Month
+                - generic [ref=e42]: (multiple selection)
+              - button "Month (multiple selection)" [ref=e44]:
+                - generic [ref=e45]: Month
+                - img [ref=e46]
+            - generic [ref=e48]:
+              - generic [ref=e49]:
+                - generic [ref=e50]: Division
+                - generic [ref=e51]: (All, Carry-All GMA, Carry-All Prov, CNS)
+              - button "Division (All, Carry-All GMA, Carry-All Prov, CNS)" [expanded] [active] [ref=e53]:
+                - generic [ref=e54]: All
+                - img [ref=e55]
+            - generic [ref=e57]:
+              - generic [ref=e59]: Team
+              - button "Team" [ref=e61]:
+                - generic [ref=e62]: All
+                - img [ref=e63]
+            - generic [ref=e65]:
+              - generic [ref=e67]: Representative
+              - button "Representative" [ref=e69]:
+                - generic [ref=e70]: All
+                - img [ref=e71]
+            - generic [ref=e73]:
+              - generic [ref=e75]: Brand
+              - button "Brand" [ref=e77]:
+                - generic [ref=e78]: All
+                - img [ref=e79]
+          - generic [ref=e81]: "Active sample context: / / All / All / All / All"
+          - generic [ref=e83]:
+            - generic [ref=e84]: "Export data columns: Date, Month, Team, Representative, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed."
+            - generic [ref=e85]:
+              - button "Export CSV" [disabled] [ref=e86]
+              - button "Export Excel" [disabled] [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e91]: Brand Share
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e95]:
+                  - heading "Brand Share of Material Open Count" [level=3] [ref=e96]
+                  - paragraph [ref=e97]: Shows each brand's share of the total Material Open Count in .
+                - generic [ref=e99]: Loading...
+              - generic [ref=e100]:
+                - generic [ref=e102]:
+                  - heading "Brand Share of Total Time Spent" [level=3] [ref=e103]
+                  - paragraph [ref=e104]: Shows each brand's share of total time spent in . Time is measured in minutes.
+                - generic [ref=e106]: Loading...
+            - generic [ref=e109]: Team and Representative Rankings
+            - generic [ref=e110]:
+              - generic [ref=e111]:
+                - generic [ref=e113]:
+                  - heading "Teams With the Highest Material Open Count by Brand" [level=3] [ref=e114]
+                  - paragraph [ref=e115]: Shows the Material Open Count used to rank each team or representative in .
+                - table [ref=e117]:
+                  - rowgroup [ref=e118]:
+                    - row "Rank Team Brand Material Open Count" [ref=e119]:
+                      - columnheader "Rank" [ref=e120]
+                      - columnheader "Team" [ref=e121]
+                      - columnheader "Brand" [ref=e122]
+                      - columnheader "Material Open Count" [ref=e123]
+                  - rowgroup [ref=e124]:
+                    - row "Loading..." [ref=e125]:
+                      - cell "Loading..." [ref=e126]
+              - generic [ref=e128]:
+                - generic [ref=e130]:
+                  - heading "Representatives With the Highest Material Open Count by Brand" [level=3] [ref=e131]
+                  - paragraph [ref=e132]: Shows the Material Open Count used to rank each team or representative in .
+                - table [ref=e134]:
+                  - rowgroup [ref=e135]:
+                    - row "Rank Team Representative Brand Material Open Count" [ref=e136]:
+                      - columnheader "Rank" [ref=e137]
+                      - columnheader "Team" [ref=e138]
+                      - columnheader "Representative" [ref=e139]
+                      - columnheader "Brand" [ref=e140]
+                      - columnheader "Material Open Count" [ref=e141]
+                  - rowgroup [ref=e142]:
+                    - row "Loading..." [ref=e143]:
+                      - cell "Loading..." [ref=e144]
+          - generic [ref=e145]:
+            - generic [ref=e148]: Material Summary
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - generic [ref=e152]:
+                  - heading "Materials With the Highest Material Open Count" [level=3] [ref=e153]
+                  - paragraph [ref=e154]: Shows the Material Open Count for each material in .
+                - generic [ref=e155]: Loading...
+              - generic [ref=e156]:
+                - generic [ref=e158]:
+                  - heading "Materials With the Most Time Spent" [level=3] [ref=e159]
+                  - paragraph [ref=e160]: Shows how many minutes people spent on each material in . Time is measured in minutes.
+                - generic [ref=e161]: Loading...
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e165]:
+                  - heading "Shows the Top Materials by Brand" [level=3] [ref=e166]
+                  - paragraph [ref=e167]: Shows the total Material Open Count for .
+                - generic [ref=e168]: Loading...
+              - generic [ref=e169]:
+                - generic [ref=e171]:
+                  - heading "How Material Activity Changed Each Month" [level=3] [ref=e172]
+                  - paragraph [ref=e173]: Shows the monthly Material Open Count in .
+                - generic [ref=e174]: Loading...
+          - generic [ref=e175]:
+            - generic [ref=e178]: Material Activity by Team
+            - generic [ref=e180]:
+              - generic [ref=e182]:
+                - heading "Materials With the Highest Material Open Count by Team" [level=3] [ref=e183]
+                - paragraph [ref=e184]: Shows the Material Open Count for each material in . Each color in the legend is a team.
+              - generic [ref=e185]: Loading...
+          - generic [ref=e186]:
+            - generic [ref=e189]: Slide Viewing Time
+            - generic [ref=e190]:
+              - generic [ref=e192]:
+                - heading "Products With the Most Slide Viewing Time" [level=3] [ref=e193]
+                - paragraph [ref=e194]: Shows the total minutes viewed for each product in .
+              - generic [ref=e196]:
+                - generic [ref=e197]: Brand Filter
+                - combobox "Brand Filter" [ref=e198]:
+                  - option "All Brands" [selected]
+              - generic [ref=e199]: Loading...
+            - generic [ref=e200]:
+              - generic [ref=e202]:
+                - heading "Materials With the Most Slide Viewing Time" [level=3] [ref=e203]
+                - paragraph [ref=e204]: Shows the total minutes viewed for each material in . Pick one material below to switch to a slide-by-slide view.
+              - generic [ref=e206]:
+                - generic [ref=e207]: Material Filter
+                - combobox "Material Filter" [ref=e208]:
+                  - option "All Attachments" [selected]
+              - generic [ref=e209]: Loading...
+        - generic [ref=e212]: Monthly Material Open Count Summary
+        - generic [ref=e214]:
+          - generic [ref=e215]:
+            - generic [ref=e216]:
+              - heading "Products With the Highest Material Open Count" [level=3] [ref=e217]
+              - paragraph [ref=e218]: Shows the top 20 products based on Material Open Count for the selected month.
+            - generic [ref=e219]: Loading...
+          - generic [ref=e220]:
+            - generic [ref=e221]:
+              - heading "Representatives With the Highest Material Open Count" [level=3] [ref=e222]
+              - paragraph [ref=e223]: Shows the top 20 representatives based on Material Open Count for the selected month.
+            - generic [ref=e224]: Loading...
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - heading "Teams With the Highest Material Open Count" [level=3] [ref=e227]
+              - paragraph [ref=e228]: Shows the top 20 teams based on Material Open Count for the selected month.
+            - generic [ref=e229]: Loading...
+        - generic [ref=e232]: Material Open Count and Slide Viewing
+        - generic [ref=e233]:
+          - generic [ref=e235]:
+            - generic [ref=e236]:
+              - generic [ref=e237]:
+                - heading "TD Product Share of Material Open Count" [level=3] [ref=e238]
+                - paragraph [ref=e239]: Shows the percent share of Material Open Count for Meptin, Mucosta, Pletaal, Aminoleban Oral, Samsca, and Jinarc.
+              - generic [ref=e240]: Loading...
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - heading "CNS Product Share by Interactions" [level=3] [ref=e243]
+                - paragraph [ref=e244]: Shows the percent share of recorded interactions for each Abilify Maintena and Rexulti material.
+              - generic [ref=e245]: Loading...
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - generic [ref=e249]:
+                  - heading "Teams With the Highest Material Open Count" [level=3] [ref=e250]
+                  - paragraph [ref=e251]: Shows the top 20 teams based on Material Open Count for the selected month.
+                - generic [ref=e252]: Loading...
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - heading "Representatives With the Highest Material Open Count" [level=3] [ref=e255]
+                  - paragraph [ref=e256]: Shows the top 20 representatives based on Material Open Count for the selected month.
+                - generic [ref=e257]: Loading...
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - heading "Products With the Highest Material Open Count" [level=3] [ref=e260]
+                  - paragraph [ref=e261]: Shows the top 20 products based on Material Open Count for the selected month.
+                - generic [ref=e262]: Loading...
+            - generic [ref=e265]: Slide Viewing Time
+            - generic [ref=e266]:
+              - generic [ref=e267]:
+                - generic [ref=e268]:
+                  - heading "Slides With the Most Total Viewing Time" [level=3] [ref=e269]
+                  - paragraph [ref=e270]: Shows the top 20 slides based on total minutes viewed. The legend shows the material name and exact slide number.
+                - generic [ref=e271]: Loading...
+              - generic [ref=e272]:
+                - generic [ref=e273]:
+                  - heading "Slides With the Highest Average Viewing Time" [level=3] [ref=e274]
+                  - paragraph [ref=e275]: Shows the top 20 slides based on average minutes viewed per slide view. Average minutes = total minutes viewed divided by total slide views.
+                - generic [ref=e276]: Loading...
+  - alert [ref=e277]
+  - generic [ref=e278]:
+    - textbox "Search division" [ref=e280]
+    - listbox [ref=e281]:
+      - option "All Selected" [selected] [ref=e282]:
+        - generic [ref=e283]: All
+        - generic [ref=e284]: Selected
+      - option "Carry-All GMA" [ref=e285]:
+        - generic [ref=e286]: Carry-All GMA
+      - option "Carry-All Prov" [ref=e287]:
+        - generic [ref=e288]: Carry-All Prov
+      - option "CNS" [ref=e289]:
+        - generic [ref=e290]: CNS
+      - option "Office" [ref=e291]:
+        - generic [ref=e292]: Office

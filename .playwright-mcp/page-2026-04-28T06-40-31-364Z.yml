@@ -1,0 +1,24 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Otsuka Detailer" [level=1] [ref=e5]
+    - paragraph [ref=e6]: Sign in to manage the dashboard
+  - generic [ref=e7]:
+    - textbox "Email or username" [ref=e9]
+    - generic [ref=e10]:
+      - textbox "Your password" [ref=e11]
+      - button "Show password" [ref=e12]:
+        - img [ref=e13]
+    - button "Login" [ref=e16]
+  - generic [ref=e17]:
+    - paragraph [ref=e18]:
+      - text: Need the Android app?
+      - link "Go to Download Page" [ref=e19] [cursor=pointer]:
+        - /url: /download
+    - paragraph [ref=e20]:
+      - text: By continuing, you agree to our
+      - link "Privacy Policy" [ref=e21] [cursor=pointer]:
+        - /url: /privacy-policy
+      - text: .
+    - paragraph [ref=e22]:
+      - link "Back to Home" [ref=e23] [cursor=pointer]:
+        - /url: /

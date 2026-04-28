@@ -1,0 +1,155 @@
+EmpID,LastName,FirstName,Position,RegionID,TeamID,AreaID,Division
+OPPI-061,Nacpil,Ma. Luisa,MR,ABI,ABN,ABN,CNS Division
+OPPI-135,De Mesa,Michael,MR,ABI,ABN,ABN,CNS Division
+OPPI-079,Romero,Eric,TL,ABI,ABS,ABS,CNS Division
+OPPI-742,Barbastro,Daniel,MR,ABI,ABC,AC1,CNS Division
+OPPI-646,Sollano,Johzainne,MR,ABI,ABC,AC2,CNS Division
+OPPI-694,Bancolita,Erick John,MR,ABI,ABC,AC3,CNS Division
+OPPI-220,Florentin,Mark Syl,MR,ABI,ABC,AC4,CNS Division
+OPPI-798,Chua,Danice Pola,MR,ABI,ABC,AC5,CNS Division
+OPPI-036,Feliciano,Irineo Jr.,TL,KAM,KAM,AM1,Key Accounts
+OPPI-792,Santos,Baron Paul Mari,MR,ABI,ABN,AN1,CNS Division
+OPPI-618,Repuya,Michaella,MR,ABI,ABN,AN2,CNS Division
+OPPI-695,Catanghal,Patricia Anne,MR,ABI,ABN,AN3,CNS Division
+OPPI-743,Salazar,Gerald,MR,ABI,ABN,AN4,CNS Division
+OPPI-764,Bulawan,Mikelle,MR,ABI,ABS,AS1,CNS Division
+OPPI-725,Abrenica,Mc Jonel,MR,ABI,ABS,AS2,CNS Division
+OPPI-237,Gutierrez,Chester,MR,ABI,ABS,AS3,CNS Division
+OPPI-635,Gardose,Christine Mariz,MR,ABI,ABS,AS4,CNS Division
+OPPI-763,Fernando,Renz Clark,MR,ABI,ABS,AS5,CNS Division
+OPPI-754,Dela Fuente,Jeany Lyn,MR,MLA,GCE,CE1,Carry-All GMA
+OPPI-734,Zabala,Bruce,MR,MLA,GCE,CE2,Carry-All GMA
+OPPI-670,Begueja,Danilo Jr.,MR,MLA,GCE,CE3,Carry-All GMA
+OPPI-475,Dominguez,Maria Angelica,MR,MLA,GCE,CE4,Carry-All GMA
+OPPI-796,Vargas,Diana Princess,MR,MLA,GCE,CE5,Carry-All GMA
+OPPI-144,Abrajano,Leslie,MR,VIS,CEV,CEV,Carry-All Province
+OPPI-230,Jacinto,Jason Paolo,TL,LUZ,CLZ,CLZ,Carry-All Province
+OPPI-776,Angelitud,John Mark,MR,MLA,GEA,EA1,Carry-All GMA
+OPPI-253,Roxas,Kervin,MR,MLA,GEA,EA2,Carry-All GMA
+OPPI-309,De Belen,Rechelle Riza,MR,MLA,GEA,EA3,Carry-All GMA
+OPPI-781,Bautista,Princess Kate,MR,MLA,GEA,EA4,Carry-All GMA
+OPPI-775,Adamos,Arjay,MR,MLA,GEA,EA5,Carry-All GMA
+OPPI-182,Dicioco,Crystal Anne,MR,MLA,GCE,GCE,Carry-All GMA
+OPPI-301,Agcaoili,Paolo Robert,TL,MLA,GEA,GEA,Carry-All GMA
+OPPI-801,Cancio,Ralph Jason,TL,MLA,GNO,GNO,Carry-All GMA
+OPPI-016,Yu,Raquel,TL,MLA,GSN,GSN,Carry-All GMA
+OPPI-158,Malaluan,Elmer Jr.,MR,MLA,GSO,GSO,Carry-All GMA
+OPPI-212,Tamana,Mary Rose,TL,MLA,GSS,GSS,Carry-All GMA
+OPPI-097,Capucao,Carolyn,TL,HAM,HAM,HM1,House Accounts GMA
+OPPI-374,Calunsag,Barbara Jones,MR,HAP,HAP,HP1,Carry-All Province
+OPPI-459,Flores,Bridget Gail,MR,LUZ,SLZ,L10,Carry-All Province
+OPPI-680,Malubay,Ronnie Cris,MR,LUZ,SLZ,L12,Carry-All Province
+OPPI-540,Alvero,Christian,MR,LUZ,SLZ,L13,Carry-All Province
+OPPI-681,Baldon,Julie Anne,MR,LUZ,SLZ,L14,Carry-All Province
+OPPI-624,Garcia,Bernadeth,MR,LUZ,SLZ,L15,Carry-All Province
+OPPI-298,Garcia,Ivy Marie,MR,LUZ,SLZ,L16,Carry-All Province
+OPPI-514,Severino,Jan Carlo,MR,LUZ,SLZ,L17,Carry-All Province
+OPPI-483,Argallon,David,MR,LUZ,NLZ,L20,Carry-All Province
+OPPI-576,Caluag,Richmond,MR,LUZ,NLZ,L21,Carry-All Province
+OPPI-455,Catacutan,Julie Ann,MR,LUZ,NLZ,L22,Carry-All Province
+OPPI-747,Dayrit,Joseph Bernard,MR,LUZ,NLZ,L23,Carry-All Province
+OPPI-464,Palisoc,Mary Kristel,MR,LUZ,NLZ,L24,Carry-All Province
+OPPI-299,Aguinaldo,Faye,MR,LUZ,CLZ,L30,Carry-All Province
+OPPI-632,Tuazon,Ryan Christopher,MR,LUZ,CLZ,L31,Carry-All Province
+OPPI-504,Cervania,Sien Elena Denise,MR,LUZ,CLZ,L32,Carry-All Province
+OPPI-687,Aguas,Antonio III,MR,LUZ,CLZ,L33,Carry-All Province
+OPPI-452,Cunanan,Nica,MR,LUZ,CLZ,L34,Carry-All Province
+OPPI-795,Vitug,Lourie Ann,MR,LUZ,CLZ,L35,Carry-All Province
+OPPI-744,Cube,Clarence Daniel,MR,CNT,LCN,LC1,Clinical Nutrition
+OPPI-713,Panis,Ferdinand,MR,CNT,LCN,LC2,Clinical Nutrition
+OPPI-736,Tajon,Nikko Jake,MR,CNT,LCN,LC3,Clinical Nutrition
+OPPI-791,Lustre,Kelly Andrine,MR,CNT,LCN,LC4,Clinical Nutrition
+OPPI-803,Cayme,Mark Vergel,MR,CNT,LCN,LC5,Clinical Nutrition
+OPPI-523,Marukot,Ma. Lourdes,MR,CNT,LCN,LCN,Clinical Nutrition
+OPPI-040,Lakibul,Zharina,MR,MIN,NMI,M10,Carry-All Province
+OPPI-308,Magno,Michel Kenneth,MR,MIN,NMI,M11,Carry-All Province
+OPPI-545,Tenchavez,Daijay Rocky,MR,MIN,NMI,M12,Carry-All Province
+OPPI-727,Ancog,Aljeno,MR,MIN,NMI,M13,Carry-All Province
+OPPI-668,Quicoy,Oligario Jr.,MR,MIN,NMI,M14,Carry-All Province
+OPPI-669,Ambino,Lemuel John,MR,MIN,SMI,M20,Carry-All Province
+OPPI-777,Montoya,Brendon Rayle,MR,MIN,SMI,M21,Carry-All Province
+OPPI-748,Cabreros,Maxwen Powell,MR,MIN,SMI,M22,Carry-All Province
+OPPI-759,Carreon,Jemar King,MR,MIN,SMI,M23,Carry-All Province
+OPPI-749,Espinosa,Crestel Jean,MR,MIN,SMI,M24,Carry-All Province
+OPPI-779,Diendo,Ainslee Catherine,MR,MIN,SMI,M25,Carry-All Province
+OPPI-607,Imatong,Kristine Joy,MR,CNT,NCN,NC1,Clinical Nutrition
+OPPI-802,Tenorio,Armanne Conrad,MR,CNT,NCN,NC2,Clinical Nutrition
+OPPI-730,Delos Santos,Jhervyson,MR,CNT,NCN,NC3,Clinical Nutrition
+OPPI-000,Vacant,Vacant,MR,CNT,NCN,NC4,Clinical Nutrition
+OPPI-758,Domulot,Cleofe,MR,CNT,NCN,NC5,Clinical Nutrition
+OPPI-418,Garcia,April,MR,LUZ,NLZ,NLZ,Carry-All Province
+OPPI-101,Gines,Evelyn,TL,MIN,NMI,NMI,Carry-All Province
+OPPI-760,Rosales,Crusette,MR,MLA,GNO,NO1,Carry-All GMA
+OPPI-672,De Leon,Lianne,MR,MLA,GNO,NO2,Carry-All GMA
+OPPI-732,Lim,Mark Willard,MR,MLA,GNO,NO3,Carry-All GMA
+OPPI-752,Torreflores,Kimberly,MR,MLA,GNO,NO4,Carry-All GMA
+OPPI-784,Marcaba,Pauline Jane,MR,MLA,GNO,NO5,Carry-All GMA
+OPPI-608,Regalia,Kryss Anne,MR,MLA,GNO,NO6,Carry-All GMA
+OPPI-059,Malajacan,Patrick Jake,TL,CNT,MPC,O30,Clinical Nutrition
+OPPI-693,Pautan,King Januar,MR,CNT,PCN,PC1,Clinical Nutrition
+OPPI-790,Anabieza,Cherryl,MR,CNT,PCN,PC2,Clinical Nutrition
+OPPI-706,Tabilid,Shelldene Mae,MR,CNT,PCN,PC3,Clinical Nutrition
+OPPI-721,Antoque,Emmanuel,MR,CNT,PCN,PC4,Clinical Nutrition
+OPPI-757,Exala,John Paul,MR,CNT,PCN,PC5,Clinical Nutrition
+OPPI-642,Santiago,Lillie-Ann Grace,MR,RDO,ONC,R01,Oncology
+OPPI-715,Pambid,Gyle Bennett,MR,CNT,SCN,SC1,Clinical Nutrition
+OPPI-770,Malondras,Angelo,MR,CNT,SCN,SC2,Clinical Nutrition
+OPPI-771,Garfin,Glenn,MR,CNT,SCN,SC3,Clinical Nutrition
+OPPI-659,Simbahan,Ericka Kinley,MR,CNT,SCN,SC4,Clinical Nutrition
+OPPI-729,Brito,Christian,MR,CNT,SCN,SC5,Clinical Nutrition
+OPPI-078,Roadel,Ruben Jr.,TL,CNT,SCN,SCN,Clinical Nutrition
+OPPI-082,Santiaguel,Josef,MR,LUZ,SLZ,SLZ,Carry-All Province
+OPPI-783,Ignacio-Fernandez,Ma. Jenny Lyn,MR,MLA,GSN,SN1,Carry-All GMA
+OPPI-592,Tambolero,Marvin,MR,MLA,GSN,SN2,Carry-All GMA
+OPPI-761,Areja,Myandy Nukiel,MR,MLA,GSN,SN3,Carry-All GMA
+OPPI-797,Tabago,Cyrah Cristiana,MR,MLA,GSN,SN4,Carry-All GMA
+OPPI-717,Escalona,Vince Andrei,MR,MLA,GSN,SN5,Carry-All GMA
+OPPI-430,Eleuterio,Mark Alvin,MR,MLA,GSN,SN6,Carry-All GMA
+OPPI-719,Dayao,Marjorie,MR,MLA,GSO,SO1,Carry-All GMA
+OPPI-691,Cortez,Abigail,MR,MLA,GSO,SO2,Carry-All GMA
+OPPI-786,Soriano,Jezelle Angeline,MR,MLA,GSO,SO3,Carry-All GMA
+OPPI-626,Armas,Maria Angelica,MR,MLA,GSO,SO4,Carry-All GMA
+OPPI-751,Santos,John Raphael,MR,MLA,GSO,SO5,Carry-All GMA
+OPPI-785,Senosa,Jake Elmer,MR,MLA,GSO,SO6,Carry-All GMA
+OPPI-107,Gurion,Rowena,MR,MLA,GSS,SS1,Carry-All GMA
+OPPI-735,Rogel,Jennica,MR,MLA,GSS,SS2,Carry-All GMA
+OPPI-570,Palis,Ressie,MR,MLA,GSS,SS3,Carry-All GMA
+OPPI-656,Salazar,Trixie Jean,MR,MLA,GSS,SS4,Carry-All GMA
+OPPI-782,Encina,Von Allison,MR,MLA,GSS,SS5,Carry-All GMA
+OPPI-702,Mendoza,Nadine Lea Mae,MR,MLA,GSS,SS6,Carry-All GMA
+OPPI-767,Ansale,Noel,MR,CNT,TAS,TA1,Trade Accounts
+OPPI-716,Mundala,Frandy,MR,VIS,CEV,V10,Carry-All Province
+OPPI-728,Espiritu,Gerard Marie Rhandith,MR,VIS,CEV,V11,Carry-All Province
+OPPI-778,Villanel,Rhea Marie,MR,VIS,CEV,V12,Carry-All Province
+OPPI-509,Sanchez,Lawrence Farley,MR,VIS,CEV,V13,Carry-All Province
+OPPI-726,Modesto,Justin,MR,VIS,CEV,V14,Carry-All Province
+OPPI-461,Deanon,Leana Precy Olivia,MR,VIS,WVS,V20,Carry-All Province
+OPPI-685,Barillas,Blessie Marie,MR,VIS,WVS,V21,Carry-All Province
+OPPI-479,Bonales,Vicente,MR,VIS,WVS,V22,Carry-All Province
+OPPI-688,Saldo,Joseph,MR,VIS,WVS,V23,Carry-All Province
+OPPI-531,Barot,Lyrah Grace,MR,VIS,WVS,V24,Carry-All Province
+OPPI-805,Orbeta,Jessa,MR,CNT,VCN,VC1,Clinical Nutrition
+OPPI-794,Quio,Angelo,MR,CNT,VCN,VC2,Clinical Nutrition
+OPPI-804,Mejaran,Ralph James,MR,CNT,VCN,VC3,Clinical Nutrition
+OPPI-600,Chua,Kenneth Lloyd,MR,CNT,VCN,VCN,Clinical Nutrition
+OPPI-089,Torres,Jivy,MR,VIS,WVS,WVS,Carry-All Province
+OPPI-563,Castro,Welgen,TL,CNT,NCN,NCN,Clinical Nutrition
+OPPI-581,Granada,Divina Marie,TL,CNT,PCN,PCN,Clinical Nutrition
+OPPI-022,Castillo,Domingo Jr.,NSM,NA,NA,NA,Sales
+OPPI-071,Patriana,Abner,NSM,NA,NA,NA,Sales
+OPPI-049,Ladaga,Joseph Franklyn,NSM,NA,NA,NA,Sales
+OPPI-232,Fernando,Michelle,PM,NA,NA,NA,Marketing
+OPPI-511,Francisco,Dawn,PM,NA,NA,NA,Marketing
+OPPI-532,Lim,Jerome Giovanni,PM,NA,NA,NA,Marketing
+OPPI-036,Feliciano,Irineo Jr.,KAM,NA,NA,NA,Key Accounts
+OPPI-275,Bangud,Cheenee,PSM,NA,NA,NA,Marketing
+OPPI-510,Tanawan,Annlyn,PSM,NA,NA,NA,Marketing
+OPPI-588,Daluro,Joanna Mary,PSM,NA,NA,NA,Marketing
+OPPI-163,Baltazar,Nina Ricci,GPM,NA,NA,NA,Marketing
+OPPI-736,Tajon,Nikko Jake,PSM,NA,NA,NA,Marketing
+OPPI-553,Allam,Girlie,PSM,NA,NA,NA,Marketing
+OPPI-555,Tan,Neala Jayne,PSM,NA,NA,NA,Marketing
+OPPI-038,Olivarez,Rochelle,GPM,NA,NA,NA,Marketing
+OPPI-059,Malajacan,Patrick Jake,GPM,NA,NA,NA,Marketing
+OPPI-084,Sianda,Winnie Lynne,TRN,NA,NA,NA,Training
+OPPI-405,Hipolito,Christine Joy,TRN,NA,NA,NA,Training

@@ -1,0 +1,241 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - button "Open sidebar" [ref=e6]:
+            - img [ref=e7]
+          - heading "Otsuka Admin Dashboard" [level=1] [ref=e9]
+        - generic [ref=e11]:
+          - img [ref=e13]
+          - generic [ref=e16]:
+            - generic [ref=e17]: Logged in
+            - generic [ref=e18]: Eunika
+            - generic [ref=e19]: info@eunika.agency • Admin
+          - button "Logout" [ref=e20]:
+            - img [ref=e21]
+    - main [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - heading "Reports Dashboard" [level=2] [ref=e28]
+            - paragraph [ref=e29]: Live dashboard view derived from the current database activity and product records.
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e34]: Year
+              - button "Year" [ref=e36]:
+                - generic [ref=e37]: "2026"
+                - img [ref=e38]
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - generic [ref=e42]: Month
+                - generic [ref=e43]: (multiple selection)
+              - button "Month (multiple selection)" [ref=e45]:
+                - generic [ref=e46]: April
+                - img [ref=e47]
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - generic [ref=e51]: Division
+                - generic [ref=e52]: (All, Carry-All GMA, Carry-All Prov, CNS)
+              - button "Division (All, Carry-All GMA, Carry-All Prov, CNS)" [ref=e54]:
+                - generic [ref=e55]: Office
+                - img [ref=e56]
+            - generic [ref=e58]:
+              - generic [ref=e60]: Team
+              - button "Team" [expanded] [active] [ref=e62]:
+                - generic [ref=e63]: All
+                - img [ref=e64]
+            - generic [ref=e66]:
+              - generic [ref=e68]: Representative
+              - button "Representative" [ref=e70]:
+                - generic [ref=e71]: All
+                - img [ref=e72]
+            - generic [ref=e74]:
+              - generic [ref=e76]: Brand
+              - button "Brand" [ref=e78]:
+                - generic [ref=e79]: All
+                - img [ref=e80]
+          - generic [ref=e82]: "Active sample context: 2026 / April / Office / All / All / All"
+          - generic [ref=e84]:
+            - generic [ref=e85]: "Export data columns: Date, Month, Team, Representative, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed."
+            - generic [ref=e86]:
+              - button "Export CSV" [disabled] [ref=e87]
+              - button "Export Excel" [disabled] [ref=e88]
+          - generic [ref=e89]:
+            - generic [ref=e92]: Brand Share
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - generic [ref=e96]:
+                  - heading "Brand Share of Material Open Count" [level=3] [ref=e97]
+                  - paragraph [ref=e98]: Shows each brand's share of the total Material Open Count in April 2026.
+                - generic [ref=e286]: Loading...
+              - generic [ref=e101]:
+                - generic [ref=e103]:
+                  - heading "Brand Share of Total Time Spent" [level=3] [ref=e104]
+                  - paragraph [ref=e105]: Shows each brand's share of total time spent in April 2026. Time is measured in minutes.
+                - generic [ref=e287]: Loading...
+            - generic [ref=e110]: Team and Representative Rankings
+            - generic [ref=e111]:
+              - generic [ref=e112]:
+                - generic [ref=e114]:
+                  - heading "Teams With the Highest Material Open Count by Brand" [level=3] [ref=e115]
+                  - paragraph [ref=e116]: Shows the Material Open Count used to rank each team or representative in April 2026.
+                - table [ref=e118]:
+                  - rowgroup [ref=e119]:
+                    - row "Rank Team Brand Material Open Count" [ref=e120]:
+                      - columnheader "Rank" [ref=e121]
+                      - columnheader "Team" [ref=e122]
+                      - columnheader "Brand" [ref=e123]
+                      - columnheader "Material Open Count" [ref=e124]
+                  - rowgroup [ref=e125]:
+                    - row "Loading..." [ref=e288]:
+                      - cell "Loading..." [ref=e289]
+              - generic [ref=e129]:
+                - generic [ref=e131]:
+                  - heading "Representatives With the Highest Material Open Count by Brand" [level=3] [ref=e132]
+                  - paragraph [ref=e133]: Shows the Material Open Count used to rank each team or representative in April 2026.
+                - table [ref=e135]:
+                  - rowgroup [ref=e136]:
+                    - row "Rank Team Representative Brand Material Open Count" [ref=e137]:
+                      - columnheader "Rank" [ref=e138]
+                      - columnheader "Team" [ref=e139]
+                      - columnheader "Representative" [ref=e140]
+                      - columnheader "Brand" [ref=e141]
+                      - columnheader "Material Open Count" [ref=e142]
+                  - rowgroup [ref=e143]:
+                    - row "Loading..." [ref=e290]:
+                      - cell "Loading..." [ref=e291]
+          - generic [ref=e146]:
+            - generic [ref=e149]: Material Summary
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - generic [ref=e153]:
+                  - heading "Materials With the Highest Material Open Count" [level=3] [ref=e154]
+                  - paragraph [ref=e155]: Shows the Material Open Count for each material in April 2026.
+                - generic [ref=e292]: Loading...
+              - generic [ref=e157]:
+                - generic [ref=e159]:
+                  - heading "Materials With the Most Time Spent" [level=3] [ref=e160]
+                  - paragraph [ref=e161]: Shows how many minutes people spent on each material in April 2026. Time is measured in minutes.
+                - generic [ref=e293]: Loading...
+            - generic [ref=e163]:
+              - generic [ref=e164]:
+                - generic [ref=e166]:
+                  - heading "Shows the Top Materials by Brand" [level=3] [ref=e167]
+                  - paragraph [ref=e168]: Shows the total Material Open Count for April 2026.
+                - generic [ref=e294]: Loading...
+              - generic [ref=e170]:
+                - generic [ref=e172]:
+                  - heading "How Material Activity Changed Each Month" [level=3] [ref=e173]
+                  - paragraph [ref=e174]: Shows the monthly Material Open Count in 2026.
+                - generic [ref=e295]: Loading...
+          - generic [ref=e176]:
+            - generic [ref=e179]: Material Activity by Team
+            - generic [ref=e181]:
+              - generic [ref=e183]:
+                - heading "Materials With the Highest Material Open Count by Team" [level=3] [ref=e184]
+                - paragraph [ref=e185]: Shows the Material Open Count for each material in April 2026. Each color in the legend is a team.
+              - generic [ref=e296]: Loading...
+          - generic [ref=e187]:
+            - generic [ref=e190]: Slide Viewing Time
+            - generic [ref=e191]:
+              - generic [ref=e193]:
+                - heading "Products With the Most Slide Viewing Time" [level=3] [ref=e194]
+                - paragraph [ref=e195]: Shows the total minutes viewed for each product in April 2026.
+              - generic [ref=e197]:
+                - generic [ref=e198]: Brand Filter
+                - combobox "Brand Filter" [ref=e199]:
+                  - option "All Brands" [selected]
+                  - option "Abilify Maintena®"
+                  - option "AMINOLEBAN ORAL"
+                  - option "MEPTIN"
+                  - option "PLETAAL"
+                  - option "Rexulti"
+                  - option "SAMSCA"
+              - generic [ref=e297]: Loading...
+            - generic [ref=e201]:
+              - generic [ref=e203]:
+                - heading "Materials With the Most Slide Viewing Time" [level=3] [ref=e204]
+                - paragraph [ref=e205]: Shows the total minutes viewed for each material in April 2026. Pick one material below to switch to a slide-by-slide view.
+              - generic [ref=e207]:
+                - generic [ref=e208]: Material Filter
+                - combobox "Material Filter" [ref=e209]:
+                  - option "All Attachments" [selected]
+                  - option "Abilify Maintena Schizophrenia 2026"
+                  - option "AMINOLEBAN ONE DETAILER"
+                  - option "MEPTIN ONE DETAILER"
+                  - option "PLETAAL ONE DETAILER"
+                  - option "Rexulti AAD 2026"
+                  - option "Rexulti Adolescent Schiz 2026"
+                  - option "SAMSCA ONE DETAILER"
+              - generic [ref=e298]: Loading...
+        - generic [ref=e213]: Monthly Material Open Count Summary
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e217]:
+              - heading "Products With the Highest Material Open Count" [level=3] [ref=e218]
+              - paragraph [ref=e219]: Shows the top 20 products based on Material Open Count for the selected month.
+            - generic [ref=e220]: Loading...
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - heading "Representatives With the Highest Material Open Count" [level=3] [ref=e223]
+              - paragraph [ref=e224]: Shows the top 20 representatives based on Material Open Count for the selected month.
+            - generic [ref=e225]: Loading...
+          - generic [ref=e226]:
+            - generic [ref=e227]:
+              - heading "Teams With the Highest Material Open Count" [level=3] [ref=e228]
+              - paragraph [ref=e229]: Shows the top 20 teams based on Material Open Count for the selected month.
+            - generic [ref=e230]: Loading...
+        - generic [ref=e233]: Material Open Count and Slide Viewing
+        - generic [ref=e234]:
+          - generic [ref=e236]:
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - heading "TD Product Share of Material Open Count" [level=3] [ref=e239]
+                - paragraph [ref=e240]: Shows the percent share of Material Open Count for Meptin, Mucosta, Pletaal, Aminoleban Oral, Samsca, and Jinarc.
+              - generic [ref=e299]: Loading...
+            - generic [ref=e242]:
+              - generic [ref=e243]:
+                - heading "CNS Product Share by Interactions" [level=3] [ref=e244]
+                - paragraph [ref=e245]: Shows the percent share of recorded interactions for each Abilify Maintena and Rexulti material.
+              - generic [ref=e300]: Loading...
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - generic [ref=e249]:
+                - generic [ref=e250]:
+                  - heading "Teams With the Highest Material Open Count" [level=3] [ref=e251]
+                  - paragraph [ref=e252]: Shows the top 20 teams based on Material Open Count for the selected month.
+                - generic [ref=e253]: Loading...
+              - generic [ref=e254]:
+                - generic [ref=e255]:
+                  - heading "Representatives With the Highest Material Open Count" [level=3] [ref=e256]
+                  - paragraph [ref=e257]: Shows the top 20 representatives based on Material Open Count for the selected month.
+                - generic [ref=e258]: Loading...
+              - generic [ref=e259]:
+                - generic [ref=e260]:
+                  - heading "Products With the Highest Material Open Count" [level=3] [ref=e261]
+                  - paragraph [ref=e262]: Shows the top 20 products based on Material Open Count for the selected month.
+                - generic [ref=e263]: Loading...
+            - generic [ref=e266]: Slide Viewing Time
+            - generic [ref=e267]:
+              - generic [ref=e268]:
+                - generic [ref=e269]:
+                  - heading "Slides With the Most Total Viewing Time" [level=3] [ref=e270]
+                  - paragraph [ref=e271]: Shows the top 20 slides based on total minutes viewed. The legend shows the material name and exact slide number.
+                - generic [ref=e272]: Loading...
+              - generic [ref=e273]:
+                - generic [ref=e274]:
+                  - heading "Slides With the Highest Average Viewing Time" [level=3] [ref=e275]
+                  - paragraph [ref=e276]: Shows the top 20 slides based on average minutes viewed per slide view. Average minutes = total minutes viewed divided by total slide views.
+                - generic [ref=e277]: Loading...
+  - alert [ref=e278]
+  - generic [ref=e279]:
+    - textbox "Search team" [ref=e281]
+    - listbox [ref=e282]:
+      - option "All Selected" [selected] [ref=e283]:
+        - generic [ref=e284]: All
+        - generic [ref=e285]: Selected
+      - option "Admin Users" [ref=e301]:
+        - generic [ref=e302]: Admin Users
+      - option "Marketing Team" [ref=e303]:
+        - generic [ref=e304]: Marketing Team
