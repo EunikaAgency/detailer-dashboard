@@ -860,14 +860,14 @@ export default function UsersPage() {
                           <button
                             type="button"
                             onClick={() => openEdit(user)}
-                            className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                            className="inline-flex cursor-pointer items-center rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400 hover:bg-gray-100"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(id)}
-                            className="inline-flex items-center rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                            className="inline-flex cursor-pointer items-center rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
                           >
                             Delete
                           </button>
