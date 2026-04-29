@@ -71,11 +71,19 @@ const fetchUsers = async () => {
   return Array.isArray(body) ? body : [];
 };
 
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
 const formatDate = (value) => {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString();
+  return DATE_TIME_FORMATTER.format(date);
 };
 
 const getDisplayUsername = (user) =>
