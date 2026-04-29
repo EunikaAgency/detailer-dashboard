@@ -71,12 +71,6 @@ const fetchUsers = async () => {
   return Array.isArray(body) ? body : [];
 };
 
-const getDownloadFilename = (response, fallback) => {
-  const disposition = response.headers.get("content-disposition") || "";
-  const match = disposition.match(/filename="?([^"]+)"?/i);
-  return match?.[1] || fallback;
-};
-
 const formatDate = (value) => {
   if (!value) return "-";
   const date = new Date(value);
@@ -179,7 +173,6 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [exportFormat, setExportFormat] = useState("");
   const [toast, setToast] = useState(null);
   const [query, setQuery] = useState("");
   const [issuedCredential, setIssuedCredential] = useState(null);
@@ -269,39 +262,6 @@ export default function UsersPage() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
-
-  const handleExport = async (format) => {
-    const nextFormat = format === "csv" ? "csv" : "xlsx";
-    setExportFormat(nextFormat);
-    try {
-      const response = await fetch(`/api/users/export?format=${encodeURIComponent(nextFormat)}`);
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body?.error || "Failed to export users.");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const filename = getDownloadFilename(response, `users.${nextFormat}`);
-
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 1000);
-
-      showToast("success", `Users ${nextFormat.toUpperCase()} exported.`);
-    } catch (error) {
-      showToast("error", error.message || "Failed to export users.");
-    } finally {
-      setExportFormat("");
-    }
   };
 
   const openEdit = (user) => {
@@ -830,35 +790,14 @@ export default function UsersPage() {
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:items-end">
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => handleExport("xlsx")}
-                disabled={Boolean(exportFormat)}
-                className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {exportFormat === "xlsx" ? "Exporting..." : "Export Excel"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleExport("csv")}
-                disabled={Boolean(exportFormat)}
-                className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {exportFormat === "csv" ? "Exporting..." : "Export CSV"}
-              </button>
-            </div>
-
-            <div className="w-full md:w-72">
-              <input
-                type="search"
-                placeholder="Search name, username, team, division"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
+          <div className="w-full md:w-72">
+            <input
+              type="search"
+              placeholder="Search name, username, team, division"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            />
           </div>
         </div>
 
