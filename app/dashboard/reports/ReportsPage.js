@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import ReportsPage from "./ReportsPageLegacy";
+import ReportsInsightsSection from "./ReportsInsightsSection";
 import ReportsUtilizationSection from "./ReportsUtilizationSection";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
@@ -63,11 +63,48 @@ const EMPTY_REPORT = {
       team: [],
     },
   },
+  shareOfVoiceBrand: [],
+  shareOfVoiceApp: [],
+  teamRankings: [],
+  repRankings: [],
+  generalCountModules: [],
+  generalTimeModules: [],
+  brandTotalModules: [],
+  movingMonthly: {
+    monthKeys: [],
+    rows: [],
+  },
+  allPerTeam: {
+    labels: [],
+    series: [],
+  },
+  divisionPerTeam: {
+    labels: [],
+    series: [],
+  },
+  specialtyCharts: [],
+  slideRetentionSlides: [],
+  unifiedExportRows: [],
+  nationalUtilization: {
+    tdShareOfVoice: [],
+    cnsShareOfVoice: [],
+  },
+  teamUtilization: {
+    perTeam: [],
+    perPsr: [],
+    perProduct: [],
+    perSlide: [],
+    averageTimePerSlide: [],
+  },
   meta: {
     monthlyTotalInteractions: 0,
     yearlyTotalInteractions: 0,
     monthlyTotalSlideViews: 0,
     monthlyTotalSlideMinutes: 0,
+    totalSessionsInYear: 0,
+    totalInteractionsInMonth: 0,
+    totalSlideViewsInMonth: 0,
+    totalSlideMinutesInMonth: 0,
   },
 };
 
@@ -243,37 +280,38 @@ function MetricChartCard({ title, subtitle, items, color, isLoading }) {
 
 export default function ReportsPageDashboard() {
   const [filters, setFilters] = useState(EMPTY_REPORT.filters.selected);
-  const filtersResult = useReportSection({
-    endpoint: "/api/reports/dashboard-v3",
+  const reportResult = useReportSection({
+    endpoint: "/api/reports/dashboard",
     filters,
-    section: "filters",
-    fallbackData: { filters: EMPTY_REPORT.filters },
-  });
-  const summaryResult = useReportSection({
-    endpoint: "/api/reports/dashboard-v3",
-    filters,
-    section: "summary",
-    fallbackData: { filters: EMPTY_REPORT.filters, legacyOverview: EMPTY_REPORT.legacyOverview, meta: EMPTY_REPORT.meta },
+    section: "full",
+    fallbackData: EMPTY_REPORT,
   });
 
   useEffect(() => {
-    if (filtersResult.isLoading || filtersResult.error) return;
+    if (reportResult.isLoading || reportResult.error) return;
 
-    const nextSelected = filtersResult.data?.filters?.selected;
+    const nextSelected = reportResult.data?.filters?.selected;
     if (!nextSelected) return;
 
     setFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
-  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading]);
+  }, [reportResult.data, reportResult.error, reportResult.isLoading]);
 
-  const monthlyProduct = summaryResult.data?.legacyOverview?.monthly?.product || [];
-  const monthlyPerson = summaryResult.data?.legacyOverview?.monthly?.person || [];
-  const monthlyTeam = summaryResult.data?.legacyOverview?.monthly?.team || [];
+  const reportData = reportResult.data || EMPTY_REPORT;
+  const monthlyProduct = reportData.legacyOverview?.monthly?.product || [];
+  const monthlyPerson = reportData.legacyOverview?.monthly?.person || [];
+  const monthlyTeam = reportData.legacyOverview?.monthly?.team || [];
 
   return (
     <div className="space-y-6 pb-6">
       
 
-      <ReportsPage filters={filters} onFiltersChange={setFilters} />
+      <ReportsInsightsSection
+        filters={filters}
+        onFiltersChange={setFilters}
+        reportData={reportData}
+        isLoading={reportResult.isLoading}
+        error={reportResult.error}
+      />
 
       <div className="relative py-4">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#0f4c5c]/25 to-transparent" />
@@ -283,9 +321,9 @@ export default function ReportsPageDashboard() {
       </div>
 
       <div className="space-y-4">
-        {summaryResult.error ? (
+        {reportResult.error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
-            {summaryResult.error}
+            {reportResult.error}
           </div>
         ) : null}
 
@@ -295,21 +333,21 @@ export default function ReportsPageDashboard() {
             subtitle="Shows the top 20 products based on Material Open Count for the selected month."
             items={monthlyProduct}
             color={SERIES_COLORS[0]}
-            isLoading={summaryResult.isLoading}
+            isLoading={reportResult.isLoading}
           />
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
             subtitle="Shows the top 20 representatives based on Material Open Count for the selected month."
             items={monthlyPerson}
             color={SERIES_COLORS[1]}
-            isLoading={summaryResult.isLoading}
+            isLoading={reportResult.isLoading}
           />
           <MetricChartCard
             title="Teams With the Highest Material Open Count"
             subtitle="Shows the top 20 teams based on Material Open Count for the selected month."
             items={monthlyTeam}
             color={SERIES_COLORS[2]}
-            isLoading={summaryResult.isLoading}
+            isLoading={reportResult.isLoading}
           />
         </div>
       </div>
@@ -321,7 +359,15 @@ export default function ReportsPageDashboard() {
         </div>
       </div>
 
-      <ReportsUtilizationSection filters={filters} onFiltersChange={setFilters} hideHeader hideFilters />
+      <ReportsUtilizationSection
+        filters={filters}
+        onFiltersChange={setFilters}
+        reportData={reportData}
+        isLoading={reportResult.isLoading}
+        error={reportResult.error}
+        hideHeader
+        hideFilters
+      />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
-import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import ReportFilterSelect from "./ReportFilterSelect";
 import {
   ArcElement,
@@ -1207,121 +1206,63 @@ function buildPieOptions() {
   };
 }
 
-export default function ReportsPage({ filters: controlledFilters, onFiltersChange } = {}) {
-  const [localFilters, setLocalFilters] = useState(EMPTY_REPORT.filters.selected);
+export default function ReportsInsightsSection({
+  filters = EMPTY_REPORT.filters.selected,
+  onFiltersChange,
+  reportData = EMPTY_REPORT,
+  isLoading = false,
+  error = "",
+} = {}) {
   const [isFilterChangePending, setIsFilterChangePending] = useState(false);
   const [rawSlideActivityBrand, setSlideActivityBrand] = useState("All Brands");
   const [rawSlideActivityProduct, setSlideActivityProduct] = useState("All Products");
   const [rawSlideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
-  const filters = controlledFilters || localFilters;
-  const setSelectedFilters = onFiltersChange || setLocalFilters;
-
-  const filtersResult = useReportSection({
-    endpoint: "/api/reports/dashboard",
-    filters,
-    section: "filters",
-    fallbackData: { filters: EMPTY_REPORT.filters },
-  });
-  const overviewResult = useReportSection({
-    endpoint: "/api/reports/dashboard",
-    filters,
-    section: "overview",
-    fallbackData: {
-      filters: EMPTY_REPORT.filters,
-      shareOfVoiceBrand: EMPTY_REPORT.shareOfVoiceBrand,
-      shareOfVoiceApp: EMPTY_REPORT.shareOfVoiceApp,
-      teamRankings: EMPTY_REPORT.teamRankings,
-      repRankings: EMPTY_REPORT.repRankings,
-      meta: EMPTY_REPORT.meta,
-    },
-  });
-  const modulesResult = useReportSection({
-    endpoint: "/api/reports/dashboard",
-    filters,
-    section: "modules",
-    fallbackData: {
-      filters: EMPTY_REPORT.filters,
-      generalCountModules: EMPTY_REPORT.generalCountModules,
-      generalTimeModules: EMPTY_REPORT.generalTimeModules,
-      brandTotalModules: EMPTY_REPORT.brandTotalModules,
-      movingMonthly: EMPTY_REPORT.movingMonthly,
-    },
-  });
-  const teamSectionResult = useReportSection({
-    endpoint: "/api/reports/dashboard",
-    filters,
-    section: "team",
-    fallbackData: {
-      filters: EMPTY_REPORT.filters,
-      allPerTeam: EMPTY_REPORT.allPerTeam,
-      divisionPerTeam: EMPTY_REPORT.divisionPerTeam,
-      specialtyCharts: EMPTY_REPORT.specialtyCharts,
-    },
-  });
-  const slidesResult = useReportSection({
-    endpoint: "/api/reports/dashboard",
-    filters,
-    section: "slides",
-    fallbackData: {
-      filters: EMPTY_REPORT.filters,
-      slideRetentionSlides: EMPTY_REPORT.slideRetentionSlides,
-      unifiedExportRows: EMPTY_REPORT.unifiedExportRows,
-    },
-  });
+  const setSelectedFilters = typeof onFiltersChange === "function" ? onFiltersChange : null;
 
   useEffect(() => {
-    if (filtersResult.isLoading || filtersResult.error) return;
-
-    const nextSelected = filtersResult.data?.filters?.selected;
-    if (!nextSelected) return;
-
-    setSelectedFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
-  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading, setSelectedFilters]);
-
-  useEffect(() => {
-    if (filtersResult.isLoading || !isFilterChangePending) return undefined;
+    if (isLoading || !isFilterChangePending) return undefined;
 
     const frameId = window.requestAnimationFrame(() => {
       setIsFilterChangePending(false);
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [filtersResult.isLoading, isFilterChangePending]);
+  }, [isLoading, isFilterChangePending]);
 
-  const isFilterControlsDisabled = filtersResult.isLoading || isFilterChangePending;
+  const isFilterControlsDisabled = isLoading || isFilterChangePending;
 
   const handleFilterChange = (key, value) => {
-    if (isFilterControlsDisabled || filters?.[key] === value) return;
+    if (!setSelectedFilters || isFilterControlsDisabled || filters?.[key] === value) return;
 
     setIsFilterChangePending(true);
     setSelectedFilters((current) => ({ ...current, [key]: value }));
   };
 
   const filterOptions = {
-    year: filtersResult.data?.filters?.yearOptions?.length ? filtersResult.data.filters.yearOptions : FILTER_OPTIONS.year,
-    month: filtersResult.data?.filters?.monthOptions?.length ? filtersResult.data.filters.monthOptions : FILTER_OPTIONS.month,
-    division: filtersResult.data?.filters?.divisionOptions?.length
-      ? filtersResult.data.filters.divisionOptions
+    year: reportData?.filters?.yearOptions?.length ? reportData.filters.yearOptions : FILTER_OPTIONS.year,
+    month: reportData?.filters?.monthOptions?.length ? reportData.filters.monthOptions : FILTER_OPTIONS.month,
+    division: reportData?.filters?.divisionOptions?.length
+      ? reportData.filters.divisionOptions
       : FILTER_OPTIONS.division,
-    team: filtersResult.data?.filters?.teamOptions?.length ? filtersResult.data.filters.teamOptions : FILTER_OPTIONS.team,
-    psr: filtersResult.data?.filters?.psrOptions?.length ? filtersResult.data.filters.psrOptions : FILTER_OPTIONS.psr,
+    team: reportData?.filters?.teamOptions?.length ? reportData.filters.teamOptions : FILTER_OPTIONS.team,
+    psr: reportData?.filters?.psrOptions?.length ? reportData.filters.psrOptions : FILTER_OPTIONS.psr,
     brand: (
-      filtersResult.data?.filters?.brandOptions?.length ? filtersResult.data.filters.brandOptions : FILTER_OPTIONS.brand
+      reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand
     ).filter(
       (brand) => !shouldHideBrandOption(brand)
     ),
   };
 
-  const teamRankingRows = overviewResult.data?.teamRankings || EMPTY_REPORT.teamRankings;
-  const repRankingRows = overviewResult.data?.repRankings || EMPTY_REPORT.repRankings;
+  const teamRankingRows = reportData?.teamRankings || EMPTY_REPORT.teamRankings;
+  const repRankingRows = reportData?.repRankings || EMPTY_REPORT.repRankings;
 
-  const brandShareRows = overviewResult.data?.shareOfVoiceBrand || EMPTY_REPORT.shareOfVoiceBrand;
-  const appShareRows = overviewResult.data?.shareOfVoiceApp || EMPTY_REPORT.shareOfVoiceApp;
-  const generalCountRows = modulesResult.data?.generalCountModules || EMPTY_REPORT.generalCountModules;
-  const generalTimeRows = modulesResult.data?.generalTimeModules || EMPTY_REPORT.generalTimeModules;
-  const brandTotalRows = modulesResult.data?.brandTotalModules || EMPTY_REPORT.brandTotalModules;
-  const specialtyCharts = teamSectionResult.data?.specialtyCharts || EMPTY_REPORT.specialtyCharts;
-  const slideRetentionRows = slidesResult.data?.slideRetentionSlides || EMPTY_REPORT.slideRetentionSlides;
+  const brandShareRows = reportData?.shareOfVoiceBrand || EMPTY_REPORT.shareOfVoiceBrand;
+  const appShareRows = reportData?.shareOfVoiceApp || EMPTY_REPORT.shareOfVoiceApp;
+  const generalCountRows = reportData?.generalCountModules || EMPTY_REPORT.generalCountModules;
+  const generalTimeRows = reportData?.generalTimeModules || EMPTY_REPORT.generalTimeModules;
+  const brandTotalRows = reportData?.brandTotalModules || EMPTY_REPORT.brandTotalModules;
+  const specialtyCharts = reportData?.specialtyCharts || EMPTY_REPORT.specialtyCharts;
+  const slideRetentionRows = reportData?.slideRetentionSlides || EMPTY_REPORT.slideRetentionSlides;
 
   const slideRetentionBrandOptions = useMemo(() => {
     const brands = Array.from(
@@ -1480,12 +1421,12 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     [brandTotalRows]
   );
   const movingMonthlyChart = useMemo(
-    () => buildMonthGroupedData(modulesResult.data?.movingMonthly),
-    [modulesResult.data?.movingMonthly]
+    () => buildMonthGroupedData(reportData?.movingMonthly),
+    [reportData?.movingMonthly]
   );
   const allPerTeamChart = useMemo(
-    () => buildTeamGroupedData(teamSectionResult.data?.allPerTeam),
-    [teamSectionResult.data?.allPerTeam]
+    () => buildTeamGroupedData(reportData?.allPerTeam),
+    [reportData?.allPerTeam]
   );
   const slideActivityBrandChart = useMemo(
     () =>
@@ -1577,31 +1518,26 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
   const teamRankingColumns = getTeamTableColumns(filters);
   const repRankingColumns = getRepTableColumns(filters);
 
-  const overviewError = overviewResult.error;
-  const modulesError = modulesResult.error;
-  const teamError = teamSectionResult.error;
-  const slidesError = slidesResult.error;
-  const firstSectionError =
-    filtersResult.error || overviewError || modulesError || teamError || slidesError;
+  const firstSectionError = error;
   const activeFilterText = `${filters.year} / ${filters.month} / ${filters.division} / ${filters.team} / ${filters.psr} / ${filters.brand}`;
-  const visibleTeamRankingRows = overviewResult.isLoading ? [] : teamRankingRows;
-  const visibleRepRankingRows = overviewResult.isLoading ? [] : repRankingRows;
+  const visibleTeamRankingRows = isLoading ? [] : teamRankingRows;
+  const visibleRepRankingRows = isLoading ? [] : repRankingRows;
   const hasBrandShareData = brandShareRows.length > 0;
   const hasAppShareData = appShareRows.length > 0;
   const hasGeneralCountData = generalCountRows.length > 0;
   const hasGeneralTimeData = generalTimeRows.length > 0;
   const hasBrandTotalData = brandTotalRows.length > 0;
-  const hasMovingMonthlyData = Boolean(modulesResult.data?.movingMonthly?.rows?.length);
-  const hasAllPerTeamData = Boolean(teamSectionResult.data?.allPerTeam?.labels?.length);
+  const hasMovingMonthlyData = Boolean(reportData?.movingMonthly?.rows?.length);
+  const hasAllPerTeamData = Boolean(reportData?.allPerTeam?.labels?.length);
   const hasSpecialtyData = specialtyCharts.length > 0;
   const specialtyGridClass =
-    teamSectionResult.isLoading || specialtyCharts.length > 1 ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
+    isLoading || specialtyCharts.length > 1 ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
   const hasSlideActivityProductData = slideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
   const unifiedExportRows = useMemo(() => {
-    if (Array.isArray(slidesResult.data?.unifiedExportRows) && slidesResult.data.unifiedExportRows.length > 0) {
-      return slidesResult.data.unifiedExportRows;
+    if (Array.isArray(reportData?.unifiedExportRows) && reportData.unifiedExportRows.length > 0) {
+      return reportData.unifiedExportRows;
     }
 
     // Fallback for environments that still serve older API payloads without unifiedExportRows.
@@ -1696,7 +1632,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         elapsedTimeSeconds,
       };
     });
-  }, [slidesResult.data?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
+  }, [reportData?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
   const unifiedExportSections = useMemo(
     () => [
       {
@@ -1741,7 +1677,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
     ],
     [unifiedExportRows]
   );
-  const unifiedExportDisabled = slidesResult.isLoading || Boolean(slidesError) || unifiedExportRows.length === 0;
+  const unifiedExportDisabled = isLoading || Boolean(error) || unifiedExportRows.length === 0;
   const unifiedExportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
 
   return (
@@ -1793,7 +1729,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Brand Share of Material Open Count" subtitle={countScopeLabel}>
             <div className="space-y-4">
-              {overviewResult.isLoading ? (
+              {isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasBrandShareData ? (
@@ -1817,7 +1753,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
           <ReportCard title="Brand Share of Total Time Spent" subtitle={timeScopeLabel}>
             <div className="space-y-4">
-              {overviewResult.isLoading ? (
+              {isLoading ? (
                 <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
               ) : (
                 hasAppShareData ? (
@@ -1848,7 +1784,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             subtitle={rankingScopeLabel}
             rows={visibleTeamRankingRows}
             columns={teamRankingColumns}
-            emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
+            emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : error || EMPTY_TABLE_MESSAGE}
           />
 
           <div className="grid gap-3">
@@ -1857,7 +1793,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
               subtitle={rankingScopeLabel}
               rows={visibleRepRankingRows}
               columns={repRankingColumns}
-              emptyMessage={overviewResult.isLoading ? LOADING_PLACEHOLDER_TEXT : overviewError || EMPTY_TABLE_MESSAGE}
+              emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : error || EMPTY_TABLE_MESSAGE}
             />
           </div>
         </div>
@@ -1868,7 +1804,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Materials With the Highest Material Open Count" subtitle={generalCountPlainLabel}>
-            {modulesResult.isLoading ? (
+            {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralCountData ? (
               <ChartEmpty />
@@ -1880,7 +1816,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="Materials With the Most Time Spent" subtitle={generalTimePlainLabel}>
-            {modulesResult.isLoading ? (
+            {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasGeneralTimeData ? (
               <ChartEmpty />
@@ -1894,7 +1830,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <ReportCard title="Shows the Top Materials by Brand" subtitle={brandTotalPlainLabel}>
-            {modulesResult.isLoading ? (
+            {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasBrandTotalData ? (
               <ChartEmpty />
@@ -1906,7 +1842,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
           </ReportCard>
 
           <ReportCard title="How Material Activity Changed Each Month" subtitle={movingMonthlyPlainLabel}>
-            {modulesResult.isLoading ? (
+            {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasMovingMonthlyData ? (
               <ChartEmpty />
@@ -1931,7 +1867,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
 
         <div className="grid gap-4 sm:gap-6">
           <ReportCard title="Materials With the Highest Material Open Count by Team" subtitle={teamScopeLabel}>
-            {teamSectionResult.isLoading ? (
+            {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasAllPerTeamData ? (
               <ChartEmpty />
@@ -1964,7 +1900,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             />
           </div>
 
-          {slidesResult.isLoading ? (
+          {isLoading ? (
             <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
           ) : !hasSlideActivityBrandData ? (
             <ChartEmpty
@@ -1994,7 +1930,7 @@ export default function ReportsPage({ filters: controlledFilters, onFiltersChang
             />
           </div>
 
-          {slidesResult.isLoading ? (
+          {isLoading ? (
             <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
           ) : !hasSlideActivityAttachmentData ? (
             <ChartEmpty

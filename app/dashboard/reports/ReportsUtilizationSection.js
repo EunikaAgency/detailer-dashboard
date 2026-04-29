@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
-import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import ReportFilterSelect from "./ReportFilterSelect";
 import {
   BarElement,
@@ -367,65 +365,37 @@ function MetricChartCard({
 }
 
 export default function ReportsUtilizationSection({
-  filters: controlledFilters,
+  filters = EMPTY_REPORT.filters.selected,
   onFiltersChange,
+  reportData = EMPTY_REPORT,
+  isLoading = false,
+  error = "",
   hideHeader = false,
   hideFilters = false,
 } = {}) {
-  const [localFilters, setLocalFilters] = useState(EMPTY_REPORT.filters.selected);
-  const filters = controlledFilters || localFilters;
-  const setSelectedFilters = onFiltersChange || setLocalFilters;
-
-  const filtersResult = useReportSection({
-    endpoint: "/api/reports/dashboard-v2",
-    filters,
-    section: "filters",
-    fallbackData: { filters: EMPTY_REPORT.filters },
-  });
-  const nationalResult = useReportSection({
-    endpoint: "/api/reports/dashboard-v2",
-    filters,
-    section: "national",
-    fallbackData: { filters: EMPTY_REPORT.filters, nationalUtilization: EMPTY_REPORT.nationalUtilization },
-  });
-  const teamResult = useReportSection({
-    endpoint: "/api/reports/dashboard-v2",
-    filters,
-    section: "team",
-    fallbackData: { filters: EMPTY_REPORT.filters, teamUtilization: EMPTY_REPORT.teamUtilization },
-  });
-
-  useEffect(() => {
-    if (filtersResult.isLoading || filtersResult.error) return;
-
-    const nextSelected = filtersResult.data?.filters?.selected;
-    if (!nextSelected) return;
-
-    setSelectedFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
-  }, [filtersResult.data, filtersResult.error, filtersResult.isLoading, setSelectedFilters]);
-
   const handleFilterChange = (key, value) => {
-    setSelectedFilters((current) => ({ ...current, [key]: value }));
+    if (typeof onFiltersChange !== "function") return;
+    onFiltersChange((current) => ({ ...current, [key]: value }));
   };
 
   const filterOptions = {
-    year: filtersResult.data?.filters?.yearOptions?.length ? filtersResult.data.filters.yearOptions : FILTER_OPTIONS.year,
-    month: filtersResult.data?.filters?.monthOptions?.length ? filtersResult.data.filters.monthOptions : FILTER_OPTIONS.month,
-    division: filtersResult.data?.filters?.divisionOptions?.length
-      ? filtersResult.data.filters.divisionOptions
+    year: reportData?.filters?.yearOptions?.length ? reportData.filters.yearOptions : FILTER_OPTIONS.year,
+    month: reportData?.filters?.monthOptions?.length ? reportData.filters.monthOptions : FILTER_OPTIONS.month,
+    division: reportData?.filters?.divisionOptions?.length
+      ? reportData.filters.divisionOptions
       : FILTER_OPTIONS.division,
-    team: filtersResult.data?.filters?.teamOptions?.length ? filtersResult.data.filters.teamOptions : FILTER_OPTIONS.team,
-    psr: filtersResult.data?.filters?.psrOptions?.length ? filtersResult.data.filters.psrOptions : FILTER_OPTIONS.psr,
-    brand: filtersResult.data?.filters?.brandOptions?.length ? filtersResult.data.filters.brandOptions : FILTER_OPTIONS.brand,
+    team: reportData?.filters?.teamOptions?.length ? reportData.filters.teamOptions : FILTER_OPTIONS.team,
+    psr: reportData?.filters?.psrOptions?.length ? reportData.filters.psrOptions : FILTER_OPTIONS.psr,
+    brand: reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand,
   };
 
-  const tdShareOfVoice = nationalResult.data?.nationalUtilization?.tdShareOfVoice || [];
-  const cnsShareOfVoice = nationalResult.data?.nationalUtilization?.cnsShareOfVoice || [];
-  const perTeam = teamResult.data?.teamUtilization?.perTeam || [];
-  const perPsr = teamResult.data?.teamUtilization?.perPsr || [];
-  const perProduct = teamResult.data?.teamUtilization?.perProduct || [];
-  const perSlide = teamResult.data?.teamUtilization?.perSlide || [];
-  const averageTimePerSlide = teamResult.data?.teamUtilization?.averageTimePerSlide || [];
+  const tdShareOfVoice = reportData?.nationalUtilization?.tdShareOfVoice || [];
+  const cnsShareOfVoice = reportData?.nationalUtilization?.cnsShareOfVoice || [];
+  const perTeam = reportData?.teamUtilization?.perTeam || [];
+  const perPsr = reportData?.teamUtilization?.perPsr || [];
+  const perProduct = reportData?.teamUtilization?.perProduct || [];
+  const perSlide = reportData?.teamUtilization?.perSlide || [];
+  const averageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide || [];
 
   return (
     <div className="space-y-6 pb-6">
@@ -446,6 +416,12 @@ export default function ReportsUtilizationSection({
               Open current reports
             </Link>
           </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
+          {error}
         </div>
       ) : null}
 
@@ -474,7 +450,7 @@ export default function ReportsUtilizationSection({
             datasetLabel="Percent Share"
             xTitle="Percent Share"
             valueSuffix="%"
-            isLoading={nationalResult.isLoading}
+            isLoading={isLoading}
             useRankLabels
             showItemLegend
           />
@@ -486,7 +462,7 @@ export default function ReportsUtilizationSection({
             datasetLabel="Percent Share"
             xTitle="Percent Share"
             valueSuffix="%"
-            isLoading={nationalResult.isLoading}
+            isLoading={isLoading}
             useRankLabels
             showItemLegend
             legendVariant="product-material"
@@ -503,7 +479,7 @@ export default function ReportsUtilizationSection({
             color={CHART_COLORS.team}
             datasetLabel="Material Open Count"
             xTitle="Material Open Count"
-            isLoading={teamResult.isLoading}
+            isLoading={isLoading}
             className="w-full"
             chartHeight="h-[420px]"
             useRankLabels
@@ -516,7 +492,7 @@ export default function ReportsUtilizationSection({
             color={CHART_COLORS.psr}
             datasetLabel="Material Open Count"
             xTitle="Material Open Count"
-            isLoading={teamResult.isLoading}
+            isLoading={isLoading}
             className="w-full"
             chartHeight="h-[420px]"
             useRankLabels
@@ -529,7 +505,7 @@ export default function ReportsUtilizationSection({
             color={CHART_COLORS.product}
             datasetLabel="Material Open Count"
             xTitle="Material Open Count"
-            isLoading={teamResult.isLoading}
+            isLoading={isLoading}
             className="w-full"
             chartHeight="h-[420px]"
             useRankLabels
@@ -547,7 +523,7 @@ export default function ReportsUtilizationSection({
             color={CHART_COLORS.slide}
             datasetLabel="Minutes Viewed"
             xTitle="Minutes Viewed"
-            isLoading={teamResult.isLoading}
+            isLoading={isLoading}
             className="w-full"
             chartHeight="h-[420px] xl:h-[500px]"
             useRankLabels
@@ -561,7 +537,7 @@ export default function ReportsUtilizationSection({
             color={CHART_COLORS.average}
             datasetLabel="Average Minutes Viewed"
             xTitle="Average Minutes Viewed"
-            isLoading={teamResult.isLoading}
+            isLoading={isLoading}
             className="w-full"
             chartHeight="h-[420px] xl:h-[500px]"
             useRankLabels
