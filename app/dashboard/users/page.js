@@ -81,6 +81,7 @@ const formatDate = (value) => {
 const getDisplayUsername = (user) =>
   normalizeText(user?.username || user?.email || user?.name || "");
 
+const getDisplayOppi = (user) => normalizeText(user?.repId || user?.username || "");
 const getDisplayRepId = (user) => normalizeText(user?.repId || "");
 const getDisplayTeam = (user) => normalizeText(user?.role || "");
 const getDisplayDivision = (user) => normalizeText(user?.division || OFFICE_DIVISION_LABEL);
@@ -793,7 +794,7 @@ export default function UsersPage() {
           <div className="w-full md:w-72">
             <input
               type="search"
-              placeholder="Search name, username, team, division"
+              placeholder="Search name, username, OPPI, team, division"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -811,7 +812,8 @@ export default function UsersPage() {
               <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
                   <th className="w-56 px-4 py-3 text-left font-semibold">Name</th>
-                  <th className="w-56 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-44 px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-40 px-4 py-3 text-left font-semibold">OPPI</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Team</th>
                   <th className="w-44 px-4 py-3 text-left font-semibold">Division</th>
                   <th className="w-40 px-4 py-3 text-left font-semibold">Access</th>
@@ -826,6 +828,7 @@ export default function UsersPage() {
                     <tr key={id} className="border-t border-gray-100">
                       <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
+                      <td className="px-4 py-3 truncate">{getDisplayOppi(user) || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayTeam(user) || "-"}</td>
                       <td className="px-4 py-3 truncate">{getDisplayDivision(user) || "-"}</td>
                       <td className="px-4 py-3"><AccessBadge user={user} /></td>
