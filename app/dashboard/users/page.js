@@ -59,7 +59,7 @@ const getUserId = (user) => {
 };
 
 const normalizeText = (value) => String(value || "").trim();
-const PRIMARY_ADMIN_EMAIL = "info@eunika.agency";
+const PRIMARY_ADMIN_USERNAME = "info@eunika.agency";
 
 const fetchUsers = async () => {
   const response = await fetch("/api/users");
@@ -97,7 +97,7 @@ const getDisplayDivision = (user) => normalizeText(user?.division || OFFICE_DIVI
 const getAccessType = (user) =>
   normalizeText(user?.accessType || "").toLowerCase() === "admin" ? "admin" : "representative";
 const isProtectedPrimaryAdmin = (user) =>
-  normalizeText(user?.email).toLowerCase() === PRIMARY_ADMIN_EMAIL;
+  normalizeText(user?.username).toLowerCase() === PRIMARY_ADMIN_USERNAME;
 
 const AccessBadge = ({ user }) => {
   const accessType = getAccessType(user);

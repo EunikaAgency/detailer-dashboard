@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const normalizeText = (value) => String(value || "").trim();
-const PRIMARY_ADMIN_EMAIL = "info@eunika.agency";
+const PRIMARY_ADMIN_USERNAME = "info@eunika.agency";
 
 const mapUser = (user) => ({
   id: user?._id?.toString?.() || user?.id || "",
@@ -261,7 +261,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    if (normalizeText(user.email).toLowerCase() === PRIMARY_ADMIN_EMAIL) {
+    if (normalizeText(user.username).toLowerCase() === PRIMARY_ADMIN_USERNAME) {
       return NextResponse.json({ error: "Cannot Delete Primary Admin" }, { status: 403 });
     }
 
