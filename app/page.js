@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { requireAuth } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, requireAuth } from "@/lib/auth";
 import { isAdminUser } from "@/lib/userAccess";
 
 export const metadata = {
@@ -11,10 +13,21 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
+async function logoutHomeAction() {
+  "use server";
+
+  const cookieStore = await cookies();
+  cookieStore.delete(ACCESS_TOKEN_COOKIE);
+  cookieStore.delete(REFRESH_TOKEN_COOKIE);
+
+  redirect("/login");
+}
+
 export default async function Home() {
   const auth = await requireAuth();
   const isSignedIn = !auth?.error;
   const isAdmin = isSignedIn ? isAdminUser(auth.user) : false;
+  const showLogout = isSignedIn;
   const identityLabel = isSignedIn
     ? String(auth?.user?.name || auth?.user?.email || auth?.user?.username || auth?.user?.repId || "Unknown user").trim()
     : "Guest";
@@ -79,6 +92,16 @@ export default async function Home() {
             >
               {authLabel}
             </Link>
+            {showLogout ? (
+              <form action={logoutHomeAction}>
+                <button
+                  type="submit"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+                >
+                  Logout
+                </button>
+              </form>
+            ) : null}
           </div>
         </nav>
 
@@ -107,12 +130,23 @@ export default async function Home() {
               >
                 {primaryLabel}
               </Link>
-              <Link
-                href={authHref}
-                className="inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-white px-7 py-4 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:border-slate-300 hover:shadow-xl"
-              >
-                {authLabel}
-              </Link>
+              {showLogout ? (
+                <form action={logoutHomeAction}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-white px-7 py-4 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:border-slate-300 hover:shadow-xl"
+                  >
+                    Logout
+                  </button>
+                </form>
+              ) : (
+                <Link
+                  href={authHref}
+                  className="inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-white px-7 py-4 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:border-slate-300 hover:shadow-xl"
+                >
+                  {authLabel}
+                </Link>
+              )}
             </div>
           </div>
         </div>
