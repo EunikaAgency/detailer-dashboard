@@ -495,7 +495,6 @@ export default function ReportsUtilizationSection({
             chartHeight="h-[420px]"
             useRankLabels
             showItemLegend
-            useItemBrandColors
           />
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
@@ -522,6 +521,7 @@ export default function ReportsUtilizationSection({
             chartHeight="h-[420px]"
             useRankLabels
             showItemLegend
+            useItemBrandColors
           />
         </div>
 
