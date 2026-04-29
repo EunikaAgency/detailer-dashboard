@@ -813,14 +813,14 @@ export default function UsersPage() {
             <table className="w-full table-fixed text-sm text-gray-700">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th className="w-56 px-4 py-3 text-left font-semibold">Name</th>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Username</th>
-                  <th className="w-40 px-4 py-3 text-left font-semibold">OPPI</th>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Team</th>
-                  <th className="w-44 px-4 py-3 text-left font-semibold">Division</th>
-                  <th className="w-40 px-4 py-3 text-left font-semibold">Access</th>
-                  <th className="w-52 px-4 py-3 text-left font-semibold">Issued</th>
-                  <th className="w-32 px-4 py-3 text-right font-semibold">Options</th>
+                  <th className="w-[16%] px-4 py-3 text-left font-semibold">Name</th>
+                  <th className="w-[13%] px-4 py-3 text-left font-semibold">Username</th>
+                  <th className="w-[11%] px-4 py-3 text-left font-semibold">OPPI</th>
+                  <th className="w-[13%] px-4 py-3 text-left font-semibold">Team</th>
+                  <th className="w-[11%] px-4 py-3 text-left font-semibold">Division</th>
+                  <th className="w-[10%] px-4 py-3 text-left font-semibold">Access</th>
+                  <th className="w-[16%] px-4 py-3 text-left font-semibold">Issued</th>
+                  <th className="w-[10%] px-4 py-3 text-right font-semibold">Options</th>
                 </tr>
               </thead>
               <tbody>
@@ -828,15 +828,35 @@ export default function UsersPage() {
                   const id = getUserId(user);
                   return (
                     <tr key={id} className="border-t border-gray-100">
-                      <td className="px-4 py-3 font-medium text-gray-900 truncate">{user?.name || "-"}</td>
-                      <td className="px-4 py-3 truncate">{getDisplayUsername(user) || "-"}</td>
-                      <td className="px-4 py-3 truncate">{getDisplayOppi(user) || "-"}</td>
-                      <td className="px-4 py-3 truncate">{getDisplayTeam(user) || "-"}</td>
-                      <td className="px-4 py-3 truncate">{getDisplayDivision(user) || "-"}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        <div className="truncate" title={user?.name || "-"}>
+                          {user?.name || "-"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="truncate" title={getDisplayUsername(user) || "-"}>
+                          {getDisplayUsername(user) || "-"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="truncate" title={getDisplayOppi(user) || "-"}>
+                          {getDisplayOppi(user) || "-"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="truncate" title={getDisplayTeam(user) || "-"}>
+                          {getDisplayTeam(user) || "-"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="truncate" title={getDisplayDivision(user) || "-"}>
+                          {getDisplayDivision(user) || "-"}
+                        </div>
+                      </td>
                       <td className="px-4 py-3"><AccessBadge user={user} /></td>
                       <td className="px-4 py-3 text-xs text-gray-600">{formatDate(user?.keygenIssuedAt || user?.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
-                        <div className="inline-flex items-center gap-2">
+                        <div className="inline-flex flex-wrap items-center justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => openEdit(user)}
