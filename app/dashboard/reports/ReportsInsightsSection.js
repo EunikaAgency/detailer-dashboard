@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
+import { getBrandColorConfig, getChartItemColorConfig } from "./reportColors";
 import ReportFilterSelect from "./ReportFilterSelect";
 import {
   ArcElement,
@@ -44,26 +45,6 @@ const FILTER_OPTIONS = {
   psr: ["All"],
   brand: ["All"],
 };
-
-const PIE_COLORS = [
-  "31, 98, 132",
-  "240, 116, 48",
-  "29, 120, 44",
-  "40, 157, 200",
-  "160, 46, 157",
-  "78, 171, 44",
-];
-
-const BRAND_COLOR_RULES = [
-  { keys: ["mucosta"], color: "244, 114, 182" },
-  { keys: ["aminoleban oral", "aminoleban"], color: "249, 115, 22" },
-  { keys: ["pletaal"], color: "190, 24, 93" },
-  { keys: ["samsca"], color: "191, 219, 254" },
-  { keys: ["jinarc"], color: "250, 204, 21" },
-  { keys: ["rexulti"], color: "34, 197, 94" },
-  { keys: ["abilify"], color: "59, 130, 246" },
-  { keys: ["meptin"], color: "20, 184, 166" },
-];
 
 const SERIES_COLORS = [
   "31, 98, 132",
@@ -246,37 +227,6 @@ const UNIFIED_EXPORT_COLUMNS = [
 
 function rgba(color, alpha) {
   return `rgba(${color}, ${alpha})`;
-}
-
-function normalizeChartColorKey(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getBrandColorConfig(label, index) {
-  const normalizedLabel = normalizeChartColorKey(label);
-  const matchedRule = BRAND_COLOR_RULES.find((rule) =>
-    rule.keys.some((key) => {
-      const normalizedKey = normalizeChartColorKey(key);
-      return normalizedLabel === normalizedKey || normalizedLabel.includes(normalizedKey) || normalizedKey.includes(normalizedLabel);
-    })
-  );
-
-  if (matchedRule) {
-    return {
-      color: matchedRule.color,
-      borderColor: matchedRule.borderColor || "#ffffff",
-    };
-  }
-
-  return {
-    color: PIE_COLORS[index % PIE_COLORS.length],
-    borderColor: "#ffffff",
-  };
 }
 
 function toMultilineLabel(value, maxLineLength = 16) {
@@ -943,13 +893,21 @@ function buildPieData(items, selectedBrand, options = {}) {
 }
 
 function buildSingleBarData(items, options = {}) {
+  const colorConfigs = items.map((item, index) =>
+    options.color
+      ? { color: options.color, borderColor: options.borderColor || rgba(options.color, 1) }
+      : getChartItemColorConfig(item, index)
+  );
+
   return {
     labels: items.map((item) => toMultilineLabel(item.label)),
     datasets: [
       {
         label: options.datasetLabel || "Material Open Count",
         data: items.map((item) => Number(item.value || 0)),
-        backgroundColor: rgba(options.color || SERIES_COLORS[0], 0.95),
+        backgroundColor: colorConfigs.map((config) => rgba(config.color, 0.95)),
+        borderColor: colorConfigs.map((config) => config.borderColor),
+        borderWidth: 1,
         borderRadius: 4,
         maxBarThickness: options.maxBarThickness || 36,
       },
@@ -970,6 +928,11 @@ function buildSlideTrendData(items, options = {}) {
   const sortedItems = [...items].sort(
     (left, right) => getSlideOrder(left) - getSlideOrder(right) || String(left.label || "").localeCompare(String(right.label || ""))
   );
+  const colorConfigs = sortedItems.map((item, index) =>
+    options.color
+      ? { color: options.color, borderColor: options.borderColor || rgba(options.color, 1) }
+      : getChartItemColorConfig(item, index)
+  );
 
   return {
     labels: sortedItems.map((item) => `Slide ${getSlideOrder(item)}`),
@@ -977,8 +940,8 @@ function buildSlideTrendData(items, options = {}) {
       {
         label: options.datasetLabel || "Minutes Viewed",
         data: sortedItems.map((item) => Number(item.value || 0)),
-        backgroundColor: rgba(options.color || SERIES_COLORS[0], 0.9),
-        borderColor: rgba(options.color || SERIES_COLORS[0], 1),
+        backgroundColor: colorConfigs.map((config) => rgba(config.color, 0.9)),
+        borderColor: colorConfigs.map((config) => config.borderColor),
         borderWidth: 1,
         borderRadius: 4,
         maxBarThickness: 28,
@@ -1432,7 +1395,6 @@ export default function ReportsInsightsSection({
     () =>
       buildSingleBarData(slideActivityBrandRows, {
         datasetLabel: "Minutes Viewed",
-        color: SERIES_COLORS[5],
         maxBarThickness: 28,
       }),
     [slideActivityBrandRows]
@@ -1441,13 +1403,12 @@ export default function ReportsInsightsSection({
     () =>
       buildSingleBarData(slideActivityProductRows, {
         datasetLabel: "Minutes Viewed",
-        color: SERIES_COLORS[2],
         maxBarThickness: 28,
       }),
     [slideActivityProductRows]
   );
   const slideActivityAttachmentChart = useMemo(
-    () => buildSlideTrendData(slideActivityAttachmentRows, { datasetLabel: "Minutes Viewed", color: SERIES_COLORS[0] }),
+    () => buildSlideTrendData(slideActivityAttachmentRows, { datasetLabel: "Minutes Viewed" }),
     [slideActivityAttachmentRows]
   );
   const isAttachmentDrilldown = slideActivityAttachment !== "All Attachments";

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import ReportsInsightsSection from "./ReportsInsightsSection";
 import ReportsUtilizationSection from "./ReportsUtilizationSection";
+import { getChartItemColorConfig } from "./reportColors";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import { areReportFiltersEqual, useReportSection } from "./reportClient";
 import {
@@ -131,14 +132,22 @@ function toMultilineLabel(value, maxLineLength = 24) {
   return lines.length > 1 ? lines : String(value || "");
 }
 
-function buildHorizontalBarData(items, color) {
+function buildHorizontalBarData(items, color, options = {}) {
+  const colorConfigs = items.map((item, index) =>
+    options.useItemBrandColors
+      ? getChartItemColorConfig(item, index)
+      : { color, borderColor: rgba(color, 1) }
+  );
+
   return {
     labels: items.map((item, index) => `#${index + 1}`),
     datasets: [
       {
         label: "Material Open Count",
         data: items.map((item) => Number(item.value || 0)),
-        backgroundColor: rgba(color, 0.92),
+        backgroundColor: colorConfigs.map((config) => rgba(config.color, 0.92)),
+        borderColor: colorConfigs.map((config) => config.borderColor),
+        borderWidth: 1,
         borderRadius: 8,
         maxBarThickness: 28,
         fullLabels: items.map((item) => item.label),
@@ -235,29 +244,33 @@ function ReportCard({ title, subtitle, children }) {
   );
 }
 
-function ChartItemLegend({ items, color }) {
+function ChartItemLegend({ items, color, useItemBrandColors = false }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
     <div className="mt-4 grid gap-2 sm:grid-cols-2">
-      {items.map((item, index) => (
+      {items.map((item, index) => {
+        const colorConfig = useItemBrandColors ? getChartItemColorConfig(item, index) : { color };
+
+        return (
         <div
           key={`${item.label}-${index}`}
           className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700"
         >
           <span className="shrink-0 text-[11px] font-semibold text-slate-500">#{index + 1}</span>
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(color, 0.92) }} />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(colorConfig.color, 0.92) }} />
           <span className="min-w-0 flex-1 break-words font-medium leading-snug" title={item.label}>
             {item.label}
           </span>
           <span className="shrink-0 font-semibold text-slate-900">{Number(item.value || 0).toLocaleString()}</span>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function MetricChartCard({ title, subtitle, items, color, isLoading }) {
+function MetricChartCard({ title, subtitle, items, color, isLoading, useItemBrandColors = false }) {
   const hasData = Array.isArray(items) && items.length > 0;
 
   return (
@@ -269,9 +282,9 @@ function MetricChartCard({ title, subtitle, items, color, isLoading }) {
       ) : (
         <>
           <div className="h-[420px]">
-            <Bar data={buildHorizontalBarData(items, color)} options={buildHorizontalBarOptions()} />
+            <Bar data={buildHorizontalBarData(items, color, { useItemBrandColors })} options={buildHorizontalBarOptions()} />
           </div>
-          <ChartItemLegend items={items} color={color} />
+          <ChartItemLegend items={items} color={color} useItemBrandColors={useItemBrandColors} />
         </>
       )}
     </ReportCard>
@@ -334,6 +347,7 @@ export default function ReportsPageDashboard() {
             items={monthlyProduct}
             color={SERIES_COLORS[0]}
             isLoading={reportResult.isLoading}
+            useItemBrandColors
           />
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
