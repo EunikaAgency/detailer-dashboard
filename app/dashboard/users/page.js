@@ -59,6 +59,7 @@ const getUserId = (user) => {
 };
 
 const normalizeText = (value) => String(value || "").trim();
+const PRIMARY_ADMIN_EMAIL = "info@eunika.agency";
 
 const fetchUsers = async () => {
   const response = await fetch("/api/users");
@@ -95,6 +96,8 @@ const getDisplayTeam = (user) => normalizeText(user?.role || "");
 const getDisplayDivision = (user) => normalizeText(user?.division || OFFICE_DIVISION_LABEL);
 const getAccessType = (user) =>
   normalizeText(user?.accessType || "").toLowerCase() === "admin" ? "admin" : "representative";
+const isProtectedPrimaryAdmin = (user) =>
+  normalizeText(user?.email).toLowerCase() === PRIMARY_ADMIN_EMAIL;
 
 const AccessBadge = ({ user }) => {
   const accessType = getAccessType(user);
@@ -459,9 +462,15 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId) => {
+  const handleDelete = async (user) => {
+    const userId = getUserId(user);
     if (!userId) {
       showToast("error", "User id is missing.");
+      return;
+    }
+
+    if (isProtectedPrimaryAdmin(user)) {
+      showToast("error", "Cannot Delete Primary Admin");
       return;
     }
 
@@ -874,7 +883,7 @@ export default function UsersPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDelete(id)}
+                            onClick={() => handleDelete(user)}
                             className="inline-flex cursor-pointer items-center rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
                           >
                             Delete
