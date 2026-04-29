@@ -185,6 +185,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
   const [toast, setToast] = useState(null);
   const [query, setQuery] = useState("");
   const [issuedCredential, setIssuedCredential] = useState(null);
@@ -239,6 +240,10 @@ export default function UsersPage() {
       );
     });
   }, [query, users]);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -768,26 +773,36 @@ export default function UsersPage() {
               Password
             </label>
             <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showCreatePassword ? "text" : "password"}
-                value={formValues.password}
-                onChange={handleChange}
-                placeholder="Create login password"
-                autoComplete="new-password"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowCreatePassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
-                aria-label={showCreatePassword ? "Hide password" : "Show password"}
-                aria-pressed={showCreatePassword}
-              >
-                <EyeIcon closed={showCreatePassword} />
-              </button>
+              {hasHydrated ? (
+                <>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showCreatePassword ? "text" : "password"}
+                    value={formValues.password}
+                    onChange={handleChange}
+                    placeholder="Create login password"
+                    autoComplete="new-password"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                    aria-label={showCreatePassword ? "Hide password" : "Show password"}
+                    aria-pressed={showCreatePassword}
+                  >
+                    <EyeIcon closed={showCreatePassword} />
+                  </button>
+                </>
+              ) : (
+                // Avoid hydrating a password field that browser extensions may rewrite first.
+                <div
+                  aria-hidden="true"
+                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2"
+                />
+              )}
             </div>
           </div>
         </div>
