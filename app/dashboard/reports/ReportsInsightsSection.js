@@ -58,7 +58,7 @@ const BRAND_COLOR_RULES = [
   { keys: ["mucosta"], color: "244, 114, 182" },
   { keys: ["aminoleban oral", "aminoleban"], color: "249, 115, 22" },
   { keys: ["pletaal"], color: "190, 24, 93" },
-  { keys: ["samsca"], color: "231, 238, 246", borderColor: "#94a3b8" },
+  { keys: ["samsca"], color: "191, 219, 254", borderColor: "#60a5fa" },
   { keys: ["jinarc"], color: "250, 204, 21" },
   { keys: ["rexulti"], color: "34, 197, 94" },
   { keys: ["abilify"], color: "59, 130, 246" },
