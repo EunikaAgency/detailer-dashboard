@@ -90,7 +90,7 @@ const formatDate = (value) => {
 const getDisplayUsername = (user) =>
   normalizeText(user?.username || user?.email || user?.name || "");
 
-const getDisplayOppi = (user) => normalizeText(user?.repId || user?.username || "");
+const getDisplayOppi = (user) => normalizeText(user?.repId || "");
 const getDisplayRepId = (user) => normalizeText(user?.repId || "");
 const getDisplayTeam = (user) => normalizeText(user?.role || "");
 const getDisplayDivision = (user) => normalizeText(user?.division || OFFICE_DIVISION_LABEL);
@@ -333,8 +333,8 @@ export default function UsersPage() {
       password: String(formValues.password || ""),
     };
 
-    if (!payload.name || !payload.username || !payload.role || !payload.password) {
-      showToast("error", "Representative name, OPPI, team, and password are required.");
+    if (!payload.name || !payload.role || !payload.password) {
+      showToast("error", "Representative name, team, and password are required.");
       return;
     }
 
@@ -395,8 +395,8 @@ export default function UsersPage() {
     const accessType = getAccessType(editValues);
     const password = String(editValues.password || "");
 
-    if (!name || !username || !repId || !role) {
-      showToast("error", "Name, username, Rep ID, and role are required.");
+    if (!name || !username || !role) {
+      showToast("error", "Name, username, and role are required.");
       return;
     }
 
@@ -552,7 +552,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div>
                   <label htmlFor="edit-repId" className="block text-sm font-medium text-gray-700 mb-1">
-                    OPPI
+                    OPPI (Optional)
                   </label>
                   <input
                     id="edit-repId"
@@ -560,7 +560,7 @@ export default function UsersPage() {
                     value={editValues.repId}
                     onChange={handleEditChange}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                    required
+                    placeholder="Enter OPPI"
                   />
                 </div>
                 <div>
@@ -715,7 +715,7 @@ export default function UsersPage() {
 
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              OPPI
+              OPPI (Optional)
             </label>
             <input
               id="username"
@@ -724,8 +724,10 @@ export default function UsersPage() {
               onChange={handleChange}
               placeholder="Enter OPPI"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              required
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Leave blank to auto-generate a username from the representative name.
+            </p>
           </div>
 
           <div>

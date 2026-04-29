@@ -34,6 +34,9 @@ const buildOfflineEmail = ({ email, repId, username }) => {
   return `${seed || "offline.user"}@offline.otsuka.local`;
 };
 
+const buildOfflineUsernameSeed = ({ name, repId }) =>
+  toLocalPart(name || repId || "offline-user") || "offline.user";
+
 const duplicateErrorMessage = (error) => {
   if (!error || error.code !== 11000) return null;
   const key = Object.keys(error?.keyPattern || error?.keyValue || {})[0];
@@ -66,6 +69,24 @@ const findCaseInsensitive = async (field, value) => {
   const normalized = normalizeText(value);
   if (!normalized) return null;
   return User.findOne({ [field]: new RegExp(`^${escapeRegex(normalized)}$`, "i") });
+};
+
+const resolveOfflineUsername = async ({ requestedUsername, name, repId }) => {
+  const explicitUsername = normalizeText(requestedUsername);
+  if (explicitUsername) {
+    return explicitUsername;
+  }
+
+  const baseUsername = buildOfflineUsernameSeed({ name, repId });
+  let candidate = baseUsername;
+  let suffix = 2;
+
+  while (await findCaseInsensitive("username", candidate)) {
+    candidate = `${baseUsername}-${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
 };
 
 const buildCredentialForUser = (user, issuedAt) => {
@@ -160,10 +181,9 @@ export async function POST(request) {
     const offlineMode = isOfflineCredentialMode(body);
 
     if (offlineMode) {
-      const username = normalizeText(usernameInput);
-      if (!username) {
+      if (!name && !usernameInput) {
         return NextResponse.json(
-          { error: "Username is required for keygen issuance." },
+          { error: "Representative name is required when OPPI is empty." },
           { status: 400 }
         );
       }
@@ -180,17 +200,28 @@ export async function POST(request) {
         );
       }
 
-      const resolvedEmail = buildOfflineEmail({ email, repId, username });
       await connectDB();
 
-      const existingUsername = await findCaseInsensitive("username", username);
-      if (existingUsername) {
-        return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+      const username = await resolveOfflineUsername({
+        requestedUsername: usernameInput,
+        name,
+        repId,
+      });
+
+      const resolvedEmail = buildOfflineEmail({ email, repId, username });
+
+      if (usernameInput) {
+        const existingUsername = await findCaseInsensitive("username", username);
+        if (existingUsername) {
+          return NextResponse.json({ error: "Username is already issued." }, { status: 409 });
+        }
       }
 
-      const existingRepId = await findCaseInsensitive("repId", repId);
-      if (existingRepId) {
-        return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+      if (repId) {
+        const existingRepId = await findCaseInsensitive("repId", repId);
+        if (existingRepId) {
+          return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
+        }
       }
 
       const existingEmail = await findCaseInsensitive("email", resolvedEmail);

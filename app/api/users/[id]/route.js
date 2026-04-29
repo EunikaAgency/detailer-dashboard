@@ -146,10 +146,7 @@ export async function PUT(request, { params }) {
     }
 
     if (hasRepId) {
-      if (!nextRepId) {
-        return NextResponse.json({ error: "Rep ID cannot be empty." }, { status: 400 });
-      }
-      if (didRepIdChange) {
+      if (nextRepId && didRepIdChange) {
         const duplicate = await findDuplicate("repId", nextRepId, user._id);
         if (duplicate) {
           return NextResponse.json({ error: "Rep ID is already issued." }, { status: 409 });
