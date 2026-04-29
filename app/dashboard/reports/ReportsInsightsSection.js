@@ -37,8 +37,8 @@ const FILTERS = [
 ];
 
 const FILTER_OPTIONS = {
-  year: [],
-  month: [],
+  year: ["All"],
+  month: ["All"],
   division: REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS,
   team: ["All"],
   psr: ["All"],
@@ -97,15 +97,15 @@ const shouldHideBrandOption = (value) => {
 
 const EMPTY_REPORT = {
   filters: {
-    yearOptions: [],
-    monthOptions: [],
+    yearOptions: FILTER_OPTIONS.year,
+    monthOptions: FILTER_OPTIONS.month,
     divisionOptions: FILTER_OPTIONS.division,
     teamOptions: FILTER_OPTIONS.team,
     psrOptions: FILTER_OPTIONS.psr,
     brandOptions: FILTER_OPTIONS.brand,
     selected: {
-      year: "",
-      month: "",
+      year: "All",
+      month: "All",
       division: "All",
       team: "All",
       psr: "All",
