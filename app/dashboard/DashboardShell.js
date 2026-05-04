@@ -70,6 +70,7 @@ export default function DashboardShell({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isCheckingUser, setIsCheckingUser] = useState(true);
   const pathname = usePathname();
+  const isReportsRoute = pathname?.startsWith("/dashboard/reports");
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/dashboard/products", label: "Products" },
@@ -211,7 +212,9 @@ export default function DashboardShell({ children }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] px-3 py-5 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
+      <main
+        className={`w-full px-3 py-5 sm:px-4 sm:py-6 lg:px-6 lg:py-8 ${isReportsRoute ? "max-w-none" : "mx-auto max-w-[1500px]"}`}
+      >
         {children}
       </main>
     </div>

@@ -65,6 +65,38 @@ const MONTH_SERIES_COLORS = {
   JUN: "96, 165, 59",
 };
 
+const PASTEL_ROYGBV_MONTH_SERIES_COLORS = {
+  JAN: "229, 115, 115",
+  FEB: "243, 156, 82",
+  MAR: "235, 205, 96",
+  APR: "123, 195, 129",
+  MAY: "113, 179, 223",
+  JUN: "169, 130, 214",
+};
+
+const PASTEL_TEAM_SERIES_COLORS = [
+  "123, 167, 196",
+  "243, 156, 118",
+  "132, 188, 144",
+  "131, 188, 215",
+  "182, 133, 201",
+  "174, 201, 115",
+  "122, 139, 166",
+  "240, 186, 115",
+  "110, 174, 166",
+  "214, 145, 179",
+  "153, 193, 125",
+  "138, 164, 208",
+  "196, 152, 214",
+  "244, 168, 144",
+  "123, 195, 178",
+  "226, 192, 122",
+  "150, 184, 229",
+  "197, 167, 146",
+  "152, 207, 188",
+  "217, 158, 194",
+];
+
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
 const EMPTY_CHART_MESSAGE = "No data available for the selected filters.";
 const EMPTY_TABLE_MESSAGE = "No rows available for the selected filters.";
@@ -104,6 +136,7 @@ const EMPTY_REPORT = {
     monthKeys: [],
     rows: [],
   },
+  materialSummaryGroups: [],
   allPerTeam: {
     labels: [],
     series: [],
@@ -123,21 +156,11 @@ const EMPTY_REPORT = {
   },
 };
 
-const TEAM_TABLE_DATE_COLUMNS = [
-  { key: "year", label: "Year" },
-  { key: "month", label: "Month" },
-];
-
 const TEAM_TABLE_BASE_COLUMNS = [
   { key: "rank", label: "Rank", align: "right" },
   { key: "team", label: "Team" },
   { key: "brand", label: "Brand" },
   { key: "detailingCount", label: "Material Open Count", align: "right", format: (value) => value.toLocaleString() },
-];
-
-const REP_TABLE_DATE_COLUMNS = [
-  { key: "year", label: "Year" },
-  { key: "month", label: "Month" },
 ];
 
 const REP_TABLE_BASE_COLUMNS = [
@@ -148,35 +171,9 @@ const REP_TABLE_BASE_COLUMNS = [
   { key: "detailingCount", label: "Material Open Count", align: "right", format: (value) => value.toLocaleString() },
 ];
 
-const getVisibleDateColumns = (filters = {}) => {
-  const columns = [];
-  if (filters?.year === "All") {
-    columns.push("year");
-  }
-  if (filters?.month === "All") {
-    columns.push("month");
-  }
-  return columns;
-};
+const getTeamTableColumns = () => [...TEAM_TABLE_BASE_COLUMNS];
 
-const getTeamTableColumns = (filters = {}) => [
-  ...TEAM_TABLE_DATE_COLUMNS.filter((column) => getVisibleDateColumns(filters).includes(column.key)),
-  ...TEAM_TABLE_BASE_COLUMNS,
-];
-
-const getRepTableColumns = (filters = {}) => [
-  ...REP_TABLE_DATE_COLUMNS.filter((column) => getVisibleDateColumns(filters).includes(column.key)),
-  ...REP_TABLE_BASE_COLUMNS,
-];
-
-const TEAM_RANKING_EXPORT_COLUMNS = [...TEAM_TABLE_DATE_COLUMNS, ...TEAM_TABLE_BASE_COLUMNS].map(({ key, label }) => ({
-  key,
-  label,
-}));
-const REP_RANKING_EXPORT_COLUMNS = [...REP_TABLE_DATE_COLUMNS, ...REP_TABLE_BASE_COLUMNS].map(({ key, label }) => ({
-  key,
-  label,
-}));
+const getRepTableColumns = () => [...REP_TABLE_BASE_COLUMNS];
 
 const SHARE_EXPORT_COLUMNS = [
   { key: "brand", label: "Brand" },
@@ -956,7 +953,8 @@ function buildSlideTrendData(items, options = {}) {
   };
 }
 
-function buildMonthGroupedData(config) {
+function buildMonthGroupedData(config, options = {}) {
+  const { colorMap = MONTH_SERIES_COLORS } = options;
   const rows = Array.isArray(config?.rows) ? config.rows : [];
   const monthKeys = Array.isArray(config?.monthKeys) ? config.monthKeys : [];
   return {
@@ -964,14 +962,24 @@ function buildMonthGroupedData(config) {
     datasets: monthKeys.map((monthKey) => ({
       label: monthKey,
       data: rows.map((item) => Number(item?.values?.[monthKey] || 0)),
-      backgroundColor: rgba(MONTH_SERIES_COLORS[monthKey] || SERIES_COLORS[0], 0.9),
+      backgroundColor: rgba(colorMap[monthKey] || SERIES_COLORS[0], 0.9),
       borderRadius: 3,
       maxBarThickness: 18,
     })),
   };
 }
 
-function buildTeamGroupedData(chart) {
+function hasMaterialSummaryGroupData(group) {
+  return Boolean(
+    (Array.isArray(group?.generalCountModules) && group.generalCountModules.length > 0) ||
+      (Array.isArray(group?.generalTimeModules) && group.generalTimeModules.length > 0) ||
+      (Array.isArray(group?.brandTotalModules) && group.brandTotalModules.length > 0) ||
+      (Array.isArray(group?.movingMonthly?.rows) && group.movingMonthly.rows.length > 0)
+  );
+}
+
+function buildTeamGroupedData(chart, options = {}) {
+  const { colorPalette = SERIES_COLORS } = options;
   const labels = Array.isArray(chart?.labels) ? chart.labels : [];
   const series = Array.isArray(chart?.series) ? chart.series : [];
   return {
@@ -980,7 +988,7 @@ function buildTeamGroupedData(chart) {
       return {
         label: dataset.label,
         data: (Array.isArray(dataset.values) ? dataset.values : []).map((value) => Number(value || 0)),
-        backgroundColor: rgba(SERIES_COLORS[index % SERIES_COLORS.length], 0.92),
+        backgroundColor: rgba(colorPalette[index % colorPalette.length] || SERIES_COLORS[0], 0.92),
         borderRadius: 3,
         maxBarThickness: 18,
       };
@@ -1226,6 +1234,13 @@ export default function ReportsInsightsSection({
   const generalCountRows = reportData?.generalCountModules || EMPTY_REPORT.generalCountModules;
   const generalTimeRows = reportData?.generalTimeModules || EMPTY_REPORT.generalTimeModules;
   const brandTotalRows = reportData?.brandTotalModules || EMPTY_REPORT.brandTotalModules;
+  const materialSummaryGroups = useMemo(
+    () =>
+      (Array.isArray(reportData?.materialSummaryGroups) ? reportData.materialSummaryGroups : EMPTY_REPORT.materialSummaryGroups).filter(
+        hasMaterialSummaryGroupData
+      ),
+    [reportData?.materialSummaryGroups]
+  );
   const specialtyCharts = reportData?.specialtyCharts || EMPTY_REPORT.specialtyCharts;
   const slideRetentionRows = reportData?.slideRetentionSlides || EMPTY_REPORT.slideRetentionSlides;
 
@@ -1385,13 +1400,14 @@ export default function ReportsInsightsSection({
     () => buildSingleBarData(brandTotalRows, { datasetLabel: "Material Open Count" }),
     [brandTotalRows]
   );
-  const movingMonthlyChart = useMemo(
-    () => buildMonthGroupedData(reportData?.movingMonthly),
-    [reportData?.movingMonthly]
-  );
   const allPerTeamChart = useMemo(
-    () => buildTeamGroupedData(reportData?.allPerTeam),
+    () => buildTeamGroupedData(reportData?.allPerTeam, { colorPalette: PASTEL_TEAM_SERIES_COLORS }),
     [reportData?.allPerTeam]
+  );
+  const allPerTeamSeriesCount = Array.isArray(reportData?.allPerTeam?.series) ? reportData.allPerTeam.series.length : 0;
+  const allPerTeamChartHeight = useMemo(
+    () => `${Math.max(320, Math.min(760, 240 + allPerTeamSeriesCount * 18))}px`,
+    [allPerTeamSeriesCount]
   );
   const slideActivityBrandChart = useMemo(
     () =>
@@ -1456,6 +1472,20 @@ export default function ReportsInsightsSection({
       ? `Shows the total Material Open Count for ${yearlyScopeLabel}.`
       : `Shows the total Material Open Count for ${periodScopeLabel}.`;
   const movingMonthlyPlainLabel = `Shows the monthly Material Open Count in ${yearlyScopeLabel}.`;
+  const buildMaterialSummaryCountSubtitle = (groupLabel) =>
+    isAllMonths || isAllYears
+      ? `Shows the Material Open Count for each ${groupLabel} material during ${periodScopeLabel}.`
+      : `Shows the Material Open Count for each ${groupLabel} material in ${periodScopeLabel}.`;
+  const buildMaterialSummaryTimeSubtitle = (groupLabel) =>
+    isAllMonths || isAllYears
+      ? `Shows how many minutes people spent on each ${groupLabel} material during ${periodScopeLabel}. Time is measured in minutes.`
+      : `Shows how many minutes people spent on each ${groupLabel} material in ${periodScopeLabel}. Time is measured in minutes.`;
+  const buildMaterialSummaryTotalSubtitle = (groupLabel) =>
+    isAllMonths
+      ? `Shows the total Material Open Count for ${groupLabel} materials in ${yearlyScopeLabel}.`
+      : `Shows the total Material Open Count for ${groupLabel} materials in ${periodScopeLabel}.`;
+  const buildMaterialSummaryMonthlySubtitle = (groupLabel) =>
+    `Shows the monthly Material Open Count for ${groupLabel} materials in ${yearlyScopeLabel}.`;
   const teamScopeLabel =
     isAllMonths || isAllYears
       ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a team.`
@@ -1491,6 +1521,7 @@ export default function ReportsInsightsSection({
   const hasGeneralTimeData = generalTimeRows.length > 0;
   const hasBrandTotalData = brandTotalRows.length > 0;
   const hasMovingMonthlyData = Boolean(reportData?.movingMonthly?.rows?.length);
+  const hasGroupedMaterialSummary = materialSummaryGroups.length > 0;
   const hasAllPerTeamData = Boolean(reportData?.allPerTeam?.labels?.length);
   const hasSpecialtyData = specialtyCharts.length > 0;
   const specialtyGridClass =
@@ -1739,6 +1770,73 @@ export default function ReportsInsightsSection({
           </ReportCard>
         </div>
 
+        {hasGroupedMaterialSummary ? (
+          <div className="grid gap-4 sm:gap-6 xl:grid-cols-3">
+            {materialSummaryGroups.map((group) => {
+              const groupLabel = String(group?.label || "Material Group").trim() || "Material Group";
+              const groupTitleSuffix =
+                group?.key === "td"
+                  ? "of TD Products"
+                  : group?.key === "rexulti"
+                  ? "of CNS Product for Rexulti"
+                  : group?.key === "abilifyMaintena"
+                  ? "of CNS Product for Abilify Maintena"
+                  : `of ${groupLabel}`;
+              const groupMovingMonthly = group?.movingMonthly || EMPTY_REPORT.movingMonthly;
+              const groupMovingMonthlyChart = buildMonthGroupedData(groupMovingMonthly, {
+                colorMap: PASTEL_ROYGBV_MONTH_SERIES_COLORS,
+              });
+              const hasGroupMovingMonthlyData = Boolean(groupMovingMonthly?.rows?.length);
+
+              return (
+                <ReportCard
+                  key={`brand-share-monthly-${group?.key || groupLabel}`}
+                  title={`How Material Activity Changed Each Month ${groupTitleSuffix}`}
+                  subtitle={buildMaterialSummaryMonthlySubtitle(groupLabel)}
+                >
+                  {isLoading ? (
+                    <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                  ) : !hasGroupMovingMonthlyData ? (
+                    <ChartEmpty />
+                  ) : (
+                    <div className="h-[220px] sm:h-[320px]">
+                      <Bar
+                        data={groupMovingMonthlyChart}
+                        options={buildBarOptions({
+                          yTitle: "Material Open Count",
+                          legend: true,
+                          legendPosition: "top",
+                        })}
+                      />
+                    </div>
+                  )}
+                </ReportCard>
+              );
+            })}
+          </div>
+        ) : (
+          <ReportCard title="How Material Activity Changed Each Month" subtitle={movingMonthlyPlainLabel}>
+            {isLoading ? (
+              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+            ) : !hasMovingMonthlyData ? (
+              <ChartEmpty />
+            ) : (
+              <div className="h-[220px] sm:h-[320px]">
+                <Bar
+                  data={buildMonthGroupedData(reportData?.movingMonthly, {
+                    colorMap: PASTEL_ROYGBV_MONTH_SERIES_COLORS,
+                  })}
+                  options={buildBarOptions({
+                    yTitle: "Material Open Count",
+                    legend: true,
+                    legendPosition: "top",
+                  })}
+                />
+              </div>
+            )}
+          </ReportCard>
+        )}
+
         <SectionDivider label="Team and Representative Rankings" />
 
         <div className="grid gap-4 sm:gap-6">
@@ -1765,64 +1863,130 @@ export default function ReportsInsightsSection({
       <div className="space-y-3 sm:space-y-4">
         <SectionDivider label="Material Summary" />
 
-        <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Materials With the Highest Material Open Count" subtitle={generalCountPlainLabel}>
-            {isLoading ? (
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-            ) : !hasGeneralCountData ? (
-              <ChartEmpty />
-            ) : (
-              <div className="h-[220px] sm:h-[320px]">
-                <Bar data={generalCountChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
-              </div>
-            )}
-          </ReportCard>
+        {hasGroupedMaterialSummary ? (
+          <div className="space-y-5 sm:space-y-6">
+            {materialSummaryGroups.map((group) => {
+              const groupLabel = String(group?.label || "Material Group").trim() || "Material Group";
+              const groupTitleSuffix =
+                group?.key === "td"
+                  ? "of TD Products"
+                  : group?.key === "rexulti"
+                  ? "of CNS Product for Rexulti"
+                  : group?.key === "abilifyMaintena"
+                  ? "of CNS Product for Abilify Maintena"
+                  : `of ${groupLabel}`;
+              const groupGeneralCountRows = Array.isArray(group?.generalCountModules) ? group.generalCountModules : [];
+              const groupGeneralTimeRows = Array.isArray(group?.generalTimeModules) ? group.generalTimeModules : [];
+              const groupBrandTotalRows = Array.isArray(group?.brandTotalModules) ? group.brandTotalModules : [];
+              const groupGeneralCountChart = buildSingleBarData(groupGeneralCountRows, { datasetLabel: "Material Open Count" });
+              const groupGeneralTimeChart = buildSingleBarData(groupGeneralTimeRows, { datasetLabel: "Minutes Spent" });
+              const groupBrandTotalChart = buildSingleBarData(groupBrandTotalRows, { datasetLabel: "Material Open Count" });
+              const hasGroupGeneralCountData = groupGeneralCountRows.length > 0;
+              const hasGroupGeneralTimeData = groupGeneralTimeRows.length > 0;
+              const hasGroupBrandTotalData = groupBrandTotalRows.length > 0;
 
-          <ReportCard title="Materials With the Most Time Spent" subtitle={generalTimePlainLabel}>
-            {isLoading ? (
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-            ) : !hasGeneralTimeData ? (
-              <ChartEmpty />
-            ) : (
-              <div className="h-[220px] sm:h-[320px]">
-                <Bar data={generalTimeChart} options={buildBarOptions({ yTitle: "Minutes" })} />
-              </div>
-            )}
-          </ReportCard>
-        </div>
+              return (
+                <div key={group?.key || groupLabel} className="space-y-4 sm:space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="rounded-full border border-[#0f4c5c]/15 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0f4c5c]">
+                      {groupLabel}
+                    </div>
+                    <div className="h-px flex-1 bg-slate-200" />
+                  </div>
 
-        <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-          <ReportCard title="Shows the Top Materials by Brand" subtitle={brandTotalPlainLabel}>
-            {isLoading ? (
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-            ) : !hasBrandTotalData ? (
-              <ChartEmpty />
-            ) : (
-              <div className="h-[220px] sm:h-[320px]">
-                <Bar data={brandTotalChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
-              </div>
-            )}
-          </ReportCard>
+                  <div className="grid gap-4 sm:gap-6 xl:grid-cols-3">
+                    <ReportCard
+                      title={`Materials With the Highest Material Open Count ${groupTitleSuffix}`}
+                      subtitle={buildMaterialSummaryCountSubtitle(groupLabel)}
+                    >
+                      {isLoading ? (
+                        <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                      ) : !hasGroupGeneralCountData ? (
+                        <ChartEmpty />
+                      ) : (
+                        <div className="h-[220px] sm:h-[320px]">
+                          <Bar data={groupGeneralCountChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
+                        </div>
+                      )}
+                    </ReportCard>
 
-          <ReportCard title="How Material Activity Changed Each Month" subtitle={movingMonthlyPlainLabel}>
-            {isLoading ? (
-              <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
-            ) : !hasMovingMonthlyData ? (
-              <ChartEmpty />
-            ) : (
-              <div className="h-[220px] sm:h-[320px]">
-                <Bar
-                  data={movingMonthlyChart}
-                  options={buildBarOptions({
-                    yTitle: "Material Open Count",
-                    legend: true,
-                    legendPosition: "top",
-                  })}
-                />
-              </div>
-            )}
-          </ReportCard>
-        </div>
+                    <ReportCard
+                      title={`Materials With the Most Time Spent ${groupTitleSuffix}`}
+                      subtitle={buildMaterialSummaryTimeSubtitle(groupLabel)}
+                    >
+                      {isLoading ? (
+                        <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                      ) : !hasGroupGeneralTimeData ? (
+                        <ChartEmpty />
+                      ) : (
+                        <div className="h-[220px] sm:h-[320px]">
+                          <Bar data={groupGeneralTimeChart} options={buildBarOptions({ yTitle: "Minutes" })} />
+                        </div>
+                      )}
+                    </ReportCard>
+                    <ReportCard
+                      title={`Shows the Top Materials by Brand ${groupTitleSuffix}`}
+                      subtitle={buildMaterialSummaryTotalSubtitle(groupLabel)}
+                    >
+                      {isLoading ? (
+                        <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                      ) : !hasGroupBrandTotalData ? (
+                        <ChartEmpty />
+                      ) : (
+                        <div className="h-[220px] sm:h-[320px]">
+                          <Bar data={groupBrandTotalChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
+                        </div>
+                      )}
+                    </ReportCard>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+              <ReportCard title="Materials With the Highest Material Open Count" subtitle={generalCountPlainLabel}>
+                {isLoading ? (
+                  <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                ) : !hasGeneralCountData ? (
+                  <ChartEmpty />
+                ) : (
+                  <div className="h-[220px] sm:h-[320px]">
+                    <Bar data={generalCountChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
+                  </div>
+                )}
+              </ReportCard>
+
+              <ReportCard title="Materials With the Most Time Spent" subtitle={generalTimePlainLabel}>
+                {isLoading ? (
+                  <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                ) : !hasGeneralTimeData ? (
+                  <ChartEmpty />
+                ) : (
+                  <div className="h-[220px] sm:h-[320px]">
+                    <Bar data={generalTimeChart} options={buildBarOptions({ yTitle: "Minutes" })} />
+                  </div>
+                )}
+              </ReportCard>
+            </div>
+
+            <div className="grid gap-4 sm:gap-6">
+              <ReportCard title="Shows the Top Materials by Brand" subtitle={brandTotalPlainLabel}>
+                {isLoading ? (
+                  <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
+                ) : !hasBrandTotalData ? (
+                  <ChartEmpty />
+                ) : (
+                  <div className="h-[220px] sm:h-[320px]">
+                    <Bar data={brandTotalChart} options={buildBarOptions({ yTitle: "Material Open Count" })} />
+                  </div>
+                )}
+              </ReportCard>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="space-y-3 sm:space-y-4">
@@ -1835,7 +1999,7 @@ export default function ReportsInsightsSection({
             ) : !hasAllPerTeamData ? (
               <ChartEmpty />
             ) : (
-              <div className="h-[220px] sm:h-[320px]">
+              <div style={{ height: allPerTeamChartHeight }}>
                 <Bar
                   data={allPerTeamChart}
                   options={buildBarOptions({ yTitle: "Material Open Count", legend: true, legendPosition: "bottom" })}

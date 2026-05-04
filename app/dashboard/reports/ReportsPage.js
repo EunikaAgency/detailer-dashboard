@@ -75,6 +75,7 @@ const EMPTY_REPORT = {
     monthKeys: [],
     rows: [],
   },
+  materialSummaryGroups: [],
   allPerTeam: {
     labels: [],
     series: [],
