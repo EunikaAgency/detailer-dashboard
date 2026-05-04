@@ -237,7 +237,9 @@ function SectionDivider({ label }) {
 
 function ReportCard({ title, subtitle, children, className = "" }) {
   return (
-    <section className={`min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
+    <section
+      className={`min-w-0 rounded-3xl border border-slate-300 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_0_0_1px_rgba(148,163,184,0.14)] sm:p-5 ${className}`}
+    >
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-900 sm:text-lg">{title}</h3>
         {subtitle ? <p className="mt-1 text-xs text-slate-600 sm:text-sm">{subtitle}</p> : null}
@@ -400,6 +402,10 @@ export default function ReportsUtilizationSection({
 
   const tdShareOfVoice = reportData?.nationalUtilization?.tdShareOfVoice || [];
   const cnsShareOfVoice = reportData?.nationalUtilization?.cnsShareOfVoice || [];
+  const cnsRexultiShareOfVoice = cnsShareOfVoice.filter((item) => item?.productGroupLabel === "Rexulti");
+  const cnsAbilifyMaintenaShareOfVoice = cnsShareOfVoice.filter(
+    (item) => item?.productGroupLabel === "Abilify Maintena"
+  );
   const perTeam = reportData?.teamUtilization?.perTeam || [];
   const perPsr = reportData?.teamUtilization?.perPsr || [];
   const perProduct = reportData?.teamUtilization?.perProduct || [];
@@ -460,14 +466,29 @@ export default function ReportsUtilizationSection({
             xTitle="Percent Share"
             valueSuffix="%"
             isLoading={isLoading}
+            className="xl:col-span-2"
             useRankLabels
             showItemLegend
             useItemBrandColors
           />
           <MetricChartCard
-            title="CNS Product Share by Interactions"
-            subtitle="Shows the percent share of recorded interactions for each Abilify Maintena and Rexulti material."
-            items={cnsShareOfVoice}
+            title="CNS Product Share by Interactions for Rexulti"
+            subtitle="Shows the percent share of recorded interactions for each Rexulti material."
+            items={cnsRexultiShareOfVoice}
+            color={CHART_COLORS.cns}
+            datasetLabel="Percent Share"
+            xTitle="Percent Share"
+            valueSuffix="%"
+            isLoading={isLoading}
+            useRankLabels
+            showItemLegend
+            legendVariant="product-material"
+            useItemBrandColors
+          />
+          <MetricChartCard
+            title="CNS Product Share by Interactions for Abilify Maintena"
+            subtitle="Shows the percent share of recorded interactions for each Abilify Maintena material."
+            items={cnsAbilifyMaintenaShareOfVoice}
             color={CHART_COLORS.cns}
             datasetLabel="Percent Share"
             xTitle="Percent Share"

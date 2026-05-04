@@ -703,7 +703,9 @@ function SectionDivider({ label }) {
 
 function ReportCard({ title, subtitle, actions = null, children, className = "" }) {
   return (
-    <section className={`min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 ${className}`}>
+    <section
+      className={`min-w-0 rounded-2xl border border-slate-300 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_0_0_1px_rgba(148,163,184,0.14)] sm:p-5 ${className}`}
+    >
       {title || actions ? (
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

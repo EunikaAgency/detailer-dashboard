@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import SlideRetention from "@/models/SlideRetention";
 
 export const runtime = "nodejs";
+const MAX_CLIENT_FUTURE_SKEW_MS = 5 * 60 * 1000;
 
 const normalizeText = (value, maxLength = 180) => {
   const normalized = String(value || "").trim();
@@ -106,6 +107,24 @@ const sanitizeEntry = (entry, requestClientInfo = null) => {
   };
 };
 
+const normalizeFutureRetentionEntries = (entries, receivedAt = new Date()) => {
+  const latestAllowedTime = receivedAt.getTime() + MAX_CLIENT_FUTURE_SKEW_MS;
+
+  return entries.map((entry) => {
+    const endedAtTime = entry?.endedAt?.getTime?.() ?? Number.NaN;
+    if (Number.isNaN(endedAtTime) || endedAtTime <= latestAllowedTime) {
+      return entry;
+    }
+
+    const offsetMs = endedAtTime - latestAllowedTime;
+    return {
+      ...entry,
+      startedAt: new Date(entry.startedAt.getTime() - offsetMs),
+      endedAt: new Date(endedAtTime - offsetMs),
+    };
+  });
+};
+
 export async function POST(request) {
   try {
     const auth = await requireApiAuthIfEnabled(request);
@@ -114,6 +133,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
+    const requestReceivedAt = new Date();
     const requestUserId = normalizeText(body?.userId, 80);
     const effectiveUserId = auth?.user?._id?.toString?.() || requestUserId;
 
@@ -123,7 +143,10 @@ export async function POST(request) {
 
     const entries = Array.isArray(body?.entries) ? body.entries : [];
     const requestClientInfo = sanitizeClientInfo(body);
-    const cleanedEntries = entries.map((entry) => sanitizeEntry(entry, requestClientInfo)).filter(Boolean);
+    const cleanedEntries = normalizeFutureRetentionEntries(
+      entries.map((entry) => sanitizeEntry(entry, requestClientInfo)).filter(Boolean),
+      requestReceivedAt
+    );
 
     if (!cleanedEntries.length) {
       return NextResponse.json({ error: "No valid slide retention entries provided." }, { status: 400 });

@@ -114,10 +114,65 @@ const toStoredEvent = (event) => ({
 });
 
 const buildSessionKey = (event) => event.sessionId || `event-${event.eventId}`;
+const MAX_CLIENT_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const MAX_ACTIVITY_LOG_WRITE_ATTEMPTS = 3;
 
 const isRetryableActivityLogWriteError = (error) =>
   error instanceof mongoose.Error.VersionError || error?.code === 11000;
+
+const shiftIsoDateString = (value, offsetMs) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Date(parsed.getTime() - offsetMs).toISOString();
+};
+
+const shiftFutureEventDetails = (details, offsetMs) => {
+  if (!details || typeof details !== "object" || Array.isArray(details) || !offsetMs) return details;
+
+  const shifted = { ...details };
+  ["timeOpenedAt", "materialOpenedAt", "timeClosedAt", "materialClosedAt"].forEach((key) => {
+    if (typeof shifted[key] === "string") {
+      shifted[key] = shiftIsoDateString(shifted[key], offsetMs);
+    }
+  });
+
+  return shifted;
+};
+
+const normalizeFutureSessionTimestamps = (events, receivedAt = new Date()) => {
+  const latestAllowedTime = receivedAt.getTime() + MAX_CLIENT_FUTURE_SKEW_MS;
+  const eventsBySession = new Map();
+
+  events.forEach((event) => {
+    const sessionKey = buildSessionKey(event);
+    const sessionEvents = eventsBySession.get(sessionKey) || [];
+    sessionEvents.push(event);
+    eventsBySession.set(sessionKey, sessionEvents);
+  });
+
+  eventsBySession.forEach((sessionEvents) => {
+    sessionEvents.sort((left, right) => new Date(left.occurredAt).getTime() - new Date(right.occurredAt).getTime());
+
+    const latestEvent = sessionEvents[sessionEvents.length - 1];
+    const latestEventTime = new Date(latestEvent?.occurredAt || 0).getTime();
+    if (Number.isNaN(latestEventTime) || latestEventTime <= latestAllowedTime) return;
+
+    const offsetMs = latestEventTime - latestAllowedTime;
+    sessionEvents.forEach((event) => {
+      const occurredAtTime = new Date(event?.occurredAt || 0).getTime();
+      if (Number.isNaN(occurredAtTime)) return;
+
+      const normalizedTime = occurredAtTime - offsetMs;
+      event.occurredAt = new Date(normalizedTime);
+      event.timestampMs = Number.isFinite(Number(event.timestampMs))
+        ? Math.max(0, Math.round(Number(event.timestampMs) - offsetMs))
+        : normalizedTime;
+      event.details = shiftFutureEventDetails(event.details, offsetMs);
+    });
+  });
+
+  return events;
+};
 
 async function saveActivityLogGroup(resolvedUserId, group) {
   for (let attempt = 1; attempt <= MAX_ACTIVITY_LOG_WRITE_ATTEMPTS; attempt += 1) {
@@ -319,6 +374,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
+    const requestReceivedAt = new Date();
     const requestUserId = normalizeText(body?.userId, 80);
     const effectiveUserId = auth?.user?._id?.toString?.() || requestUserId;
     if (!effectiveUserId || !mongoose.Types.ObjectId.isValid(effectiveUserId)) {
@@ -332,6 +388,7 @@ export async function POST(request) {
     const events = Array.isArray(body?.events) ? body.events : [];
     const requestClientInfo = sanitizeClientInfo(body);
     const cleaned = events.map((event) => sanitizeEvent(event, requestClientInfo)).filter(Boolean);
+    normalizeFutureSessionTimestamps(cleaned, requestReceivedAt);
 
     if (!cleaned.length) {
       return NextResponse.json({ error: "No valid events provided." }, { status: 400 });

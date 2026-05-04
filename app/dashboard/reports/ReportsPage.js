@@ -234,7 +234,7 @@ function SectionHeader({ eyebrow, title, subtitle }) {
 
 function ReportCard({ title, subtitle, children }) {
   return (
-    <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="min-w-0 rounded-3xl border border-slate-300 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_0_0_1px_rgba(148,163,184,0.14)] sm:p-5">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-slate-900 sm:text-lg">{title}</h3>
         {subtitle ? <p className="mt-1 text-xs text-slate-600 sm:text-sm">{subtitle}</p> : null}
