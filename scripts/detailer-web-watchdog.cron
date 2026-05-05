@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=/home/eunika-yellow
+PM2_HOME=/home/eunika-yellow/.pm2
+
+@reboot /var/www/node/detailer-dashboard/scripts/detailer-web-watchdog.sh
+* * * * * /var/www/node/detailer-dashboard/scripts/detailer-web-watchdog.sh

@@ -213,7 +213,7 @@ export default function DashboardShell({ children }) {
       </header>
 
       <main
-        className={`w-full px-3 py-5 sm:px-4 sm:py-6 lg:px-6 lg:py-8 ${isReportsRoute ? "max-w-none" : "mx-auto max-w-[1500px]"}`}
+        className={`w-full px-3 py-5 sm:px-4 sm:py-6 lg:px-6 lg:py-8 ${isReportsRoute ? "mx-auto max-w-[1800px]" : "mx-auto max-w-[1500px]"}`}
       >
         {children}
       </main>

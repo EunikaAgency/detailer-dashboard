@@ -7,6 +7,7 @@ import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import useCsvExportAccess from "../useCsvExportAccess";
 import { getBrandColorConfig, getChartItemColorConfig } from "./reportColors";
 import ReportFilterSelect from "./ReportFilterSelect";
+import { useReportSection } from "./reportClient";
 import {
   ArcElement,
   BarElement,
@@ -96,6 +97,12 @@ const PASTEL_TEAM_SERIES_COLORS = [
   "197, 167, 146",
   "152, 207, 188",
   "217, 158, 194",
+];
+
+const LOADING_MATERIAL_SUMMARY_GROUPS = [
+  { key: "td", label: "TD Product", movingMonthly: { monthKeys: [], rows: [] } },
+  { key: "rexulti", label: "Rexulti", movingMonthly: { monthKeys: [], rows: [] } },
+  { key: "abilifyMaintena", label: "Abilify Maintena", movingMonthly: { monthKeys: [], rows: [] } },
 ];
 
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
@@ -1095,6 +1102,19 @@ function hasMaterialSummaryGroupData(group) {
   );
 }
 
+function zeroValueRows(rows, limit = 10) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      ...row,
+      value: 0,
+      rawValue: 0,
+      totalMinutes: 0,
+      elapsedSeconds: 0,
+      averageMinutes: 0,
+    }))
+    .slice(0, limit);
+}
+
 function buildTeamGroupedData(chart, options = {}) {
   const { colorPalette = SERIES_COLORS } = options;
   const labels = Array.isArray(chart?.labels) ? chart.labels : [];
@@ -1266,6 +1286,12 @@ export default function ReportsInsightsSection({
   const [rawSlideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
   const canExportCsv = useCsvExportAccess();
   const setSelectedFilters = typeof onFiltersChange === "function" ? onFiltersChange : null;
+  const exportResult = useReportSection({
+    endpoint: "/api/reports/dashboard-export",
+    filters,
+    section: "",
+    fallbackData: EMPTY_REPORT,
+  });
 
   useEffect(() => {
     if (isLoading || !isFilterChangePending) return undefined;
@@ -1309,12 +1335,22 @@ export default function ReportsInsightsSection({
   const generalCountRows = reportData?.generalCountModules || EMPTY_REPORT.generalCountModules;
   const generalTimeRows = reportData?.generalTimeModules || EMPTY_REPORT.generalTimeModules;
   const brandTotalRows = reportData?.brandTotalModules || EMPTY_REPORT.brandTotalModules;
+  const rawMonthlyProductRows = reportData?.legacyOverview?.monthly?.product;
+  const rawMaterialSummaryGroups = reportData?.materialSummaryGroups;
+  const monthlyProductRows = useMemo(
+    () => rawMonthlyProductRows || [],
+    [rawMonthlyProductRows]
+  );
   const materialSummaryGroups = useMemo(
-    () =>
-      (Array.isArray(reportData?.materialSummaryGroups) ? reportData.materialSummaryGroups : EMPTY_REPORT.materialSummaryGroups).filter(
-        hasMaterialSummaryGroupData
-      ),
-    [reportData?.materialSummaryGroups]
+    () => {
+      const groups = (
+        Array.isArray(rawMaterialSummaryGroups) ? rawMaterialSummaryGroups : EMPTY_REPORT.materialSummaryGroups
+      ).filter(hasMaterialSummaryGroupData);
+
+      if (groups.length > 0 || !isLoading) return groups;
+      return LOADING_MATERIAL_SUMMARY_GROUPS;
+    },
+    [isLoading, rawMaterialSummaryGroups]
   );
   const specialtyCharts = reportData?.specialtyCharts || EMPTY_REPORT.specialtyCharts;
   const slideRetentionRows = reportData?.slideRetentionSlides || EMPTY_REPORT.slideRetentionSlides;
@@ -1391,12 +1427,21 @@ export default function ReportsInsightsSection({
           grouped.set(productLabel, current);
         });
 
-      return Array.from(grouped.values())
+      const rows = Array.from(grouped.values())
         .filter((row) => row.value > 0)
         .sort((left, right) => right.value - left.value || String(left.label || "").localeCompare(String(right.label || "")))
         .slice(0, 10);
+
+      if (rows.length > 0) return rows;
+
+      return zeroValueRows(
+        (Array.isArray(monthlyProductRows) ? monthlyProductRows : []).filter(
+          (row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand
+        ),
+        10
+      );
     },
-    [slideRetentionRows, slideActivityBrand]
+    [monthlyProductRows, slideRetentionRows, slideActivityBrand]
   );
   const slideActivityProductRows = useMemo(
     () => {
@@ -1418,11 +1463,20 @@ export default function ReportsInsightsSection({
           grouped.set(attachmentLabel, current);
         });
 
-      return Array.from(grouped.values())
+      const rows = Array.from(grouped.values())
         .filter((row) => row.value > 0)
         .sort((left, right) => right.value - left.value || String(left.label || "").localeCompare(String(right.label || "")));
+
+      if (rows.length > 0) return rows;
+
+      return zeroValueRows(
+        (Array.isArray(generalCountRows) ? generalCountRows : []).filter(
+          (row) => slideActivityBrand === "All Brands" || row.brand === slideActivityBrand
+        ),
+        20
+      );
     },
-    [slideRetentionRows, slideActivityBrand, slideActivityProduct]
+    [generalCountRows, slideRetentionRows, slideActivityBrand, slideActivityProduct]
   );
   const tdSlideActivityProductRows = useMemo(
     () => slideActivityProductRows.filter((row) => !isCnsSlideActivityRow(row)),
@@ -1590,7 +1644,12 @@ export default function ReportsInsightsSection({
     isAllMonths
       ? `Shows the total Material Open Count for ${yearlyScopeLabel}.`
       : `Shows the total Material Open Count for ${periodScopeLabel}.`;
-  const movingMonthlyPlainLabel = `Shows the monthly Material Open Count in ${yearlyScopeLabel}.`;
+  const movingMonthlyTitle = isAllMonths
+    ? "How Material Activity Changed Each Month"
+    : `Material Activity for ${selectedMonthText}`;
+  const movingMonthlyPlainLabel = isAllMonths
+    ? `Shows the monthly Material Open Count in ${yearlyScopeLabel}.`
+    : `Shows the Material Open Count in ${periodScopeLabel}.`;
   const buildMaterialSummaryCountSubtitle = (groupLabel) =>
     isAllMonths || isAllYears
       ? `Shows the Material Open Count for each ${groupLabel} material during ${periodScopeLabel}.`
@@ -1603,8 +1662,14 @@ export default function ReportsInsightsSection({
     isAllMonths
       ? `Shows the total Material Open Count for ${groupLabel} materials in ${yearlyScopeLabel}.`
       : `Shows the total Material Open Count for ${groupLabel} materials in ${periodScopeLabel}.`;
+  const buildMaterialSummaryMonthlyTitle = (groupTitleSuffix) =>
+    isAllMonths
+      ? `How Material Activity Changed Each Month ${groupTitleSuffix}`
+      : `Material Activity for ${selectedMonthText} ${groupTitleSuffix}`;
   const buildMaterialSummaryMonthlySubtitle = (groupLabel) =>
-    `Shows the monthly Material Open Count for ${groupLabel} materials in ${yearlyScopeLabel}.`;
+    isAllMonths
+      ? `Shows the monthly Material Open Count for ${groupLabel} materials in ${yearlyScopeLabel}.`
+      : `Shows the Material Open Count for ${groupLabel} materials in ${periodScopeLabel}.`;
   const teamScopeLabel =
     isAllMonths || isAllYears
       ? `Shows the Material Open Count for each material during ${periodScopeLabel}. Each color in the legend is a team.`
@@ -1650,9 +1715,10 @@ export default function ReportsInsightsSection({
   const hasTdSlideActivityProductData = tdSlideActivityProductRows.length > 0;
   const hasCnsSlideActivityProductData = cnsSlideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
-  const reportSlideActivityExportRows = reportData?.slideActivityExportRows;
-  const reportMaterialOpenExportRows = reportData?.materialOpenExportRows;
-  const reportMaterialOpenCountExportRows = reportData?.materialOpenCountExportRows;
+  const exportData = exportResult.data || EMPTY_REPORT;
+  const reportSlideActivityExportRows = exportData?.slideActivityExportRows;
+  const reportMaterialOpenExportRows = exportData?.materialOpenExportRows;
+  const reportMaterialOpenCountExportRows = exportData?.materialOpenCountExportRows;
   const legacyUnifiedExportRows = reportData?.unifiedExportRows;
   const slideActivityExportRows = useMemo(() => {
     if (Array.isArray(reportSlideActivityExportRows) && reportSlideActivityExportRows.length > 0) {
@@ -1904,12 +1970,7 @@ export default function ReportsInsightsSection({
     ],
     [materialOpenCountExportRows, materialOpenExportRows, slideActivityExportRows]
   );
-  const exportDisabled =
-    isLoading ||
-    Boolean(error) ||
-    (slideActivityExportRows.length === 0 &&
-      materialOpenExportRows.length === 0 &&
-      materialOpenCountExportRows.length === 0);
+  const exportDisabled = exportResult.isLoading || Boolean(exportResult.error);
   const exportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
 
   return (
@@ -1919,7 +1980,7 @@ export default function ReportsInsightsSection({
         subtitle="Live dashboard view derived from the current database activity and product records."
       />
 
-      <div className="rounded-[1.05rem] bg-white/90 p-1 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/75 sm:-mx-1 sm:rounded-[1.2rem] sm:px-1 sm:py-1 md:-mx-2 md:rounded-[1.4rem] md:px-2 md:py-2">
+      <div className="rounded-[1.05rem] bg-white/90 p-1 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/75 sm:rounded-[1.2rem] sm:px-1 sm:py-1 md:rounded-[1.4rem] md:px-2 md:py-2">
         <div className="grid gap-[1px] overflow-hidden rounded-[1.05rem] bg-white/25 md:grid-cols-3 xl:grid-cols-6 md:rounded-2xl">
           {FILTERS.map((filter) => (
             <FilterTile
@@ -2030,7 +2091,7 @@ export default function ReportsInsightsSection({
               return (
                 <ReportCard
                   key={`brand-share-monthly-${group?.key || groupLabel}`}
-                  title={`How Material Activity Changed Each Month ${groupTitleSuffix}`}
+                  title={buildMaterialSummaryMonthlyTitle(groupTitleSuffix)}
                   subtitle={buildMaterialSummaryMonthlySubtitle(groupLabel)}
                 >
                   {isLoading ? (
@@ -2054,7 +2115,7 @@ export default function ReportsInsightsSection({
             })}
           </div>
         ) : (
-          <ReportCard title="How Material Activity Changed Each Month" subtitle={movingMonthlyPlainLabel}>
+          <ReportCard title={movingMonthlyTitle} subtitle={movingMonthlyPlainLabel}>
             {isLoading ? (
               <ChartEmpty message={LOADING_PLACEHOLDER_TEXT} />
             ) : !hasMovingMonthlyData ? (

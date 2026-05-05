@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
@@ -292,6 +293,29 @@ function getProductMaterialLegendContent(item) {
   };
 }
 
+function buildZeroSlideMetricRows(rows, limit = 20) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => {
+      const materialName = String(row?.label || row?.materialName || row?.product || "").trim();
+      if (!materialName) return null;
+
+      return {
+        label: materialName,
+        materialName,
+        slideFilename: "No slide retention recorded",
+        slideDetailLabel: "No slide retention recorded",
+        fullLabel: materialName,
+        slideNumber: null,
+        brand: row?.brand || "",
+        product: row?.product || materialName,
+        value: 0,
+        rawValue: 0,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 function ChartItemLegend({ items, color, valueSuffix = "", variant = "default", useItemBrandColors = false }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
@@ -416,8 +440,24 @@ export default function ReportsUtilizationSection({
 
   const perTeam = reportData?.teamUtilization?.perTeam || [];
   const perPsr = reportData?.teamUtilization?.perPsr || [];
-  const perSlide = reportData?.teamUtilization?.perSlide || [];
-  const averageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide || [];
+  const rawPerSlide = reportData?.teamUtilization?.perSlide;
+  const rawAverageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide;
+  const rawSlideFallbackRows = reportData?.generalCountModules || reportData?.legacyOverview?.monthly?.product;
+  const zeroSlideRows = useMemo(
+    () => buildZeroSlideMetricRows(rawSlideFallbackRows, 20),
+    [rawSlideFallbackRows]
+  );
+  const perSlide = useMemo(
+    () => (Array.isArray(rawPerSlide) && rawPerSlide.length > 0 ? rawPerSlide : zeroSlideRows),
+    [rawPerSlide, zeroSlideRows]
+  );
+  const averageTimePerSlide = useMemo(
+    () =>
+      Array.isArray(rawAverageTimePerSlide) && rawAverageTimePerSlide.length > 0
+        ? rawAverageTimePerSlide
+        : zeroSlideRows,
+    [rawAverageTimePerSlide, zeroSlideRows]
+  );
   const filterScopeText = getFilterScopeText(reportData?.filters);
 
   return (
