@@ -108,6 +108,34 @@ const shouldHideBrandOption = (value) => {
   return key.includes("test product") || key.includes("local test") || key.startsWith("demo product");
 };
 
+const CNS_SLIDE_ACTIVITY_PRODUCT_ALIASES = [
+  "ABILIFY MAINTENA",
+  "ABILIFY MAINTENA®",
+  "ABILIFY",
+  "MAINTENA",
+  "REXULTI",
+];
+
+const TEAM_ACTIVITY_CHART_MIN_HEIGHT_PX = 260;
+const TEAM_ACTIVITY_CHART_MAX_HEIGHT_PX = 420;
+const TEAM_ACTIVITY_CHART_HEIGHT_PER_SERIES_PX = 10;
+const SLIDE_ACTIVITY_SUMMARY_MIN_HEIGHT_PX = 220;
+const SLIDE_ACTIVITY_SUMMARY_MAX_HEIGHT_PX = 380;
+const SLIDE_ACTIVITY_SUMMARY_HEIGHT_PER_ROW_PX = 26;
+
+const normalizeSlideActivityProductKey = (value) => String(value || "").trim().toLowerCase();
+const isCnsSlideActivityRow = (row) => {
+  const candidates = [row?.product, row?.brand].map(normalizeSlideActivityProductKey).filter(Boolean);
+  if (!candidates.length) return false;
+
+  return candidates.some((candidate) =>
+    CNS_SLIDE_ACTIVITY_PRODUCT_ALIASES.some((alias) => {
+      const normalizedAlias = normalizeSlideActivityProductKey(alias);
+      return candidate === normalizedAlias || candidate.includes(normalizedAlias) || normalizedAlias.includes(candidate);
+    })
+  );
+};
+
 const EMPTY_REPORT = {
   filters: {
     yearOptions: FILTER_OPTIONS.year,
@@ -147,7 +175,9 @@ const EMPTY_REPORT = {
   },
   specialtyCharts: [],
   slideRetentionSlides: [],
-  unifiedExportRows: [],
+  slideActivityExportRows: [],
+  materialOpenExportRows: [],
+  materialOpenCountExportRows: [],
   meta: {
     totalSessionsInYear: 0,
     totalInteractionsInMonth: 0,
@@ -208,18 +238,42 @@ const SLIDE_ACTIVITY_SLIDE_EXPORT_COLUMNS = [
   { key: "minutes", label: "Minutes Viewed" },
 ];
 
-const UNIFIED_EXPORT_COLUMNS = [
+const SLIDE_ACTIVITY_EXPORT_COLUMNS = [
   { key: "date", label: "Date" },
   { key: "month", label: "Month" },
   { key: "team", label: "Team" },
-  { key: "psr", label: "Representative" },
+  { key: "psr", label: "PSR" },
   { key: "brand", label: "Brand" },
   { key: "productName", label: "Product Name" },
   { key: "material", label: "Material" },
   { key: "slide", label: "Slide" },
   { key: "secondsViewed", label: "Seconds viewed" },
-  { key: "timeOpened", label: "Time opened" },
-  { key: "timeClosed", label: "Time closed" },
+  { key: "secondsIdle", label: "Seconds Idle" },
+  { key: "timeSlideOpened", label: "Time Slide Open" },
+  { key: "timeSlideClosed", label: "Time Slide Close" },
+];
+
+const MATERIAL_OPEN_EXPORT_COLUMNS = [
+  { key: "date", label: "Date" },
+  { key: "month", label: "Month" },
+  { key: "team", label: "Team" },
+  { key: "psr", label: "PSR" },
+  { key: "brand", label: "Brand" },
+  { key: "productName", label: "Product Name" },
+  { key: "material", label: "Material" },
+  { key: "timeOpen", label: "Time Open" },
+  { key: "timeClose", label: "Time Close" },
+];
+
+const MATERIAL_OPEN_COUNT_EXPORT_COLUMNS = [
+  { key: "date", label: "Date" },
+  { key: "month", label: "Month" },
+  { key: "team", label: "Team" },
+  { key: "psr", label: "PSR" },
+  { key: "brand", label: "Brand" },
+  { key: "productName", label: "Product Name" },
+  { key: "material", label: "Material" },
+  { key: "openCountPerDay", label: "Open Count Per Day" },
 ];
 
 function rgba(color, alpha) {
@@ -378,10 +432,16 @@ function downloadFile(filename, content, mimeType) {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
   document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  window.requestAnimationFrame(() => {
+    link.click();
+    window.setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 1500);
+  });
 }
 
 function toFileSlug(value) {
@@ -817,7 +877,21 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
 
 function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
   const handleExportCsv = () => {
-    downloadFile(`${filenameBase}.csv`, sectionsToCsv(csvSections || sections), "text/csv;charset=utf-8;");
+    const normalizedSections = Array.isArray(csvSections || sections) ? csvSections || sections : [];
+
+    if (normalizedSections.length <= 1) {
+      downloadFile(`${filenameBase}.csv`, sectionsToCsv(normalizedSections), "text/csv;charset=utf-8;");
+      return;
+    }
+
+    normalizedSections.forEach((section, index) => {
+      const sectionSlug = toFileSlug(section?.title || `section-${index + 1}`);
+      downloadFile(
+        `${filenameBase}-${sectionSlug}.csv`,
+        sectionsToCsv([section]),
+        "text/csv;charset=utf-8;"
+      );
+    });
   };
 
   const handleExportExcel = () => {
@@ -834,7 +908,7 @@ function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
         type="button"
         onClick={handleExportCsv}
         disabled={disabled}
-        className="rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:cursor-pointer hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Export CSV
       </button>
@@ -842,7 +916,7 @@ function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
         type="button"
         onClick={handleExportExcel}
         disabled={disabled}
-        className="rounded-lg border border-sky-700 bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer rounded-lg border border-sky-700 bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:cursor-pointer hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Export Excel
       </button>
@@ -1349,6 +1423,14 @@ export default function ReportsInsightsSection({
     },
     [slideRetentionRows, slideActivityBrand, slideActivityProduct]
   );
+  const tdSlideActivityProductRows = useMemo(
+    () => slideActivityProductRows.filter((row) => !isCnsSlideActivityRow(row)),
+    [slideActivityProductRows]
+  );
+  const cnsSlideActivityProductRows = useMemo(
+    () => slideActivityProductRows.filter((row) => isCnsSlideActivityRow(row)),
+    [slideActivityProductRows]
+  );
   const slideActivityAttachmentRows = useMemo(
     () => {
       const grouped = new Map();
@@ -1406,7 +1488,11 @@ export default function ReportsInsightsSection({
   );
   const allPerTeamSeriesCount = Array.isArray(reportData?.allPerTeam?.series) ? reportData.allPerTeam.series.length : 0;
   const allPerTeamChartHeight = useMemo(
-    () => `${Math.max(320, Math.min(760, 240 + allPerTeamSeriesCount * 18))}px`,
+    () =>
+      `${Math.max(
+        TEAM_ACTIVITY_CHART_MIN_HEIGHT_PX,
+        Math.min(TEAM_ACTIVITY_CHART_MAX_HEIGHT_PX, 220 + allPerTeamSeriesCount * TEAM_ACTIVITY_CHART_HEIGHT_PER_SERIES_PX)
+      )}px`,
     [allPerTeamSeriesCount]
   );
   const slideActivityBrandChart = useMemo(
@@ -1417,22 +1503,48 @@ export default function ReportsInsightsSection({
       }),
     [slideActivityBrandRows]
   );
-  const slideActivityProductChart = useMemo(
+  const tdSlideActivityProductChart = useMemo(
     () =>
-      buildSingleBarData(slideActivityProductRows, {
+      buildSingleBarData(tdSlideActivityProductRows, {
         datasetLabel: "Minutes Viewed",
         maxBarThickness: 28,
       }),
-    [slideActivityProductRows]
+    [tdSlideActivityProductRows]
+  );
+  const cnsSlideActivityProductChart = useMemo(
+    () =>
+      buildSingleBarData(cnsSlideActivityProductRows, {
+        datasetLabel: "Minutes Viewed",
+        maxBarThickness: 28,
+      }),
+    [cnsSlideActivityProductRows]
   );
   const slideActivityAttachmentChart = useMemo(
     () => buildSlideTrendData(slideActivityAttachmentRows, { datasetLabel: "Minutes Viewed" }),
     [slideActivityAttachmentRows]
   );
   const isAttachmentDrilldown = slideActivityAttachment !== "All Attachments";
-  const slideActivitySummaryHeight = useMemo(
-    () => `${Math.max(260, Math.min(560, slideActivityProductRows.length * 38))}px`,
-    [slideActivityProductRows.length]
+  const tdSlideActivitySummaryHeight = useMemo(
+    () =>
+      `${Math.max(
+        SLIDE_ACTIVITY_SUMMARY_MIN_HEIGHT_PX,
+        Math.min(
+          SLIDE_ACTIVITY_SUMMARY_MAX_HEIGHT_PX,
+          tdSlideActivityProductRows.length * SLIDE_ACTIVITY_SUMMARY_HEIGHT_PER_ROW_PX
+        )
+      )}px`,
+    [tdSlideActivityProductRows.length]
+  );
+  const cnsSlideActivitySummaryHeight = useMemo(
+    () =>
+      `${Math.max(
+        SLIDE_ACTIVITY_SUMMARY_MIN_HEIGHT_PX,
+        Math.min(
+          SLIDE_ACTIVITY_SUMMARY_MAX_HEIGHT_PX,
+          cnsSlideActivityProductRows.length * SLIDE_ACTIVITY_SUMMARY_HEIGHT_PER_ROW_PX
+        )
+      )}px`,
+    [cnsSlideActivityProductRows.length]
   );
 
   const isAllYears = filters.year === "All";
@@ -1528,111 +1640,165 @@ export default function ReportsInsightsSection({
     isLoading || specialtyCharts.length > 1 ? "grid gap-4 sm:gap-6 xl:grid-cols-2" : "grid gap-4 sm:gap-6";
   const hasSlideActivityBrandData = slideActivityBrandRows.length > 0;
   const hasSlideActivityProductData = slideActivityProductRows.length > 0;
+  const hasTdSlideActivityProductData = tdSlideActivityProductRows.length > 0;
+  const hasCnsSlideActivityProductData = cnsSlideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
-  const unifiedExportRows = useMemo(() => {
-    if (Array.isArray(reportData?.unifiedExportRows) && reportData.unifiedExportRows.length > 0) {
-      return reportData.unifiedExportRows;
+  const reportSlideActivityExportRows = reportData?.slideActivityExportRows;
+  const reportMaterialOpenExportRows = reportData?.materialOpenExportRows;
+  const reportMaterialOpenCountExportRows = reportData?.materialOpenCountExportRows;
+  const legacyUnifiedExportRows = reportData?.unifiedExportRows;
+  const slideActivityExportRows = useMemo(() => {
+    if (Array.isArray(reportSlideActivityExportRows) && reportSlideActivityExportRows.length > 0) {
+      return reportSlideActivityExportRows;
     }
 
-    // Fallback for environments that still serve older API payloads without unifiedExportRows.
-    const materialWindows = new Map();
-    const materialUseKeysByMaterial = new Map();
-    const grouped = new Map();
-    (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).forEach((row) => {
-      const year = String(row?.year || filters.year || "").trim() || "All";
-      const month = String(row?.month || filters.month || "").trim() || "All";
-      const date = String(row?.date || "").trim() || `${year}-${month}`;
-      const team = String(row?.team || "").trim() || "Unassigned Team";
-      const psr = String(row?.psr || "").trim() || "Unknown Representative";
-      const brand = String(row?.brand || "").trim() || "Unknown Brand";
-      const productName = String(row?.product || "").trim();
-      if (!productName) return;
+    if (Array.isArray(legacyUnifiedExportRows) && legacyUnifiedExportRows.length > 0) {
+      return legacyUnifiedExportRows.map((row) => ({
+        date: row?.date || "",
+        year: row?.year || "",
+        month: row?.month || "",
+        team: row?.team || "",
+        psr: row?.psr || "",
+        brand: row?.brand || "",
+        productName: row?.productName || row?.product || "",
+        material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+        slide: row?.slide || "",
+        secondsViewed: Number(row?.secondsViewed || 0),
+        secondsIdle: 0,
+        timeSlideOpenedAt: row?.timeOpenedAt || row?.startedAt || "",
+        timeSlideClosedAt: row?.timeClosedAt || row?.endedAt || "",
+      }));
+    }
 
-      const material = toMaterialName({
+    // Fallback for environments that still serve older API payloads without explicit export rows.
+    return (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).map((row) => ({
+      date: row?.date || "",
+      year: row?.year || "",
+      month: row?.month || "",
+      team: row?.team || "",
+      psr: row?.psr || "",
+      brand: row?.brand || "",
+      productName: row?.product || "",
+      material: toMaterialName({
         attachment: row?.attachment,
         slide: row?.exportName || row?.label || row?.slide || "",
-        brand,
+        brand: row?.brand,
+      }),
+      slide: row?.exportName || row?.label || row?.slide || "",
+      secondsViewed: Math.round(Number(row?.elapsedSeconds || Number(row?.totalMinutes || 0) * 60 || 0)),
+      secondsIdle: 0,
+      timeSlideOpenedAt: row?.timeOpenedAt || "",
+      timeSlideClosedAt: row?.timeClosedAt || "",
+    }));
+  }, [reportSlideActivityExportRows, legacyUnifiedExportRows, slideRetentionRows]);
+  const materialOpenExportRows = useMemo(() => {
+    if (Array.isArray(reportMaterialOpenExportRows) && reportMaterialOpenExportRows.length > 0) {
+      return reportMaterialOpenExportRows;
+    }
+
+    if (!Array.isArray(legacyUnifiedExportRows) || legacyUnifiedExportRows.length === 0) {
+      return [];
+    }
+
+    const grouped = new Map();
+    legacyUnifiedExportRows.forEach((row) => {
+      const key = [
+        row?.date || "",
+        row?.year || "",
+        row?.month || "",
+        row?.team || "",
+        row?.psr || "",
+        row?.brand || "",
+        row?.productName || row?.product || "",
+        row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+        row?.timeOpenedAt || row?.startedAt || "",
+        row?.timeClosedAt || row?.endedAt || "",
+      ].join("||");
+
+      if (grouped.has(key)) return;
+      grouped.set(key, {
+        date: row?.date || "",
+        year: row?.year || "",
+        month: row?.month || "",
+        team: row?.team || "",
+        psr: row?.psr || "",
+        brand: row?.brand || "",
+        productName: row?.productName || row?.product || "",
+        material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+        timeOpenedAt: row?.timeOpenedAt || row?.startedAt || "",
+        timeClosedAt: row?.timeClosedAt || row?.endedAt || "",
       });
-      const slide = String(row?.exportName || row?.label || row?.slide || "").trim() || "Unknown Slide";
-      const materialUseKey =
-        String(row?.materialUseKey || "").trim() ||
-        [
-          date,
-          String(row?.userId || row?.psr || psr || "").trim(),
-          String(row?.sessionId || row?.caseId || row?.deckId || material).trim(),
-          productName,
-          material,
-        ]
-          .filter(Boolean)
-          .join("||");
-      const secondsViewed = Number(row?.totalMinutes || 0) * 60;
-      const materialWindowKey = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}`;
-      const key = `${date}||${year}||${month}||${team}||${psr}||${brand}||${productName}||${material}||${slide}`;
+    });
 
-      const currentWindow = materialWindows.get(materialWindowKey) || {
-        timeOpenedAt: "",
-        timeClosedAt: "",
+    return Array.from(grouped.values()).sort(
+      (left, right) =>
+        String(left.date || "").localeCompare(String(right.date || "")) ||
+        String(left.timeOpenedAt || "").localeCompare(String(right.timeOpenedAt || "")) ||
+        String(left.timeClosedAt || "").localeCompare(String(right.timeClosedAt || "")) ||
+        String(left.month || "").localeCompare(String(right.month || "")) ||
+        String(left.team || "").localeCompare(String(right.team || "")) ||
+        String(left.psr || "").localeCompare(String(right.psr || "")) ||
+        String(left.brand || "").localeCompare(String(right.brand || "")) ||
+        String(left.material || "").localeCompare(String(right.material || ""))
+    );
+  }, [reportMaterialOpenExportRows, legacyUnifiedExportRows]);
+  const materialOpenCountExportRows = useMemo(() => {
+    if (Array.isArray(reportMaterialOpenCountExportRows) && reportMaterialOpenCountExportRows.length > 0) {
+      return reportMaterialOpenCountExportRows;
+    }
+
+    if (!Array.isArray(legacyUnifiedExportRows) || legacyUnifiedExportRows.length === 0) {
+      return [];
+    }
+
+    const grouped = new Map();
+    legacyUnifiedExportRows.forEach((row) => {
+      const normalizedRow = {
+        date: row?.date || "",
+        year: row?.year || "",
+        month: row?.month || "",
+        team: row?.team || "",
+        psr: row?.psr || "",
+        brand: row?.brand || "",
+        productName: row?.productName || row?.product || "",
+        material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
       };
-      if (row?.timeOpenedAt) {
-        currentWindow.timeOpenedAt =
-          currentWindow.timeOpenedAt && currentWindow.timeOpenedAt < row.timeOpenedAt
-            ? currentWindow.timeOpenedAt
-            : row.timeOpenedAt;
-      }
-      if (row?.timeClosedAt) {
-        currentWindow.timeClosedAt =
-          currentWindow.timeClosedAt && currentWindow.timeClosedAt > row.timeClosedAt
-            ? currentWindow.timeClosedAt
-            : row.timeClosedAt;
-      }
-      materialWindows.set(materialWindowKey, currentWindow);
-
-      const materialUseKeys = materialUseKeysByMaterial.get(materialWindowKey) || new Set();
-      materialUseKeys.add(materialUseKey);
-      materialUseKeysByMaterial.set(materialWindowKey, materialUseKeys);
-
+      const key = [
+        normalizedRow.date,
+        normalizedRow.year,
+        normalizedRow.month,
+        normalizedRow.team,
+        normalizedRow.psr,
+        normalizedRow.brand,
+        normalizedRow.productName,
+        normalizedRow.material,
+      ].join("||");
       const current = grouped.get(key) || {
-        date,
-        year,
-        month,
-        team,
-        psr,
-        brand,
-        productName,
-        material,
-        slide,
-        materialWindowKey,
-        secondsViewed: 0,
+        ...normalizedRow,
+        openCountPerDay: 0,
       };
-      current.secondsViewed += secondsViewed;
+
+      current.openCountPerDay += 1;
       grouped.set(key, current);
     });
 
-    return Array.from(grouped.values()).map(({ materialWindowKey, ...row }) => {
-      const window = materialWindows.get(materialWindowKey) || {};
-      const openedAt = window?.timeOpenedAt ? new Date(window.timeOpenedAt) : null;
-      const closedAt = window?.timeClosedAt ? new Date(window.timeClosedAt) : null;
-      const elapsedTimeSeconds =
-        openedAt && closedAt && !Number.isNaN(openedAt.getTime()) && !Number.isNaN(closedAt.getTime())
-          ? Math.max(0, Math.round((closedAt.getTime() - openedAt.getTime()) / 1000))
-          : 0;
-
-      return {
-        ...row,
-        detailingCount: materialUseKeysByMaterial.get(materialWindowKey)?.size || 0,
-        secondsViewed: Math.round(row.secondsViewed),
-        timeOpenedAt: window?.timeOpenedAt || "",
-        timeClosedAt: window?.timeClosedAt || "",
-        elapsedTimeSeconds,
-      };
-    });
-  }, [reportData?.unifiedExportRows, slideRetentionRows, filters.year, filters.month]);
-  const unifiedExportSections = useMemo(
+    return Array.from(grouped.values()).sort(
+      (left, right) =>
+        String(left.date || "").localeCompare(String(right.date || "")) ||
+        String(left.month || "").localeCompare(String(right.month || "")) ||
+        String(left.team || "").localeCompare(String(right.team || "")) ||
+        String(left.psr || "").localeCompare(String(right.psr || "")) ||
+        String(left.brand || "").localeCompare(String(right.brand || "")) ||
+        String(left.productName || "").localeCompare(String(right.productName || "")) ||
+        String(left.material || "").localeCompare(String(right.material || ""))
+    );
+  }, [reportMaterialOpenCountExportRows, legacyUnifiedExportRows]);
+  const exportSections = useMemo(
     () => [
       {
-        title: "Dashboard Report Export",
-        columns: UNIFIED_EXPORT_COLUMNS,
-        rows: unifiedExportRows.map((row) => ({
+        title: "Slide Activities",
+        columns: SLIDE_ACTIVITY_EXPORT_COLUMNS,
+        rows: slideActivityExportRows.map((row) => ({
           date: toHumanReadableDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
@@ -1642,19 +1808,49 @@ export default function ReportsInsightsSection({
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
           secondsViewed: Number(row?.secondsViewed || 0),
-          timeOpened: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
-          timeClosed: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
+          secondsIdle: Number(row?.secondsIdle || 0),
+          timeSlideOpened: toHumanReadableTime(row?.timeSlideOpenedAt || row?.startedAt),
+          timeSlideClosed: toHumanReadableTime(row?.timeSlideClosedAt || row?.endedAt),
+        })),
+      },
+      {
+        title: "Materials Open",
+        columns: MATERIAL_OPEN_EXPORT_COLUMNS,
+        rows: materialOpenExportRows.map((row) => ({
+          date: toHumanReadableDate(row?.date, row?.month, row?.year),
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          timeOpen: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
+          timeClose: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
+        })),
+      },
+      {
+        title: "Material Opens Count",
+        columns: MATERIAL_OPEN_COUNT_EXPORT_COLUMNS,
+        rows: materialOpenCountExportRows.map((row) => ({
+          date: toHumanReadableDate(row?.date, row?.month, row?.year),
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          openCountPerDay: Number(row?.openCountPerDay || 0),
         })),
       },
     ],
-    [unifiedExportRows]
+    [materialOpenCountExportRows, materialOpenExportRows, slideActivityExportRows]
   );
-  const unifiedExportCsvSections = useMemo(
+  const exportCsvSections = useMemo(
     () => [
       {
-        title: "Dashboard Report Export",
-        columns: UNIFIED_EXPORT_COLUMNS,
-        rows: unifiedExportRows.map((row) => ({
+        title: "Slide Activities",
+        columns: SLIDE_ACTIVITY_EXPORT_COLUMNS,
+        rows: slideActivityExportRows.map((row) => ({
           date: toCsvDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
@@ -1664,15 +1860,50 @@ export default function ReportsInsightsSection({
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
           slide: row?.slide || "",
           secondsViewed: Number(row?.secondsViewed || 0),
-          timeOpened: toCsvTime(row?.timeOpenedAt || row?.startedAt),
-          timeClosed: toCsvTime(row?.timeClosedAt || row?.endedAt),
+          secondsIdle: Number(row?.secondsIdle || 0),
+          timeSlideOpened: toCsvTime(row?.timeSlideOpenedAt || row?.startedAt),
+          timeSlideClosed: toCsvTime(row?.timeSlideClosedAt || row?.endedAt),
+        })),
+      },
+      {
+        title: "Materials Open",
+        columns: MATERIAL_OPEN_EXPORT_COLUMNS,
+        rows: materialOpenExportRows.map((row) => ({
+          date: toCsvDate(row?.date, row?.month, row?.year),
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          timeOpen: toCsvTime(row?.timeOpenedAt || row?.startedAt),
+          timeClose: toCsvTime(row?.timeClosedAt || row?.endedAt),
+        })),
+      },
+      {
+        title: "Material Opens Count",
+        columns: MATERIAL_OPEN_COUNT_EXPORT_COLUMNS,
+        rows: materialOpenCountExportRows.map((row) => ({
+          date: toCsvDate(row?.date, row?.month, row?.year),
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          openCountPerDay: Number(row?.openCountPerDay || 0),
         })),
       },
     ],
-    [unifiedExportRows]
+    [materialOpenCountExportRows, materialOpenExportRows, slideActivityExportRows]
   );
-  const unifiedExportDisabled = isLoading || Boolean(error) || unifiedExportRows.length === 0;
-  const unifiedExportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
+  const exportDisabled =
+    isLoading ||
+    Boolean(error) ||
+    (slideActivityExportRows.length === 0 &&
+      materialOpenExportRows.length === 0 &&
+      materialOpenCountExportRows.length === 0);
+  const exportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
 
   return (
     <div className="max-w-full space-y-5 sm:space-y-8">
@@ -1705,13 +1936,13 @@ export default function ReportsInsightsSection({
       <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-600 sm:text-sm">
-            Export data columns: Date, Month, Team, Representative, Brand, Product Name, Material, Slide, Seconds viewed, Time opened, Time closed.
+            Export tabs: Slide Activities, Materials Open, and Material Opens Count, with separate open/close timestamps for each slide view and each material session.
           </div>
           <ExportButtons
-            disabled={unifiedExportDisabled}
-            filenameBase={unifiedExportFilenameBase}
-            sections={unifiedExportSections}
-            csvSections={unifiedExportCsvSections}
+            disabled={exportDisabled}
+            filenameBase={exportFilenameBase}
+            sections={exportSections}
+            csvSections={exportCsvSections}
           />
         </div>
       </div>
@@ -1839,7 +2070,7 @@ export default function ReportsInsightsSection({
 
         <SectionDivider label="Team and Representative Rankings" />
 
-        <div className="grid gap-4 sm:gap-6">
+        <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
           <RankingTable
             title="Teams With the Highest Material Open Count by Brand"
             subtitle={rankingScopeLabel}
@@ -1847,16 +2078,13 @@ export default function ReportsInsightsSection({
             columns={teamRankingColumns}
             emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : error || EMPTY_TABLE_MESSAGE}
           />
-
-          <div className="grid gap-3">
-            <RankingTable
-              title="Representatives With the Highest Material Open Count by Brand"
-              subtitle={rankingScopeLabel}
-              rows={visibleRepRankingRows}
-              columns={repRankingColumns}
-              emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : error || EMPTY_TABLE_MESSAGE}
-            />
-          </div>
+          <RankingTable
+            title="Representatives With the Highest Material Open Count by Brand"
+            subtitle={rankingScopeLabel}
+            rows={visibleRepRankingRows}
+            columns={repRankingColumns}
+            emptyMessage={isLoading ? LOADING_PLACEHOLDER_TEXT : error || EMPTY_TABLE_MESSAGE}
+          />
         </div>
       </div>
 
@@ -2081,12 +2309,61 @@ export default function ReportsInsightsSection({
                   />
                 </div>
               ) : (
-                <div style={{ height: slideActivitySummaryHeight }}>
-                  <Bar
-                    key="slide-attachment-summary"
-                    data={slideActivityProductChart}
-                    options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
-                  />
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0f4c5c]">
+                        TD Products
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500 sm:text-sm">
+                        Materials with the highest slide viewing time for TD products.
+                      </div>
+                    </div>
+                    {hasTdSlideActivityProductData ? (
+                      <div style={{ height: tdSlideActivitySummaryHeight }}>
+                        <Bar
+                          key="slide-attachment-summary-td"
+                          data={tdSlideActivityProductChart}
+                          options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
+                        />
+                      </div>
+                    ) : (
+                      <ChartEmpty
+                        message={
+                          slideActivityBrand === "All Brands"
+                            ? "No TD slide activity found."
+                            : `No TD slide activity found for ${slideActivityBrand}.`
+                        }
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0f4c5c]">
+                        CNS Products
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500 sm:text-sm">
+                        Materials with the highest slide viewing time for CNS products.
+                      </div>
+                    </div>
+                    {hasCnsSlideActivityProductData ? (
+                      <div style={{ height: cnsSlideActivitySummaryHeight }}>
+                        <Bar
+                          key="slide-attachment-summary-cns"
+                          data={cnsSlideActivityProductChart}
+                          options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
+                        />
+                      </div>
+                    ) : (
+                      <ChartEmpty
+                        message={
+                          slideActivityBrand === "All Brands"
+                            ? "No CNS slide activity found."
+                            : `No CNS slide activity found for ${slideActivityBrand}.`
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
               )}
             </div>

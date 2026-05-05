@@ -50,6 +50,9 @@ const CHART_COLORS = {
 
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
 const EMPTY_CHART_MESSAGE = "No data available for the selected filters.";
+const STANDARD_BAR_CHART_HEIGHT = "h-[220px] sm:h-[250px]";
+const TALL_BAR_CHART_HEIGHT = "h-[240px] sm:h-[280px]";
+const SLIDE_BAR_CHART_HEIGHT = "h-[260px] sm:h-[300px]";
 
 const EMPTY_REPORT = {
   filters: {
@@ -102,6 +105,17 @@ function toMultilineLabel(value, maxLineLength = 24) {
 
   if (current) lines.push(current);
   return lines.length > 1 ? lines : String(value || "");
+}
+
+function getFilterScopeText(filters) {
+  const selected = filters?.selected || filters || {};
+  const year = String(selected.year || "All").trim() || "All";
+  const month = String(selected.month || "All").trim() || "All";
+
+  if (year === "All" && month === "All") return "all months across all years";
+  if (year === "All") return `${month} across all years`;
+  if (month === "All") return `all months in ${year}`;
+  return `${month} ${year}`;
 }
 
 function buildHorizontalBarData(items, { color, datasetLabel, labelMaxLineLength = 24, useRankLabels = false, useItemBrandColors = false }) {
@@ -184,7 +198,7 @@ function buildHorizontalBarOptions({ xTitle, datasetLabel, valueSuffix = "", raw
 
 function ChartLoading() {
   return (
-    <div className="flex min-h-[320px] w-full items-center justify-center text-sm text-slate-500">
+    <div className="flex min-h-[220px] w-full items-center justify-center text-sm text-slate-500 sm:min-h-[250px]">
       {LOADING_PLACEHOLDER_TEXT}
     </div>
   );
@@ -192,7 +206,7 @@ function ChartLoading() {
 
 function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
   return (
-    <div className="flex min-h-[320px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
+    <div className="flex min-h-[220px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500 sm:min-h-[250px]">
       {message}
     </div>
   );
@@ -282,7 +296,7 @@ function ChartItemLegend({ items, color, valueSuffix = "", variant = "default", 
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
-    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+    <div className="mt-3 grid gap-1.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {items.map((item, index) => {
         const productMaterialContent = variant === "product-material" ? getProductMaterialLegendContent(item) : null;
         const colorConfig = useItemBrandColors ? getChartItemColorConfig(item, index) : { color };
@@ -290,13 +304,13 @@ function ChartItemLegend({ items, color, valueSuffix = "", variant = "default", 
         return (
         <div
           key={`${item.label}-${index}`}
-          className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700"
+          className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-700"
         >
           <span className="shrink-0 text-[11px] font-semibold text-slate-500">#{index + 1}</span>
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(colorConfig.color, 0.92) }} />
           <span className="min-w-0 flex-1">
             {variant === "slide-detail" ? (
-              <span className="flex min-w-0 flex-col leading-snug">
+              <span className="flex min-w-0 flex-col leading-tight">
                 <span className="break-words font-semibold text-slate-800" title={item.materialName || item.label}>
                   {item.materialName || item.label}
                 </span>
@@ -305,7 +319,7 @@ function ChartItemLegend({ items, color, valueSuffix = "", variant = "default", 
                 </span>
               </span>
             ) : variant === "product-material" ? (
-              <span className="flex min-w-0 flex-col leading-snug">
+              <span className="flex min-w-0 flex-col leading-tight">
                 <span
                   className="break-words font-semibold text-slate-800"
                   title={productMaterialContent?.productLabel || item.label}
@@ -317,7 +331,7 @@ function ChartItemLegend({ items, color, valueSuffix = "", variant = "default", 
                 </span>
               </span>
             ) : (
-              <span className="break-words font-medium leading-snug" title={item.label}>
+              <span className="break-words font-medium leading-tight" title={item.label}>
                 {item.label}
               </span>
             )}
@@ -343,7 +357,7 @@ function MetricChartCard({
   valueSuffix = "",
   isLoading,
   className = "",
-  chartHeight = "h-[320px]",
+  chartHeight = STANDARD_BAR_CHART_HEIGHT,
   labelMaxLineLength = 24,
   useRankLabels = false,
   showItemLegend = false,
@@ -400,17 +414,11 @@ export default function ReportsUtilizationSection({
     brand: reportData?.filters?.brandOptions?.length ? reportData.filters.brandOptions : FILTER_OPTIONS.brand,
   };
 
-  const tdShareOfVoice = reportData?.nationalUtilization?.tdShareOfVoice || [];
-  const cnsShareOfVoice = reportData?.nationalUtilization?.cnsShareOfVoice || [];
-  const cnsRexultiShareOfVoice = cnsShareOfVoice.filter((item) => item?.productGroupLabel === "Rexulti");
-  const cnsAbilifyMaintenaShareOfVoice = cnsShareOfVoice.filter(
-    (item) => item?.productGroupLabel === "Abilify Maintena"
-  );
   const perTeam = reportData?.teamUtilization?.perTeam || [];
   const perPsr = reportData?.teamUtilization?.perPsr || [];
-  const perProduct = reportData?.teamUtilization?.perProduct || [];
   const perSlide = reportData?.teamUtilization?.perSlide || [];
   const averageTimePerSlide = reportData?.teamUtilization?.averageTimePerSlide || [];
+  const filterScopeText = getFilterScopeText(reportData?.filters);
 
   return (
     <div className="space-y-6 pb-6">
@@ -456,93 +464,32 @@ export default function ReportsUtilizationSection({
       ) : null}
 
       <div className="space-y-4">
-        <div className="grid gap-4 xl:grid-cols-2">
-          <MetricChartCard
-            title="TD Product Share of Material Open Count"
-            subtitle="Shows the percent share of Material Open Count for Meptin, Mucosta, Pletaal, Aminoleban Oral, Samsca, and Jinarc."
-            items={tdShareOfVoice}
-            color={CHART_COLORS.td}
-            datasetLabel="Percent Share"
-            xTitle="Percent Share"
-            valueSuffix="%"
-            isLoading={isLoading}
-            className="xl:col-span-2"
-            useRankLabels
-            showItemLegend
-            useItemBrandColors
-          />
-          <MetricChartCard
-            title="CNS Product Share by Interactions for Rexulti"
-            subtitle="Shows the percent share of recorded interactions for each Rexulti material."
-            items={cnsRexultiShareOfVoice}
-            color={CHART_COLORS.cns}
-            datasetLabel="Percent Share"
-            xTitle="Percent Share"
-            valueSuffix="%"
-            isLoading={isLoading}
-            useRankLabels
-            showItemLegend
-            legendVariant="product-material"
-            useItemBrandColors
-          />
-          <MetricChartCard
-            title="CNS Product Share by Interactions for Abilify Maintena"
-            subtitle="Shows the percent share of recorded interactions for each Abilify Maintena material."
-            items={cnsAbilifyMaintenaShareOfVoice}
-            color={CHART_COLORS.cns}
-            datasetLabel="Percent Share"
-            xTitle="Percent Share"
-            valueSuffix="%"
-            isLoading={isLoading}
-            useRankLabels
-            showItemLegend
-            legendVariant="product-material"
-            useItemBrandColors
-          />
-        </div>
-      </div>
-
-      <div className="space-y-4">
         <div className="grid gap-4">
           <MetricChartCard
             title="Teams With the Highest Material Open Count"
-            subtitle="Shows the top 20 teams based on Material Open Count for the selected month."
+            subtitle={`Shows the top 20 teams based on Material Open Count for ${filterScopeText}.`}
             items={perTeam}
             color={CHART_COLORS.team}
             datasetLabel="Material Open Count"
             xTitle="Material Open Count"
             isLoading={isLoading}
             className="w-full"
-            chartHeight="h-[420px]"
+            chartHeight={TALL_BAR_CHART_HEIGHT}
             useRankLabels
             showItemLegend
           />
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
-            subtitle="Shows the top 20 representatives based on Material Open Count for the selected month."
+            subtitle={`Shows the top 20 representatives based on Material Open Count for ${filterScopeText}.`}
             items={perPsr}
             color={CHART_COLORS.psr}
             datasetLabel="Material Open Count"
             xTitle="Material Open Count"
             isLoading={isLoading}
             className="w-full"
-            chartHeight="h-[420px]"
+            chartHeight={TALL_BAR_CHART_HEIGHT}
             useRankLabels
             showItemLegend
-          />
-          <MetricChartCard
-            title="Products With the Highest Material Open Count"
-            subtitle="Shows the top 20 products based on Material Open Count for the selected month."
-            items={perProduct}
-            color={CHART_COLORS.product}
-            datasetLabel="Material Open Count"
-            xTitle="Material Open Count"
-            isLoading={isLoading}
-            className="w-full"
-            chartHeight="h-[420px]"
-            useRankLabels
-            showItemLegend
-            useItemBrandColors
           />
         </div>
 
@@ -558,7 +505,7 @@ export default function ReportsUtilizationSection({
             xTitle="Minutes Viewed"
             isLoading={isLoading}
             className="w-full"
-            chartHeight="h-[420px] xl:h-[500px]"
+            chartHeight={SLIDE_BAR_CHART_HEIGHT}
             useRankLabels
             showItemLegend
             legendVariant="slide-detail"
@@ -573,7 +520,7 @@ export default function ReportsUtilizationSection({
             xTitle="Average Minutes Viewed"
             isLoading={isLoading}
             className="w-full"
-            chartHeight="h-[420px] xl:h-[500px]"
+            chartHeight={SLIDE_BAR_CHART_HEIGHT}
             useRankLabels
             showItemLegend
             legendVariant="slide-detail"

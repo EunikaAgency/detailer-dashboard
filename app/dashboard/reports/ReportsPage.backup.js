@@ -32,13 +32,13 @@ const FILTER_OPTIONS = {
 };
 
 const SERIES_COLORS = [
+  "16, 94, 118",
   "2, 132, 199",
   "217, 119, 6",
 ];
 
 const LOADING_PLACEHOLDER_TEXT = "Loading...";
 const EMPTY_CHART_MESSAGE = "No data available for the selected filters.";
-const SUMMARY_BAR_CHART_HEIGHT = "h-[220px] sm:h-[250px]";
 
 const EMPTY_REPORT = {
   filters: {
@@ -222,7 +222,7 @@ function buildHorizontalBarOptions() {
 
 function ChartLoading() {
   return (
-    <div className="flex min-h-[220px] w-full items-center justify-center text-sm text-slate-500 sm:min-h-[250px]">
+    <div className="flex min-h-[320px] w-full items-center justify-center text-sm text-slate-500">
       {LOADING_PLACEHOLDER_TEXT}
     </div>
   );
@@ -230,7 +230,7 @@ function ChartLoading() {
 
 function ChartEmpty({ message = EMPTY_CHART_MESSAGE }) {
   return (
-    <div className="flex min-h-[220px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500 sm:min-h-[250px]">
+    <div className="flex min-h-[320px] w-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
       {message}
     </div>
   );
@@ -262,18 +262,18 @@ function ChartItemLegend({ items, color, useItemBrandColors = false }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
-    <div className="mt-3 grid gap-1.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="mt-4 grid gap-2 sm:grid-cols-2">
       {items.map((item, index) => {
         const colorConfig = useItemBrandColors ? getChartItemColorConfig(item, index) : { color };
 
         return (
         <div
           key={`${item.label}-${index}`}
-          className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-700"
+          className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-700"
         >
           <span className="shrink-0 text-[11px] font-semibold text-slate-500">#{index + 1}</span>
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: rgba(colorConfig.color, 0.92) }} />
-          <span className="min-w-0 flex-1 break-words font-medium leading-tight" title={item.label}>
+          <span className="min-w-0 flex-1 break-words font-medium leading-snug" title={item.label}>
             {item.label}
           </span>
           <span className="shrink-0 font-semibold text-slate-900">{Number(item.value || 0).toLocaleString()}</span>
@@ -284,15 +284,7 @@ function ChartItemLegend({ items, color, useItemBrandColors = false }) {
   );
 }
 
-function MetricChartCard({
-  title,
-  subtitle,
-  items,
-  color,
-  isLoading,
-  useItemBrandColors = false,
-  chartHeight = SUMMARY_BAR_CHART_HEIGHT,
-}) {
+function MetricChartCard({ title, subtitle, items, color, isLoading, useItemBrandColors = false }) {
   const hasData = Array.isArray(items) && items.length > 0;
 
   return (
@@ -303,7 +295,7 @@ function MetricChartCard({
         <ChartEmpty />
       ) : (
         <>
-          <div className={chartHeight}>
+          <div className="h-[420px]">
             <Bar data={buildHorizontalBarData(items, color, { useItemBrandColors })} options={buildHorizontalBarOptions()} />
           </div>
           <ChartItemLegend items={items} color={color} useItemBrandColors={useItemBrandColors} />
@@ -332,6 +324,7 @@ export default function ReportsPageDashboard() {
   }, [reportResult.data, reportResult.error, reportResult.isLoading]);
 
   const reportData = reportResult.data || EMPTY_REPORT;
+  const monthlyProduct = reportData.legacyOverview?.monthly?.product || [];
   const monthlyPerson = reportData.legacyOverview?.monthly?.person || [];
   const monthlyTeam = reportData.legacyOverview?.monthly?.team || [];
   const filterScopeText = getFilterScopeText(reportData?.filters);
@@ -362,19 +355,27 @@ export default function ReportsPageDashboard() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-4">
+          <MetricChartCard
+            title="Products With the Highest Material Open Count"
+            subtitle={`Shows the Material Open Count for all products in ${filterScopeText}.`}
+            items={monthlyProduct}
+            color={SERIES_COLORS[0]}
+            isLoading={reportResult.isLoading}
+            useItemBrandColors
+          />
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
             subtitle={`Shows the top 20 representatives based on Material Open Count for ${filterScopeText}.`}
             items={monthlyPerson}
-            color={SERIES_COLORS[0]}
+            color={SERIES_COLORS[1]}
             isLoading={reportResult.isLoading}
           />
           <MetricChartCard
             title="Teams With the Highest Material Open Count"
             subtitle={`Shows the top 20 teams based on Material Open Count for ${filterScopeText}.`}
             items={monthlyTeam}
-            color={SERIES_COLORS[1]}
+            color={SERIES_COLORS[2]}
             isLoading={reportResult.isLoading}
           />
         </div>
