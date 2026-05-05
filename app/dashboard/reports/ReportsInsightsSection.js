@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import * as XLSX from "xlsx";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
+import useCsvExportAccess from "../useCsvExportAccess";
 import { getBrandColorConfig, getChartItemColorConfig } from "./reportColors";
 import ReportFilterSelect from "./ReportFilterSelect";
 import {
@@ -875,14 +876,10 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
   );
 }
 
-function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
+function ExportButtons({ disabled, filenameBase, sections, csvSections, showCsv = false }) {
   const handleExportCsv = () => {
     const normalizedSections = Array.isArray(csvSections || sections) ? csvSections || sections : [];
-
-    if (normalizedSections.length <= 1) {
-      downloadFile(`${filenameBase}.csv`, sectionsToCsv(normalizedSections), "text/csv;charset=utf-8;");
-      return;
-    }
+    if (!normalizedSections.length) return;
 
     normalizedSections.forEach((section, index) => {
       const sectionSlug = toFileSlug(section?.title || `section-${index + 1}`);
@@ -904,14 +901,16 @@ function ExportButtons({ disabled, filenameBase, sections, csvSections }) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <button
-        type="button"
-        onClick={handleExportCsv}
-        disabled={disabled}
-        className="cursor-pointer rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:cursor-pointer hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Export CSV
-      </button>
+      {showCsv ? (
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          disabled={disabled}
+          className="cursor-pointer rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:cursor-pointer hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Export CSV
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={handleExportExcel}
@@ -1264,6 +1263,7 @@ export default function ReportsInsightsSection({
   const [rawSlideActivityBrand, setSlideActivityBrand] = useState("All Brands");
   const [rawSlideActivityProduct, setSlideActivityProduct] = useState("All Products");
   const [rawSlideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
+  const canExportCsv = useCsvExportAccess();
   const setSelectedFilters = typeof onFiltersChange === "function" ? onFiltersChange : null;
 
   useEffect(() => {
@@ -1943,6 +1943,7 @@ export default function ReportsInsightsSection({
             filenameBase={exportFilenameBase}
             sections={exportSections}
             csvSections={exportCsvSections}
+            showCsv={canExportCsv}
           />
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import useCsvExportAccess from "../useCsvExportAccess";
 import {
   BarElement,
   CategoryScale,
@@ -232,7 +233,7 @@ const toFileSlug = (value) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "all-users";
 
-const ExportButtons = ({ filenameBase, rows }) => {
+const ExportButtons = ({ filenameBase, rows, showCsv = false }) => {
   const disabled = !Array.isArray(rows) || rows.length === 0;
 
   const handleExportCsv = () => {
@@ -247,14 +248,16 @@ const ExportButtons = ({ filenameBase, rows }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={handleExportCsv}
-        disabled={disabled}
-        className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Export CSV
-      </button>
+      {showCsv ? (
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          disabled={disabled}
+          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Export CSV
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={handleExportExcel}
@@ -344,6 +347,7 @@ const groupEventsToLogs = (events) => {
 };
 
 export default function LoginEventsPage() {
+  const canExportCsv = useCsvExportAccess();
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -1048,6 +1052,7 @@ export default function LoginEventsPage() {
             <ExportButtons
               filenameBase={`activity-logs-graph-${toFileSlug(selectedUserLabel)}`}
               rows={graphExportRows}
+              showCsv={canExportCsv}
             />
           </div>
         </div>
