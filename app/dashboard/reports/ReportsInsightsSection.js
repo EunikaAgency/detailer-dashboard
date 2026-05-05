@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import * as XLSX from "xlsx";
 import { REPORT_DIVISION_DASHBOARD_FILTER_OPTIONS } from "@/lib/reportDivision";
 import useCsvExportAccess from "../useCsvExportAccess";
 import { getBrandColorConfig, getChartItemColorConfig } from "./reportColors";
 import ReportFilterSelect from "./ReportFilterSelect";
-import { useReportSection } from "./reportClient";
+import { buildReportSearchParams } from "./reportClient";
 import {
   ArcElement,
   BarElement,
@@ -654,7 +653,8 @@ function toExcelCellValue(value) {
   return normalizeExportCell(value);
 }
 
-function sectionsToXlsxArray(sections) {
+async function sectionsToXlsxArray(sections) {
+  const XLSX = await import("xlsx");
   const workbook = XLSX.utils.book_new();
   const usedSheetNames = new Set();
 
@@ -923,48 +923,28 @@ function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
   );
 }
 
-function ExportButtons({ disabled, filenameBase, sections, csvSections, showCsv = false }) {
-  const handleExportCsv = () => {
-    const normalizedSections = Array.isArray(csvSections || sections) ? csvSections || sections : [];
-    if (!normalizedSections.length) return;
-
-    normalizedSections.forEach((section, index) => {
-      const sectionSlug = toFileSlug(section?.title || `section-${index + 1}`);
-      downloadFile(
-        `${filenameBase}-${sectionSlug}.csv`,
-        sectionsToCsv([section]),
-        "text/csv;charset=utf-8;"
-      );
-    });
-  };
-
-  const handleExportExcel = () => {
-    downloadFile(
-      `${filenameBase}.xlsx`,
-      sectionsToXlsxArray(sections),
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-  };
+function ExportButtons({ disabled, isLoading = false, onExportCsv, onExportExcel, showCsv = false }) {
+  const isDisabled = disabled || isLoading;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       {showCsv ? (
         <button
           type="button"
-          onClick={handleExportCsv}
-          disabled={disabled}
+          onClick={onExportCsv}
+          disabled={isDisabled}
           className="cursor-pointer rounded-lg border border-sky-700 bg-white px-4 py-2.5 text-sm font-semibold text-sky-800 shadow-sm transition hover:cursor-pointer hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Export CSV
+          {isLoading ? "Preparing..." : "Export CSV"}
         </button>
       ) : null}
       <button
         type="button"
-        onClick={handleExportExcel}
-        disabled={disabled}
+        onClick={onExportExcel}
+        disabled={isDisabled}
         className="cursor-pointer rounded-lg border border-sky-700 bg-sky-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:cursor-pointer hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Export Excel
+        {isLoading ? "Preparing..." : "Export Excel"}
       </button>
     </div>
   );
@@ -1284,14 +1264,26 @@ export default function ReportsInsightsSection({
   const [rawSlideActivityBrand, setSlideActivityBrand] = useState("All Brands");
   const [rawSlideActivityProduct, setSlideActivityProduct] = useState("All Products");
   const [rawSlideActivityAttachment, setSlideActivityAttachment] = useState("All Attachments");
+  const [exportRequest, setExportRequest] = useState({
+    data: null,
+    error: "",
+    isLoading: false,
+    requestKey: "",
+  });
   const canExportCsv = useCsvExportAccess();
   const setSelectedFilters = typeof onFiltersChange === "function" ? onFiltersChange : null;
-  const exportResult = useReportSection({
-    endpoint: "/api/reports/dashboard-export",
-    filters,
-    section: "",
-    fallbackData: EMPTY_REPORT,
-  });
+  const exportRequestKey = useMemo(
+    () =>
+      JSON.stringify({
+        year: filters?.year || "",
+        month: filters?.month || "",
+        division: filters?.division || "",
+        team: filters?.team || "",
+        psr: filters?.psr || "",
+        brand: filters?.brand || "",
+      }),
+    [filters?.brand, filters?.division, filters?.month, filters?.psr, filters?.team, filters?.year]
+  );
 
   useEffect(() => {
     if (isLoading || !isFilterChangePending) return undefined;
@@ -1715,18 +1707,25 @@ export default function ReportsInsightsSection({
   const hasTdSlideActivityProductData = tdSlideActivityProductRows.length > 0;
   const hasCnsSlideActivityProductData = cnsSlideActivityProductRows.length > 0;
   const hasSlideActivityAttachmentData = isAttachmentDrilldown ? slideActivityAttachmentRows.length > 0 : hasSlideActivityProductData;
-  const exportData = exportResult.data || EMPTY_REPORT;
-  const reportSlideActivityExportRows = exportData?.slideActivityExportRows;
-  const reportMaterialOpenExportRows = exportData?.materialOpenExportRows;
-  const reportMaterialOpenCountExportRows = exportData?.materialOpenCountExportRows;
   const legacyUnifiedExportRows = reportData?.unifiedExportRows;
-  const slideActivityExportRows = useMemo(() => {
-    if (Array.isArray(reportSlideActivityExportRows) && reportSlideActivityExportRows.length > 0) {
-      return reportSlideActivityExportRows;
+  const buildExportRows = useCallback((exportData) => {
+    if (!exportData) {
+      return {
+        slideActivityExportRows: [],
+        materialOpenExportRows: [],
+        materialOpenCountExportRows: [],
+      };
     }
 
-    if (Array.isArray(legacyUnifiedExportRows) && legacyUnifiedExportRows.length > 0) {
-      return legacyUnifiedExportRows.map((row) => ({
+    const reportSlideActivityExportRows = exportData?.slideActivityExportRows;
+    const reportMaterialOpenExportRows = exportData?.materialOpenExportRows;
+    const reportMaterialOpenCountExportRows = exportData?.materialOpenCountExportRows;
+
+    let slideActivityRows = [];
+    if (Array.isArray(reportSlideActivityExportRows) && reportSlideActivityExportRows.length > 0) {
+      slideActivityRows = reportSlideActivityExportRows;
+    } else if (Array.isArray(legacyUnifiedExportRows) && legacyUnifiedExportRows.length > 0) {
+      slideActivityRows = legacyUnifiedExportRows.map((row) => ({
         date: row?.date || "",
         year: row?.year || "",
         month: row?.month || "",
@@ -1741,138 +1740,144 @@ export default function ReportsInsightsSection({
         timeSlideOpenedAt: row?.timeOpenedAt || row?.startedAt || "",
         timeSlideClosedAt: row?.timeClosedAt || row?.endedAt || "",
       }));
-    }
-
-    // Fallback for environments that still serve older API payloads without explicit export rows.
-    return (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).map((row) => ({
-      date: row?.date || "",
-      year: row?.year || "",
-      month: row?.month || "",
-      team: row?.team || "",
-      psr: row?.psr || "",
-      brand: row?.brand || "",
-      productName: row?.product || "",
-      material: toMaterialName({
-        attachment: row?.attachment,
+    } else {
+      // Fallback for environments that still serve older API payloads without explicit export rows.
+      slideActivityRows = (Array.isArray(slideRetentionRows) ? slideRetentionRows : []).map((row) => ({
+        date: row?.date || "",
+        year: row?.year || "",
+        month: row?.month || "",
+        team: row?.team || "",
+        psr: row?.psr || "",
+        brand: row?.brand || "",
+        productName: row?.product || "",
+        material: toMaterialName({
+          attachment: row?.attachment,
+          slide: row?.exportName || row?.label || row?.slide || "",
+          brand: row?.brand,
+        }),
         slide: row?.exportName || row?.label || row?.slide || "",
-        brand: row?.brand,
-      }),
-      slide: row?.exportName || row?.label || row?.slide || "",
-      secondsViewed: Math.round(Number(row?.elapsedSeconds || Number(row?.totalMinutes || 0) * 60 || 0)),
-      secondsIdle: 0,
-      timeSlideOpenedAt: row?.timeOpenedAt || "",
-      timeSlideClosedAt: row?.timeClosedAt || "",
-    }));
-  }, [reportSlideActivityExportRows, legacyUnifiedExportRows, slideRetentionRows]);
-  const materialOpenExportRows = useMemo(() => {
+        secondsViewed: Math.round(Number(row?.elapsedSeconds || Number(row?.totalMinutes || 0) * 60 || 0)),
+        secondsIdle: 0,
+        timeSlideOpenedAt: row?.timeOpenedAt || "",
+        timeSlideClosedAt: row?.timeClosedAt || "",
+      }));
+    }
+
+    let materialOpenRows = [];
     if (Array.isArray(reportMaterialOpenExportRows) && reportMaterialOpenExportRows.length > 0) {
-      return reportMaterialOpenExportRows;
-    }
+      materialOpenRows = reportMaterialOpenExportRows;
+    } else if (Array.isArray(legacyUnifiedExportRows) && legacyUnifiedExportRows.length > 0) {
+      const grouped = new Map();
+      legacyUnifiedExportRows.forEach((row) => {
+        const key = [
+          row?.date || "",
+          row?.year || "",
+          row?.month || "",
+          row?.team || "",
+          row?.psr || "",
+          row?.brand || "",
+          row?.productName || row?.product || "",
+          row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          row?.timeOpenedAt || row?.startedAt || "",
+          row?.timeClosedAt || row?.endedAt || "",
+        ].join("||");
 
-    if (!Array.isArray(legacyUnifiedExportRows) || legacyUnifiedExportRows.length === 0) {
-      return [];
-    }
-
-    const grouped = new Map();
-    legacyUnifiedExportRows.forEach((row) => {
-      const key = [
-        row?.date || "",
-        row?.year || "",
-        row?.month || "",
-        row?.team || "",
-        row?.psr || "",
-        row?.brand || "",
-        row?.productName || row?.product || "",
-        row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-        row?.timeOpenedAt || row?.startedAt || "",
-        row?.timeClosedAt || row?.endedAt || "",
-      ].join("||");
-
-      if (grouped.has(key)) return;
-      grouped.set(key, {
-        date: row?.date || "",
-        year: row?.year || "",
-        month: row?.month || "",
-        team: row?.team || "",
-        psr: row?.psr || "",
-        brand: row?.brand || "",
-        productName: row?.productName || row?.product || "",
-        material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-        timeOpenedAt: row?.timeOpenedAt || row?.startedAt || "",
-        timeClosedAt: row?.timeClosedAt || row?.endedAt || "",
+        if (grouped.has(key)) return;
+        grouped.set(key, {
+          date: row?.date || "",
+          year: row?.year || "",
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+          timeOpenedAt: row?.timeOpenedAt || row?.startedAt || "",
+          timeClosedAt: row?.timeClosedAt || row?.endedAt || "",
+        });
       });
-    });
 
-    return Array.from(grouped.values()).sort(
-      (left, right) =>
-        String(left.date || "").localeCompare(String(right.date || "")) ||
-        String(left.timeOpenedAt || "").localeCompare(String(right.timeOpenedAt || "")) ||
-        String(left.timeClosedAt || "").localeCompare(String(right.timeClosedAt || "")) ||
-        String(left.month || "").localeCompare(String(right.month || "")) ||
-        String(left.team || "").localeCompare(String(right.team || "")) ||
-        String(left.psr || "").localeCompare(String(right.psr || "")) ||
-        String(left.brand || "").localeCompare(String(right.brand || "")) ||
-        String(left.material || "").localeCompare(String(right.material || ""))
-    );
-  }, [reportMaterialOpenExportRows, legacyUnifiedExportRows]);
-  const materialOpenCountExportRows = useMemo(() => {
+      materialOpenRows = Array.from(grouped.values()).sort(
+        (left, right) =>
+          String(left.date || "").localeCompare(String(right.date || "")) ||
+          String(left.timeOpenedAt || "").localeCompare(String(right.timeOpenedAt || "")) ||
+          String(left.timeClosedAt || "").localeCompare(String(right.timeClosedAt || "")) ||
+          String(left.month || "").localeCompare(String(right.month || "")) ||
+          String(left.team || "").localeCompare(String(right.team || "")) ||
+          String(left.psr || "").localeCompare(String(right.psr || "")) ||
+          String(left.brand || "").localeCompare(String(right.brand || "")) ||
+          String(left.material || "").localeCompare(String(right.material || ""))
+      );
+    }
+
+    let materialOpenCountRows = [];
     if (Array.isArray(reportMaterialOpenCountExportRows) && reportMaterialOpenCountExportRows.length > 0) {
-      return reportMaterialOpenCountExportRows;
+      materialOpenCountRows = reportMaterialOpenCountExportRows;
+    } else if (Array.isArray(legacyUnifiedExportRows) && legacyUnifiedExportRows.length > 0) {
+      const grouped = new Map();
+      legacyUnifiedExportRows.forEach((row) => {
+        const normalizedRow = {
+          date: row?.date || "",
+          year: row?.year || "",
+          month: row?.month || "",
+          team: row?.team || "",
+          psr: row?.psr || "",
+          brand: row?.brand || "",
+          productName: row?.productName || row?.product || "",
+          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
+        };
+        const key = [
+          normalizedRow.date,
+          normalizedRow.year,
+          normalizedRow.month,
+          normalizedRow.team,
+          normalizedRow.psr,
+          normalizedRow.brand,
+          normalizedRow.productName,
+          normalizedRow.material,
+        ].join("||");
+        const current = grouped.get(key) || {
+          ...normalizedRow,
+          openCountPerDay: 0,
+        };
+
+        current.openCountPerDay += 1;
+        grouped.set(key, current);
+      });
+
+      materialOpenCountRows = Array.from(grouped.values()).sort(
+        (left, right) =>
+          String(left.date || "").localeCompare(String(right.date || "")) ||
+          String(left.month || "").localeCompare(String(right.month || "")) ||
+          String(left.team || "").localeCompare(String(right.team || "")) ||
+          String(left.psr || "").localeCompare(String(right.psr || "")) ||
+          String(left.brand || "").localeCompare(String(right.brand || "")) ||
+          String(left.productName || "").localeCompare(String(right.productName || "")) ||
+          String(left.material || "").localeCompare(String(right.material || ""))
+      );
     }
 
-    if (!Array.isArray(legacyUnifiedExportRows) || legacyUnifiedExportRows.length === 0) {
-      return [];
-    }
+    return {
+      slideActivityExportRows: slideActivityRows,
+      materialOpenExportRows: materialOpenRows,
+      materialOpenCountExportRows: materialOpenCountRows,
+    };
+  }, [legacyUnifiedExportRows, slideRetentionRows]);
+  const buildExportSections = useCallback((exportData, csv = false) => {
+    const {
+      slideActivityExportRows,
+      materialOpenExportRows,
+      materialOpenCountExportRows,
+    } = buildExportRows(exportData);
+    const formatDate = csv ? toCsvDate : toHumanReadableDate;
+    const formatTime = csv ? toCsvTime : toHumanReadableTime;
 
-    const grouped = new Map();
-    legacyUnifiedExportRows.forEach((row) => {
-      const normalizedRow = {
-        date: row?.date || "",
-        year: row?.year || "",
-        month: row?.month || "",
-        team: row?.team || "",
-        psr: row?.psr || "",
-        brand: row?.brand || "",
-        productName: row?.productName || row?.product || "",
-        material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-      };
-      const key = [
-        normalizedRow.date,
-        normalizedRow.year,
-        normalizedRow.month,
-        normalizedRow.team,
-        normalizedRow.psr,
-        normalizedRow.brand,
-        normalizedRow.productName,
-        normalizedRow.material,
-      ].join("||");
-      const current = grouped.get(key) || {
-        ...normalizedRow,
-        openCountPerDay: 0,
-      };
-
-      current.openCountPerDay += 1;
-      grouped.set(key, current);
-    });
-
-    return Array.from(grouped.values()).sort(
-      (left, right) =>
-        String(left.date || "").localeCompare(String(right.date || "")) ||
-        String(left.month || "").localeCompare(String(right.month || "")) ||
-        String(left.team || "").localeCompare(String(right.team || "")) ||
-        String(left.psr || "").localeCompare(String(right.psr || "")) ||
-        String(left.brand || "").localeCompare(String(right.brand || "")) ||
-        String(left.productName || "").localeCompare(String(right.productName || "")) ||
-        String(left.material || "").localeCompare(String(right.material || ""))
-    );
-  }, [reportMaterialOpenCountExportRows, legacyUnifiedExportRows]);
-  const exportSections = useMemo(
-    () => [
+    return [
       {
         title: "Slide Activities",
         columns: SLIDE_ACTIVITY_EXPORT_COLUMNS,
         rows: slideActivityExportRows.map((row) => ({
-          date: toHumanReadableDate(row?.date, row?.month, row?.year),
+          date: formatDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
           psr: row?.psr || "",
@@ -1882,30 +1887,30 @@ export default function ReportsInsightsSection({
           slide: row?.slide || "",
           secondsViewed: Number(row?.secondsViewed || 0),
           secondsIdle: Number(row?.secondsIdle || 0),
-          timeSlideOpened: toHumanReadableTime(row?.timeSlideOpenedAt || row?.startedAt),
-          timeSlideClosed: toHumanReadableTime(row?.timeSlideClosedAt || row?.endedAt),
+          timeSlideOpened: formatTime(row?.timeSlideOpenedAt || row?.startedAt),
+          timeSlideClosed: formatTime(row?.timeSlideClosedAt || row?.endedAt),
         })),
       },
       {
         title: "Materials Open",
         columns: MATERIAL_OPEN_EXPORT_COLUMNS,
         rows: materialOpenExportRows.map((row) => ({
-          date: toHumanReadableDate(row?.date, row?.month, row?.year),
+          date: formatDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
           psr: row?.psr || "",
           brand: row?.brand || "",
           productName: row?.productName || row?.product || "",
           material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-          timeOpen: toHumanReadableTime(row?.timeOpenedAt || row?.startedAt),
-          timeClose: toHumanReadableTime(row?.timeClosedAt || row?.endedAt),
+          timeOpen: formatTime(row?.timeOpenedAt || row?.startedAt),
+          timeClose: formatTime(row?.timeClosedAt || row?.endedAt),
         })),
       },
       {
         title: "Material Opens Count",
         columns: MATERIAL_OPEN_COUNT_EXPORT_COLUMNS,
         rows: materialOpenCountExportRows.map((row) => ({
-          date: toHumanReadableDate(row?.date, row?.month, row?.year),
+          date: formatDate(row?.date, row?.month, row?.year),
           month: row?.month || "",
           team: row?.team || "",
           psr: row?.psr || "",
@@ -1915,63 +1920,86 @@ export default function ReportsInsightsSection({
           openCountPerDay: Number(row?.openCountPerDay || 0),
         })),
       },
-    ],
-    [materialOpenCountExportRows, materialOpenExportRows, slideActivityExportRows]
-  );
-  const exportCsvSections = useMemo(
-    () => [
-      {
-        title: "Slide Activities",
-        columns: SLIDE_ACTIVITY_EXPORT_COLUMNS,
-        rows: slideActivityExportRows.map((row) => ({
-          date: toCsvDate(row?.date, row?.month, row?.year),
-          month: row?.month || "",
-          team: row?.team || "",
-          psr: row?.psr || "",
-          brand: row?.brand || "",
-          productName: row?.productName || row?.product || "",
-          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-          slide: row?.slide || "",
-          secondsViewed: Number(row?.secondsViewed || 0),
-          secondsIdle: Number(row?.secondsIdle || 0),
-          timeSlideOpened: toCsvTime(row?.timeSlideOpenedAt || row?.startedAt),
-          timeSlideClosed: toCsvTime(row?.timeSlideClosedAt || row?.endedAt),
-        })),
-      },
-      {
-        title: "Materials Open",
-        columns: MATERIAL_OPEN_EXPORT_COLUMNS,
-        rows: materialOpenExportRows.map((row) => ({
-          date: toCsvDate(row?.date, row?.month, row?.year),
-          month: row?.month || "",
-          team: row?.team || "",
-          psr: row?.psr || "",
-          brand: row?.brand || "",
-          productName: row?.productName || row?.product || "",
-          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-          timeOpen: toCsvTime(row?.timeOpenedAt || row?.startedAt),
-          timeClose: toCsvTime(row?.timeClosedAt || row?.endedAt),
-        })),
-      },
-      {
-        title: "Material Opens Count",
-        columns: MATERIAL_OPEN_COUNT_EXPORT_COLUMNS,
-        rows: materialOpenCountExportRows.map((row) => ({
-          date: toCsvDate(row?.date, row?.month, row?.year),
-          month: row?.month || "",
-          team: row?.team || "",
-          psr: row?.psr || "",
-          brand: row?.brand || "",
-          productName: row?.productName || row?.product || "",
-          material: row?.material || toMaterialName({ attachment: row?.attachment, slide: row?.slide, brand: row?.brand }),
-          openCountPerDay: Number(row?.openCountPerDay || 0),
-        })),
-      },
-    ],
-    [materialOpenCountExportRows, materialOpenExportRows, slideActivityExportRows]
-  );
-  const exportDisabled = exportResult.isLoading || Boolean(exportResult.error);
+    ];
+  }, [buildExportRows]);
+  const exportDisabled = isLoading;
   const exportFilenameBase = buildFilenameBase(filters, "dashboard-report-data");
+  const loadExportData = useCallback(async () => {
+    if (exportRequest.requestKey === exportRequestKey && exportRequest.data && !exportRequest.error) {
+      return exportRequest.data;
+    }
+
+    setExportRequest((current) => ({
+      ...current,
+      error: "",
+      isLoading: true,
+    }));
+
+    const searchParams = buildReportSearchParams(filters);
+    const queryString = searchParams.toString();
+    const exportUrl = queryString ? `/api/reports/dashboard-export?${queryString}` : "/api/reports/dashboard-export";
+
+    try {
+      const response = await fetch(exportUrl, {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Failed to load dashboard export data.");
+      }
+
+      setExportRequest({
+        data: payload,
+        error: "",
+        isLoading: false,
+        requestKey: exportRequestKey,
+      });
+      return payload;
+    } catch (loadError) {
+      const message =
+        loadError instanceof Error ? loadError.message : "Failed to load dashboard export data.";
+      setExportRequest((current) => ({
+        ...current,
+        error: message,
+        isLoading: false,
+      }));
+      throw loadError;
+    }
+  }, [exportRequest.data, exportRequest.error, exportRequest.requestKey, exportRequestKey, filters]);
+  const handleExportCsv = useCallback(async () => {
+    try {
+      const exportData = await loadExportData();
+      const csvSections = buildExportSections(exportData, true);
+      const normalizedSections = Array.isArray(csvSections) ? csvSections : [];
+      if (!normalizedSections.length) return;
+
+      normalizedSections.forEach((section, index) => {
+        const sectionSlug = toFileSlug(section?.title || `section-${index + 1}`);
+        downloadFile(
+          `${exportFilenameBase}-${sectionSlug}.csv`,
+          sectionsToCsv([section]),
+          "text/csv;charset=utf-8;"
+        );
+      });
+    } catch (exportError) {
+      console.error("Failed to export dashboard CSV:", exportError);
+    }
+  }, [buildExportSections, exportFilenameBase, loadExportData]);
+  const handleExportExcel = useCallback(async () => {
+    try {
+      const exportData = await loadExportData();
+      const exportSections = buildExportSections(exportData);
+      downloadFile(
+        `${exportFilenameBase}.xlsx`,
+        await sectionsToXlsxArray(exportSections),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+    } catch (exportError) {
+      console.error("Failed to export dashboard Excel:", exportError);
+    }
+  }, [buildExportSections, exportFilenameBase, loadExportData]);
 
   return (
     <div className="max-w-full space-y-5 sm:space-y-8">
@@ -2008,12 +2036,15 @@ export default function ReportsInsightsSection({
           </div>
           <ExportButtons
             disabled={exportDisabled}
-            filenameBase={exportFilenameBase}
-            sections={exportSections}
-            csvSections={exportCsvSections}
+            isLoading={exportRequest.isLoading}
+            onExportCsv={handleExportCsv}
+            onExportExcel={handleExportExcel}
             showCsv={canExportCsv}
           />
         </div>
+        {exportRequest.error ? (
+          <div className="mt-2 text-xs font-medium text-red-700">{exportRequest.error}</div>
+        ) : null}
       </div>
 
 
