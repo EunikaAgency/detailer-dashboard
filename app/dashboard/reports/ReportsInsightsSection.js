@@ -120,8 +120,8 @@ const CNS_SLIDE_ACTIVITY_PRODUCT_ALIASES = [
 const TEAM_ACTIVITY_CHART_MIN_HEIGHT_PX = 260;
 const TEAM_ACTIVITY_CHART_MAX_HEIGHT_PX = 420;
 const TEAM_ACTIVITY_CHART_HEIGHT_PER_SERIES_PX = 10;
-const SLIDE_ACTIVITY_SUMMARY_MIN_HEIGHT_PX = 220;
-const SLIDE_ACTIVITY_SUMMARY_MAX_HEIGHT_PX = 380;
+const SLIDE_ACTIVITY_SUMMARY_MIN_HEIGHT_PX = 300;
+const SLIDE_ACTIVITY_SUMMARY_MAX_HEIGHT_PX = 420;
 const SLIDE_ACTIVITY_SUMMARY_HEIGHT_PER_ROW_PX = 26;
 
 const normalizeSlideActivityProductKey = (value) => String(value || "").trim().toLowerCase();
@@ -822,6 +822,46 @@ function PieLegend({ items, selectedBrand, detailKey = null, detailFormatter = n
   );
 }
 
+function MaterialBarLegend({ items, columns = 2, primaryLabelFormatter = null, secondaryLabelFormatter = null }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  const gridClass = columns === 3 ? "grid gap-2 lg:grid-cols-3" : "grid gap-2 sm:grid-cols-2";
+
+  return (
+    <div className={gridClass}>
+      {items.map((item, index) => {
+        const colorConfig = getChartItemColorConfig(item, index);
+        const rankLabel = `#${index + 1}`;
+        const primaryLabel =
+          typeof primaryLabelFormatter === "function" ? String(primaryLabelFormatter(item, index) || "").trim() : item.label;
+        const secondaryLabel =
+          typeof secondaryLabelFormatter === "function" ? String(secondaryLabelFormatter(item, index) || "").trim() : "";
+
+        return (
+          <div key={`${item.label}-${index}`} className="min-w-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2">
+            <div className="flex min-w-0 items-start gap-2">
+              <span className="w-7 shrink-0 pt-0.5 text-xs font-semibold text-slate-500">{rankLabel}</span>
+              <span
+                className="mt-0.5 h-3 w-3 shrink-0 rounded-sm border"
+                style={{
+                  backgroundColor: rgba(colorConfig.color, 0.95),
+                  borderColor: colorConfig.borderColor,
+                }}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-medium leading-snug text-slate-700">{primaryLabel || item.label}</span>
+                {secondaryLabel ? (
+                  <span className="mt-0.5 block break-all text-[11px] leading-snug text-slate-500">{secondaryLabel}</span>
+                ) : null}
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-slate-900">{formatMinutes(item.value)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function RankingTable({ title, subtitle, rows, columns, emptyMessage }) {
   return (
     <ReportCard title={title} subtitle={subtitle}>
@@ -972,7 +1012,9 @@ function buildSingleBarData(items, options = {}) {
   );
 
   return {
-    labels: items.map((item) => toMultilineLabel(item.label)),
+    labels: items.map((item, index) =>
+      typeof options.labelFormatter === "function" ? options.labelFormatter(item, index) : toMultilineLabel(item.label)
+    ),
     datasets: [
       {
         label: options.datasetLabel || "Material Open Count",
@@ -1007,7 +1049,9 @@ function buildSlideTrendData(items, options = {}) {
   );
 
   return {
-    labels: sortedItems.map((item) => `Slide ${getSlideOrder(item)}`),
+    labels: sortedItems.map((item, index) =>
+      typeof options.labelFormatter === "function" ? options.labelFormatter(item, index) : `Slide ${getSlideOrder(item)}`
+    ),
     datasets: [
       {
         label: options.datasetLabel || "Minutes Viewed",
@@ -1105,6 +1149,7 @@ function buildBarOptions({
         grid: { display: false },
         border: { display: false },
         ticks: {
+          autoSkip: false,
           color: "#475569",
           font: { size: 11 },
         },
@@ -1124,50 +1169,6 @@ function buildBarOptions({
           text: yTitle,
           color: "#64748b",
           font: { size: 12, weight: "600" },
-        },
-      },
-    },
-  };
-}
-
-function buildHorizontalBarOptions({ xTitle = "Minutes Viewed" } = {}) {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: "y",
-    interaction: { mode: "index", intersect: false },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label(context) {
-            return `${context.dataset.label}: ${Number(context.parsed.x || 0).toLocaleString()}`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-        grid: { color: "rgba(148, 163, 184, 0.18)" },
-        border: { display: false },
-        ticks: {
-          color: "#475569",
-          font: { size: 11 },
-        },
-        title: {
-          display: Boolean(xTitle),
-          text: xTitle,
-          color: "#64748b",
-          font: { size: 12, weight: "600" },
-        },
-      },
-      y: {
-        grid: { display: false },
-        border: { display: false },
-        ticks: {
-          color: "#475569",
-          font: { size: 11 },
         },
       },
     },
@@ -1507,6 +1508,7 @@ export default function ReportsInsightsSection({
     () =>
       buildSingleBarData(tdSlideActivityProductRows, {
         datasetLabel: "Minutes Viewed",
+        labelFormatter: (_item, index) => `#${index + 1}`,
         maxBarThickness: 28,
       }),
     [tdSlideActivityProductRows]
@@ -1515,12 +1517,17 @@ export default function ReportsInsightsSection({
     () =>
       buildSingleBarData(cnsSlideActivityProductRows, {
         datasetLabel: "Minutes Viewed",
+        labelFormatter: (_item, index) => `#${index + 1}`,
         maxBarThickness: 28,
       }),
     [cnsSlideActivityProductRows]
   );
   const slideActivityAttachmentChart = useMemo(
-    () => buildSlideTrendData(slideActivityAttachmentRows, { datasetLabel: "Minutes Viewed" }),
+    () =>
+      buildSlideTrendData(slideActivityAttachmentRows, {
+        datasetLabel: "Minutes Viewed",
+        labelFormatter: (_item, index) => `#${index + 1}`,
+      }),
     [slideActivityAttachmentRows]
   );
   const isAttachmentDrilldown = slideActivityAttachment !== "All Attachments";
@@ -2302,11 +2309,27 @@ export default function ReportsInsightsSection({
                 {slideDetailHelperText}
               </p>
               {isAttachmentDrilldown ? (
-                <div className="h-[280px] sm:h-[340px]">
-                  <Bar
-                    key={`slide-attachment-${slideActivityAttachment}`}
-                    data={slideActivityAttachmentChart}
-                    options={buildSlideBarOptions({ yTitle: "Minutes Viewed" })}
+                <div className="space-y-3">
+                  <div className="h-[280px] sm:h-[340px]">
+                    <Bar
+                      key={`slide-attachment-${slideActivityAttachment}`}
+                      data={slideActivityAttachmentChart}
+                      options={buildSlideBarOptions({ yTitle: "Minutes Viewed" })}
+                    />
+                  </div>
+                  <MaterialBarLegend
+                    items={slideActivityAttachmentRows}
+                    columns={3}
+                    primaryLabelFormatter={(item) =>
+                      Number.isFinite(Number(item?.slideNumber)) && Number(item.slideNumber) > 0
+                        ? `Slide ${Math.round(Number(item.slideNumber))}`
+                        : item?.label
+                    }
+                    secondaryLabelFormatter={(item) =>
+                      String(item?.exportName || "").trim() && String(item?.exportName || "").trim() !== String(item?.label || "").trim()
+                        ? item.exportName
+                        : ""
+                    }
                   />
                 </div>
               ) : (
@@ -2321,12 +2344,15 @@ export default function ReportsInsightsSection({
                       </div>
                     </div>
                     {hasTdSlideActivityProductData ? (
-                      <div style={{ height: tdSlideActivitySummaryHeight }}>
-                        <Bar
-                          key="slide-attachment-summary-td"
-                          data={tdSlideActivityProductChart}
-                          options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
-                        />
+                      <div className="space-y-3">
+                        <div style={{ height: tdSlideActivitySummaryHeight }}>
+                          <Bar
+                            key="slide-attachment-summary-td"
+                            data={tdSlideActivityProductChart}
+                            options={buildBarOptions({ yTitle: "Minutes Viewed" })}
+                          />
+                        </div>
+                        <MaterialBarLegend items={tdSlideActivityProductRows} />
                       </div>
                     ) : (
                       <ChartEmpty
@@ -2348,12 +2374,15 @@ export default function ReportsInsightsSection({
                       </div>
                     </div>
                     {hasCnsSlideActivityProductData ? (
-                      <div style={{ height: cnsSlideActivitySummaryHeight }}>
-                        <Bar
-                          key="slide-attachment-summary-cns"
-                          data={cnsSlideActivityProductChart}
-                          options={buildHorizontalBarOptions({ xTitle: "Minutes Viewed" })}
-                        />
+                      <div className="space-y-3">
+                        <div style={{ height: cnsSlideActivitySummaryHeight }}>
+                          <Bar
+                            key="slide-attachment-summary-cns"
+                            data={cnsSlideActivityProductChart}
+                            options={buildBarOptions({ yTitle: "Minutes Viewed" })}
+                          />
+                        </div>
+                        <MaterialBarLegend items={cnsSlideActivityProductRows} />
                       </div>
                     ) : (
                       <ChartEmpty
