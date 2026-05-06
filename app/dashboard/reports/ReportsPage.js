@@ -323,12 +323,16 @@ export default function ReportsPageDashboard() {
   });
 
   useEffect(() => {
-    if (reportResult.isLoading || reportResult.error) return;
+    if (reportResult.isLoading || reportResult.error) return undefined;
 
     const nextSelected = reportResult.data?.filters?.selected;
-    if (!nextSelected) return;
+    if (!nextSelected) return undefined;
 
-    setFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
+    const frameId = window.requestAnimationFrame(() => {
+      setFilters((current) => (areReportFiltersEqual(current, nextSelected) ? current : nextSelected));
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, [reportResult.data, reportResult.error, reportResult.isLoading]);
 
   const reportData = reportResult.data || EMPTY_REPORT;
@@ -338,7 +342,11 @@ export default function ReportsPageDashboard() {
 
   return (
     <div className="space-y-6 pb-6">
-      
+      {reportResult.error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
+          {reportResult.error}
+        </div>
+      ) : null}
 
       <ReportsInsightsSection
         filters={filters}
@@ -356,12 +364,6 @@ export default function ReportsPageDashboard() {
       </div>
 
       <div className="space-y-4">
-        {reportResult.error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
-            {reportResult.error}
-          </div>
-        ) : null}
-
         <div className="grid gap-4 xl:grid-cols-2">
           <MetricChartCard
             title="Representatives With the Highest Material Open Count"
@@ -395,6 +397,7 @@ export default function ReportsPageDashboard() {
         error={reportResult.error}
         hideHeader
         hideFilters
+        hideError
       />
     </div>
   );

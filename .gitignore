@@ -44,6 +44,7 @@ next-env.d.ts
 /public/uploads/
 /public/pwa/
 /public/uploads (Copy)/
+/backups/db/
 /pwa/node_modules/
 /pwa/dist/
 /pwa/.playwright-cli/

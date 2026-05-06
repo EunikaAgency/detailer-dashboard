@@ -421,6 +421,7 @@ export default function ReportsUtilizationSection({
   error = "",
   hideHeader = false,
   hideFilters = false,
+  hideError = false,
 } = {}) {
   const handleFilterChange = (key, value) => {
     if (typeof onFiltersChange !== "function") return;
@@ -482,7 +483,7 @@ export default function ReportsUtilizationSection({
         </div>
       ) : null}
 
-      {error ? (
+      {!hideError && error ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
           {error}
         </div>
