@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# backup
+backups/api-products/*
+
 # debug
 *.log
 npm-debug.log*

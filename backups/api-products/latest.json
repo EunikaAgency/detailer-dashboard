@@ -1,11 +1,11 @@
 {
-  "backupDate": "2026-05-06",
-  "backedUpAt": "2026-05-05T16:07:13.875Z",
+  "backupDate": "2026-05-11",
+  "backedUpAt": "2026-05-10T16:07:23.971Z",
   "sourceUrl": "http://127.0.0.1:7001/api/products",
-  "sha256": "fe918335c3552800a8e82fdbd14ee77948963a57d5117a016e83ceb13b73f4f1",
+  "sha256": "64d04b3e530a82cee91236dd95093db6cba884aa9429a62ea074e0b0ec889388",
   "productCount": 8,
   "response": {
-    "version": 1777996800000,
+    "version": 1778428800000,
     "products": [
       {
         "_id": "699d2471cd34d02077217d45",
@@ -841,7 +841,7 @@
               },
               {
                 "url": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-021.jpg?v=1773641101000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/converted/1771906161187-473013110-MEPTIN_ONE_DETAILER/meptin-meptin-one-detailer-slide-021.jpg?v=1773641101000",
                 "type": "image",
                 "groupTitle": "MEPTIN ONE DETAILER",
                 "groupId": "1771906161187-473013110-MEPTIN_ONE_DETAILER",
@@ -2521,7 +2521,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-001.jpg?v=1777349290076",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-001.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-001.jpg?v=1777349290076",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-001.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2533,7 +2533,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-002.jpg?v=1773205270000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-002.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-002.jpg?v=1773205270000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-002.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2582,7 +2582,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-003.jpg?v=1773205271000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-003.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-003.jpg?v=1773205271000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-003.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2622,7 +2622,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-004.jpg?v=1773205272000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-004.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-004.jpg?v=1773205272000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-004.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2662,7 +2662,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-005.jpg?v=1773205273000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-005.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-005.jpg?v=1773205273000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-005.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2702,7 +2702,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-006.jpg?v=1773205273000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-006.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-006.jpg?v=1773205273000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-006.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2742,7 +2742,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-007.jpg?v=1773205274000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-007.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-007.jpg?v=1773205274000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-007.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2782,7 +2782,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-008.jpg?v=1773205275000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-008.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-008.jpg?v=1773205275000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-008.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2822,7 +2822,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-009.jpg?v=1773205275000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-009.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-009.jpg?v=1773205275000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-009.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2862,7 +2862,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-010.jpg?v=1773205276000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-010.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-010.jpg?v=1773205276000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-010.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2902,7 +2902,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-011.jpg?v=1773205277000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-011.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-011.jpg?v=1773205277000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-011.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2942,7 +2942,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-012.jpg?v=1773205278000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-012.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-012.jpg?v=1773205278000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-012.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -2982,7 +2982,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-013.jpg?v=1773205278000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-013.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-013.jpg?v=1773205278000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-013.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3022,7 +3022,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-014.jpg?v=1773205279000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-014.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-014.jpg?v=1773205279000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-014.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3062,7 +3062,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-015.jpg?v=1773205280000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-015.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-015.jpg?v=1773205280000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-015.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3102,7 +3102,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-016.jpg?v=1773205280000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-016.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-016.jpg?v=1773205280000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-016.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3142,7 +3142,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-017.jpg?v=1773205281000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-017.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-017.jpg?v=1773205281000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-017.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3182,7 +3182,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-018.jpg?v=1773205282000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-018.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-018.jpg?v=1773205282000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-018.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3222,7 +3222,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-019.jpg?v=1773205283000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-019.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-019.jpg?v=1773205283000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-019.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3262,7 +3262,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-020.jpg?v=1773205283000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-020.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-020.jpg?v=1773205283000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-020.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3302,7 +3302,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-021.jpg?v=1773205284000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-021.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-021.jpg?v=1773205284000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-021.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3342,7 +3342,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-022.jpg?v=1773205285000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-022.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-022.jpg?v=1773205285000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-022.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3382,7 +3382,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-023.jpg?v=1773205285000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-023.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-023.jpg?v=1773205285000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-023.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3422,7 +3422,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-024.jpg?v=1773205286000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-024.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-024.jpg?v=1773205286000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-024.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -3462,7 +3462,7 @@
               },
               {
                 "url": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-025.jpg?v=1773205287000",
-                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/muscosta-mucosta-daily-detailer-2026-slide-025.jpg",
+                "thumbnailUrl": "/uploads/product-library/muscosta/mucosta-daily-detailer-2026/mucosta-mucosta-daily-detailer-2026-slide-025.jpg?v=1773205287000",
                 "type": "image",
                 "title": "mucosta-mucosta-daily-detailer-2026-slide-025.jpg",
                 "groupTitle": "MUCOSTA ONE DETAILER",
@@ -5651,7 +5651,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-001.jpg?v=1774409613000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-001.jpg?v=1774409613000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 1066705,
@@ -5698,7 +5698,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-002.jpg?v=1774409677000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-002.jpg?v=1774409677000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 647896,
@@ -5745,7 +5745,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-003.jpg?v=1774409770000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-003.jpg?v=1774409770000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 340770,
@@ -5792,7 +5792,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-004.jpg?v=1774409792000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-004.jpg?v=1774409792000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 322063,
@@ -5839,7 +5839,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-005.jpg?v=1774409823000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-005.jpg?v=1774409823000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 629824,
@@ -5886,7 +5886,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-006.jpg?v=1774409846000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-006.jpg?v=1774409846000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 408328,
@@ -5933,7 +5933,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-007.jpg?v=1774409867000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-007.jpg?v=1774409867000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 533529,
@@ -5980,7 +5980,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-008.jpg?v=1774409883000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-aad-2026/brexpiprazole-rexulti-aad-2026-slide-008.jpg?v=1774409883000",
                 "type": "image",
                 "groupTitle": "Rexulti_AAD-2026.pdf",
                 "size": 312395,
@@ -6042,7 +6042,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-001.jpg?v=1773205317000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-001.jpg?v=1773205317000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6097,7 +6097,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-002.jpg?v=1773205318000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-002.jpg?v=1773205318000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6152,7 +6152,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-003.jpg?v=1773205319000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-003.jpg?v=1773205319000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6207,7 +6207,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-004.jpg?v=1773205319000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-004.jpg?v=1773205319000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6262,7 +6262,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-005.jpg?v=1773205320000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-005.jpg?v=1773205320000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6317,7 +6317,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-006.jpg?v=1773205321000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-006.jpg?v=1773205321000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6372,7 +6372,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-007.jpg?v=1773205321000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adolescent-schiz-2026/brexpiprazole-rexulti-adolescent-schiz-2026-slide-007.jpg?v=1773205321000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adolescent Schiz-2026.pdf",
                 "groupId": "1771914375132-784605546-4 Rexulti_Adolescent_Schiz-2026",
@@ -6433,7 +6433,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-001.jpg?v=1773205322000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-001.jpg?v=1773205322000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6488,7 +6488,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-002.jpg?v=1773205323000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-002.jpg?v=1773205323000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6543,7 +6543,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-003.jpg?v=1773205323000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-003.jpg?v=1773205323000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6598,7 +6598,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-004.jpg?v=1773205324000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-004.jpg?v=1773205324000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6653,7 +6653,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-005.jpg?v=1773205325000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-005.jpg?v=1773205325000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6708,7 +6708,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-006.jpg?v=1773205325000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-006.jpg?v=1773205325000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6763,7 +6763,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-007.jpg?v=1773205326000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-adult-schizophrenia-2026/brexpiprazole-rexulti-adult-schizophrenia-2026-slide-007.jpg?v=1773205326000",
                 "type": "image",
                 "groupTitle": "Rexulti_Adult Schizophrenia-2026.pdf",
                 "groupId": "1771914563449-829867796-3 Rexulti_Adult_Schizophrenia-2026",
@@ -6824,7 +6824,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg?v=1774410222000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-001.jpg?v=1774410222000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 1130655,
@@ -6871,7 +6871,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg?v=1774410231000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-002.jpg?v=1774410231000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 339499,
@@ -6918,7 +6918,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-003.jpg?v=1774410235000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-003.jpg?v=1774410235000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 477482,
@@ -6965,7 +6965,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg?v=1774410241000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-004.jpg?v=1774410241000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 373030,
@@ -7012,7 +7012,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-005.jpg?v=1774410245000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-005.jpg?v=1774410245000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 748461,
@@ -7059,7 +7059,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg?v=1774410248000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-006.jpg?v=1774410248000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 633418,
@@ -7106,7 +7106,7 @@
               },
               {
                 "url": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-007.jpg?v=1774410253000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/brexpiprazole/rexulti-mdd-2026/brexpiprazole-rexulti-mdd-2026-slide-007.jpg?v=1774410253000",
                 "type": "image",
                 "groupTitle": "Rexulti_MDD-2026.pdf",
                 "size": 369451,
@@ -7181,7 +7181,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-001.jpg?v=1773205331000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-001.jpg?v=1773205331000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7227,7 +7227,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-002.jpg?v=1773205332000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-002.jpg?v=1773205332000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7273,7 +7273,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-003.jpg?v=1773205333000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-003.jpg?v=1773205333000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7319,7 +7319,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-004.jpg?v=1773205333000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-004.jpg?v=1773205333000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7365,7 +7365,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-005.jpg?v=1773205334000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-005.jpg?v=1773205334000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7411,7 +7411,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-006.jpg?v=1773205334000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-bipolar-2026/aripiprazole-abilify-maintena-bipolar-2026-slide-006.jpg?v=1773205334000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Bipolar-2026.pdf",
                 "groupId": "1771914831049-776257489-Abilify_Maintena-Bipolar-2026",
@@ -7463,7 +7463,7 @@
             "items": [
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-001.jpg?v=1776653536000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-001.jpg?v=1776653536000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 1054772,
@@ -7510,7 +7510,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-002.jpg?v=1776653541000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-002.jpg?v=1776653541000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 1126122,
@@ -7557,7 +7557,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-003.jpg?v=1776653549000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-003.jpg?v=1776653549000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 533525,
@@ -7604,7 +7604,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-004.jpg?v=1776653554000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-004.jpg?v=1776653554000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 669680,
@@ -7651,7 +7651,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-005.jpg?v=1776653558000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-005.jpg?v=1776653558000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 1092939,
@@ -7698,7 +7698,7 @@
               },
               {
                 "url": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-006.jpg?v=1776653562000",
-                "thumbnailUrl": "",
+                "thumbnailUrl": "/uploads/product-library/aripiprazole/abilify-maintena-schizophrenia-2026/aripiprazole-abilify-maintena-schizophrenia-2026-slide-006.jpg?v=1776653562000",
                 "type": "image",
                 "groupTitle": "Abilify Maintena-Schizophrenia-2026.pdf",
                 "size": 598917,

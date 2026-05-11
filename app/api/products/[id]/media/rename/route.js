@@ -139,10 +139,13 @@ export async function POST(request, { params }) {
 
     product.media = mediaItems.map((item) => {
       const cleanItemUrl = cleanUrl(item?.url || "");
+      const cleanThumbnailUrl = cleanUrl(item?.thumbnailUrl || "");
       const nextItemUrl = cleanItemUrl === oldUrl ? nextUrl : cleanItemUrl;
+      const nextThumbnailUrl = cleanThumbnailUrl === oldUrl ? nextUrl : cleanThumbnailUrl;
       return {
         ...item.toObject(),
         url: nextItemUrl,
+        thumbnailUrl: nextThumbnailUrl,
         title:
           cleanItemUrl === oldUrl &&
           (!item?.title || String(item?.title || "").trim() === currentFilename)

@@ -89,6 +89,60 @@ const toPublicFilePath = (url = "") => {
   return path.join(process.cwd(), "public", clean);
 };
 
+const publicUploadFileExists = async (url = "") => {
+  const clean = getUrlWithoutQuery(url);
+  if (!clean) return false;
+  if (!clean.startsWith("/uploads/")) return true;
+
+  const filePath = toPublicFilePath(clean);
+  if (!filePath) return false;
+
+  try {
+    const stat = await fs.stat(filePath);
+    return stat.isFile();
+  } catch {
+    return false;
+  }
+};
+
+const repairMissingImageThumbnails = async (products = []) => {
+  const repairMedia = async (media = []) => {
+    if (!Array.isArray(media)) return media;
+    if (media[0] && Array.isArray(media[0].items)) {
+      return Promise.all(
+        media.map(async (group) => ({
+          ...group,
+          items: await repairMedia(group?.items || []),
+        }))
+      );
+    }
+
+    return Promise.all(
+      media.map(async (item) => {
+        if (String(item?.type || "").toLowerCase() !== "image" || !item?.url) {
+          return item;
+        }
+
+        if (await publicUploadFileExists(item?.thumbnailUrl || "")) {
+          return item;
+        }
+
+        return {
+          ...item,
+          thumbnailUrl: item.url,
+        };
+      })
+    );
+  };
+
+  return Promise.all(
+    products.map(async (product) => ({
+      ...product,
+      media: await repairMedia(product?.media || []),
+    }))
+  );
+};
+
 const applyCacheBustToProductPayload = async (products = []) => {
   const versionByUrl = new Map();
 
@@ -395,7 +449,7 @@ export async function GET(request) {
           ...product,
           media: await buildMediaGroupsFromMedia(product.media, manifestMappings),
         })));
-    const rewrittenProducts = await applyProductImageLibrary(enriched);
+    const rewrittenProducts = await repairMissingImageThumbnails(await applyProductImageLibrary(enriched));
     const apiKeyAllowed = hasValidApiKey(request);
     const shouldCacheBustMedia = !auth.user || apiKeyAllowed;
     const responseProducts = shouldCacheBustMedia

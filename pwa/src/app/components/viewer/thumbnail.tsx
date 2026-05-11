@@ -3,7 +3,7 @@
  * Handles thumbnail loading, error states, and HTML placeholder
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { NormalizedSlide } from '../../lib/products';
 
 interface ThumbnailProps {
@@ -16,32 +16,68 @@ interface ThumbnailProps {
 }
 
 export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, compact = false }: ThumbnailProps) {
-  const [loading, setLoading] = useState(!!slide.thumbnailUrl);
-  const [error, setError] = useState(false);
+  const thumbnailCandidates = useMemo(() => {
+    const candidates = [slide.thumbnailUrl, slide.type === 'image' ? slide.url : undefined]
+      .map((url) => String(url || "").trim())
+      .filter(Boolean);
+
+    return Array.from(new Set(candidates));
+  }, [slide.thumbnailUrl, slide.type, slide.url]);
+  const thumbnailCandidatesKey = thumbnailCandidates.join("\n");
+  const [thumbnailState, setThumbnailState] = useState({
+    candidatesKey: "",
+    sourceIndex: 0,
+    loadedUrl: "",
+    failedUrl: "",
+  });
+  const resolvedThumbnailState =
+    thumbnailState.candidatesKey === thumbnailCandidatesKey
+      ? thumbnailState
+      : {
+          candidatesKey: thumbnailCandidatesKey,
+          sourceIndex: 0,
+          loadedUrl: "",
+          failedUrl: "",
+        };
+  const activeThumbnailUrl = thumbnailCandidates[resolvedThumbnailState.sourceIndex] || "";
+  const isFinalThumbnailCandidate =
+    resolvedThumbnailState.sourceIndex >= thumbnailCandidates.length - 1;
+  const error =
+    !!activeThumbnailUrl &&
+    resolvedThumbnailState.failedUrl === activeThumbnailUrl &&
+    isFinalThumbnailCandidate;
+  const loading =
+    !!activeThumbnailUrl &&
+    resolvedThumbnailState.loadedUrl !== activeThumbnailUrl &&
+    !error;
   const isActive = currentSlide === index;
-  const imageRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    setLoading(!!slide.thumbnailUrl);
-    setError(false);
-
-    const image = imageRef.current;
-    if (!image || !image.complete) {
-      return;
-    }
-
-    setLoading(false);
-    setError(image.naturalWidth === 0);
-  }, [slide.thumbnailUrl]);
   
   const handleLoad = () => {
-    setLoading(false);
-    setError(false);
+    setThumbnailState({
+      candidatesKey: thumbnailCandidatesKey,
+      sourceIndex: resolvedThumbnailState.sourceIndex,
+      loadedUrl: activeThumbnailUrl,
+      failedUrl: "",
+    });
   };
   
   const handleError = () => {
-    setLoading(false);
-    setError(true);
+    if (!isFinalThumbnailCandidate) {
+      setThumbnailState({
+        candidatesKey: thumbnailCandidatesKey,
+        sourceIndex: resolvedThumbnailState.sourceIndex + 1,
+        loadedUrl: "",
+        failedUrl: activeThumbnailUrl,
+      });
+      return;
+    }
+
+    setThumbnailState({
+      candidatesKey: thumbnailCandidatesKey,
+      sourceIndex: resolvedThumbnailState.sourceIndex,
+      loadedUrl: "",
+      failedUrl: activeThumbnailUrl,
+    });
   };
   
   return (
@@ -56,7 +92,7 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, com
       }`}
     >
       {/* Image/Video thumbnail with preview */}
-      {slide.thumbnailUrl && !error && (
+      {activeThumbnailUrl && !error && (
         <div id={idPrefix ? `${idPrefix}-preview` : undefined} className="w-full h-full relative">
           {loading && (
             <div
@@ -71,8 +107,8 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, com
           )}
           <img
             id={idPrefix ? `${idPrefix}-image` : undefined}
-            ref={imageRef}
-            src={slide.thumbnailUrl}
+            key={activeThumbnailUrl}
+            src={activeThumbnailUrl}
             alt={`Slide ${index + 1}`}
             className={`w-full h-full object-cover transition-all duration-200 ${
               isActive
@@ -92,7 +128,7 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, com
       )}
       
       {/* HTML thumbnail with preview error or no preview - show placeholder */}
-      {slide.type === 'html' && (!slide.thumbnailUrl || error) && (
+      {slide.type === 'html' && (!activeThumbnailUrl || error) && (
         <div
           id={idPrefix ? `${idPrefix}-html-fallback` : undefined}
           className={`w-full h-full flex items-center justify-center transition-all ${
@@ -106,7 +142,7 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, com
       )}
       
       {/* Video placeholder */}
-      {slide.type === 'video' && !slide.thumbnailUrl && (
+      {slide.type === 'video' && !activeThumbnailUrl && (
         <div
           id={idPrefix ? `${idPrefix}-video-fallback` : undefined}
           className={`w-full h-full flex items-center justify-center transition-all ${
@@ -120,7 +156,7 @@ export function Thumbnail({ slide, index, currentSlide, goToSlide, idPrefix, com
       )}
       
       {/* Image error state */}
-      {slide.type === 'image' && error && (
+      {slide.type === 'image' && (!activeThumbnailUrl || error) && (
         <div
           id={idPrefix ? `${idPrefix}-image-fallback` : undefined}
           className={`w-full h-full flex items-center justify-center transition-all ${
